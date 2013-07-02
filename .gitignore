@@ -21,3 +21,6 @@ utils/python/python26/PCbuild/Win32*
 utils/python/python26/PCbuild/obj/
 utils/python/python26/bin/
 python/
+linux_sdk/vcpm
+*.vdf
+linux_sdk/server_i486.so

@@ -292,7 +292,7 @@ void CHudBloodScreen::DrawRespawnText( void )
 
 void CHudBloodScreen::FireGameEvent( IGameEvent *event )
 {
-	C_BasePlayer *pLocal = C_BasePlayer::GetLocalPlayer();
+	C_GEPlayer *pLocal = ToGEPlayer( C_BasePlayer::GetLocalPlayer() );
 	if ( !pLocal )
 		return;
 
@@ -315,12 +315,16 @@ void CHudBloodScreen::FireGameEvent( IGameEvent *event )
 	{
 		m_bDoFadeOut = true;
 	}
-	else
+	else // player_death
 	{
 		PlayDeathMusic();
 
 		if ( cl_ge_disablebloodscreen.GetBool() )
 			return;
+
+		// Make sure we move out of aim mode
+		pLocal->ResetAimMode();
+		pLocal->CheckAimMode();
 
 		m_bShow = true;
 		m_bResetOccured = false;

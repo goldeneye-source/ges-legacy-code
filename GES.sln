@@ -1,9 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GoldenEye Source", "GoldenEye Source", "{4305E60F-8E21-4342-9995-8244000A2C77}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{33C1A500-F232-4D04-BAEB-D6DD4E99C56A}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client", "game\client_ges-2010.vcxproj", "{02817029-DA00-4BD4-B140-EE1646F1447E}"
 	ProjectSection(ProjectDependencies) = postProject
 		{BF3EDBF5-ED65-4567-B348-504C1310A1BB} = {BF3EDBF5-ED65-4567-B348-504C1310A1BB}
@@ -34,10 +30,5 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{02817029-DA00-4BD4-B140-EE1646F1447E} = {4305E60F-8E21-4342-9995-8244000A2C77}
-		{4998DCA8-9606-46C7-8B28-6506E34992DC} = {4305E60F-8E21-4342-9995-8244000A2C77}
-		{BF3EDBF5-ED65-4567-B348-504C1310A1BB} = {33C1A500-F232-4D04-BAEB-D6DD4E99C56A}
 	EndGlobalSection
 EndGlobal

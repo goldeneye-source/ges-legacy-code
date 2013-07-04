@@ -49,7 +49,7 @@ IMPLEMENT_CLIENTCLASS_DT(C_GEPlayer, DT_GE_Player, CGEPlayer)
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_GEPlayer )
-// TODO: Define m_iAimModeState here?
+	DEFINE_PRED_FIELD( m_bResetZoom, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
 extern ConVar v_viewmodel_fov;
@@ -125,7 +125,10 @@ float C_GEPlayer::GetHeadOffset( void )
 
 void C_GEPlayer::SetZoom( int zoom )
 {
-	Zoom( zoom, (float) abs(zoom - GetZoom()) / WEAPON_ZOOM_RATE );
+	if ( m_bResetZoom )
+		Zoom( zoom, 0 );
+	else
+		Zoom( zoom, (float) abs(zoom - GetZoom()) / WEAPON_ZOOM_RATE );
 }
 
 int C_GEPlayer::GetZoomEnd()

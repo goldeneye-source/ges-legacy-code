@@ -20,3 +20,4 @@ linux_sdk/release/
 utils/python/python26/PCbuild/Win32*
 utils/python/python26/PCbuild/obj/
 utils/python/python26/bin/
+python/

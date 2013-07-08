@@ -24,16 +24,14 @@ class CGEShell : public CGEBaseGrenade
 public:
 	DECLARE_CLASS( CGEShell, CGEBaseGrenade );
 	DECLARE_DATADESC();
-					
-	~CGEShell( void );
 
 	virtual void	Spawn( void );
 	virtual void	Precache( void );
 
-	virtual bool		IsInAir( void )		{ return true; };
-	virtual GEWeaponID	GetWeaponID( void ) { return WEAPON_GRENADE_LAUNCHER; };
-	virtual const char* GetPrintName( void ) { return "#GE_GrenadeLauncher"; };
-	virtual int			GetCustomData( void ) { return m_iBounceCount; };
+	virtual bool		IsInAir( void )			{ return true; }
+	virtual GEWeaponID	GetWeaponID( void )		{ return WEAPON_GRENADE_LAUNCHER; }
+	virtual const char* GetPrintName( void )	{ return "#GE_GrenadeLauncher"; }
+	virtual int			GetCustomData( void )	{ return m_iBounceCount; }
 
 	virtual void	SetVelocity( const Vector &velocity, const AngularImpulse &angVelocity );
 	virtual void	VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
@@ -43,6 +41,7 @@ public:
 	virtual void	PlayerTouch( CBaseEntity *pOther );
 	virtual void	ExplodeThink();
 	virtual void	CreateSmokeTrail();
+	virtual bool	CanExplode();
 
 private:
 	int m_iBounceCount;

@@ -137,6 +137,11 @@ void CGERocket::ExplodeTouch( CBaseEntity *pOther )
 	if ( !g_pGameRules->ShouldCollide( GetCollisionGroup(), pOther->GetCollisionGroup() ) )
 		return;
 
+	// Don't collide with teammates
+	int myteam = GetThrower()->GetTeamNumber();
+	if ( myteam >= FIRST_GAME_TEAM && pOther->GetTeamNumber() == myteam )
+		return;
+
 	trace_t tr;
 	UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + (m_vForward * 32), MASK_SOLID, this, GetCollisionGroup(), &tr );
 	if( tr.surface.flags & SURF_SKY )

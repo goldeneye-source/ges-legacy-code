@@ -27,11 +27,6 @@ BEGIN_DATADESC( CGEShell )
 	DEFINE_THINKFUNC( ExplodeThink ),
 END_DATADESC()
 
-
-CGEShell::~CGEShell( void )
-{
-}
-
 void CGEShell::Spawn( void )
 {
 	Precache();
@@ -119,6 +114,11 @@ void CGEShell::CreateSmokeTrail( void )
 	}
 }
 
+bool CGEShell::CanExplode()
+{
+	return m_iBounceCount > 0 || m_flFloorTimeout < gpGlobals->curtime;
+}
+
 void CGEShell::ExplodeThink() 
 {
 	if( m_hSmokeTrail )
@@ -136,6 +136,11 @@ void CGEShell::PlayerTouch( CBaseEntity *pOther )
 	if ( !PassServerEntityFilter( this, pOther) )
 		return;
 
+	// Don't collide with teammates
+	int myteam = GetThrower()->GetTeamNumber();
+	if ( myteam >= FIRST_GAME_TEAM && pOther->GetTeamNumber() == myteam )
+		return;
+
 	// Always explode immediately upon hitting another player
 	if ( pOther->IsPlayer() || pOther->IsNPC() )
 		SetNextThink( gpGlobals->curtime );
@@ -150,11 +155,13 @@ void CGEShell::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 
 	// Grab what we hit
 	CBaseEntity *pOther = pEvent->pEntities[!index];
+	if ( !pOther )
+		return;
 
 	if ( pOther->IsWorld() )
 	{
 		surfacedata_t *phit = physprops->GetSurfaceData( pEvent->surfaceProps[!index] );
-		if ( phit->game.material == 'X' )
+		if ( phit && phit->game.material == 'X' )
 		{
 			// Game Over, we hit the sky box, remove the rocket from the world (no explosion)
 			PhysCallbackRemove( GetNetworkable() );
@@ -171,25 +178,53 @@ void CGEShell::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 	if ( !g_pGameRules->ShouldCollide( GetCollisionGroup(), pOther->GetCollisionGroup() ) )
 		return;
 
+	// Don't collide with teammates
+	int myteam = GetThrower()->GetTeamNumber();
+	if ( myteam >= FIRST_GAME_TEAM && pOther->GetTeamNumber() == myteam )
+		return;
+
 	trace_t tr;
 	CollisionEventToTrace( index, pEvent, tr );
 
 	// If we hit another player or hit the floor after a wall/ceiling bounce, instantly explode
-	if ( pOther->IsPlayer() || pOther->IsNPC() || ( (m_iBounceCount > 0 || m_flFloorTimeout < gpGlobals->curtime) && tr.plane.normal.z < -0.6f ) )
+	if ( pOther->IsPlayer() || pOther->IsNPC() || ( CanExplode() && tr.plane.normal.z < -0.6f ) )
 	{
 		SetNextThink( gpGlobals->curtime );
 		return;
 	}
 
-	// Only lose 20% speed
+	// Start with our velocity before the collision
+	Vector vecCalcVelocity = pEvent->preVelocity[index];
+	float pre_speed = vecCalcVelocity.NormalizeInPlace();
+
+#if 0
+	// Debug output!
 	Vector vecFinalVelocity = pEvent->postVelocity[index];
-	vecFinalVelocity.NormalizeInPlace();
+	float post_speed = vecFinalVelocity.NormalizeInPlace();
+
+	Vector pre_start, post_end;
+	VectorMA( GetAbsOrigin(), 75.0f, vecCalcVelocity, pre_start );
+	VectorMA( GetAbsOrigin(), 75.0f, vecFinalVelocity, post_end );
+#endif
+
+	// First bounce retains 60% energy, subsequent only 45% energy
 	if ( !m_iBounceCount )
-		vecFinalVelocity *= pEvent->collisionSpeed * 0.8f;
+		vecCalcVelocity *= pre_speed * 0.6f;
 	else
-		vecFinalVelocity *= pEvent->collisionSpeed;
-	PhysCallbackSetVelocity( pEvent->pObjects[index], vecFinalVelocity );
+		vecCalcVelocity *= pre_speed * 0.45f;
+
+#if 0
+	// Debug output!
+	DevMsg( "Bounce!! Pre Speed: %0.1f, Post Speed: %0.1f, Calc Speed: %0.1f\n", pre_speed, post_speed, vecCalcVelocity.Length() );
 	
+	debugoverlay->AddLineOverlay( pre_start, GetAbsOrigin(), 255, 0, 0, false, 10.0f );
+	debugoverlay->AddLineOverlay( GetAbsOrigin(), post_end, 0, 255, 0, false, 10.0f );
+#endif
+
+	// Set our final velocity based on the calcs above
+	PhysCallbackSetVelocity( pEvent->pObjects[index], vecCalcVelocity );
+	
+	// Update our bounce count
 	++m_iBounceCount;
 }
 

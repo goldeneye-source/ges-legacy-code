@@ -12,6 +12,7 @@
 #include "grenade_shell.h"
 #include "explode.h"
 #include "ge_utils.h"
+#include "gamevars_shared.h"
 #include "gebot_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -138,7 +139,7 @@ void CGEShell::PlayerTouch( CBaseEntity *pOther )
 
 	// Don't collide with teammates
 	int myteam = GetThrower()->GetTeamNumber();
-	if ( myteam >= FIRST_GAME_TEAM && pOther->GetTeamNumber() == myteam )
+	if ( myteam >= FIRST_GAME_TEAM && pOther->GetTeamNumber() == myteam && !friendlyfire.GetBool() )
 		return;
 
 	// Always explode immediately upon hitting another player

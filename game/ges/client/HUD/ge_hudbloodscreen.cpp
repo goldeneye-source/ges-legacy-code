@@ -323,8 +323,7 @@ void CHudBloodScreen::FireGameEvent( IGameEvent *event )
 			return;
 
 		// Make sure we move out of aim mode
-		pLocal->ResetAimMode();
-		pLocal->CheckAimMode();
+		pLocal->ResetAimMode( true );
 
 		m_bShow = true;
 		m_bResetOccured = false;

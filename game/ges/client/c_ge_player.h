@@ -55,15 +55,13 @@ public:
 	virtual void ClientThink();
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 
-	virtual void ResetAimMode();
-	virtual bool IsInAimMode();
-	virtual void CheckAimMode();
+	void ResetAimMode( bool forced=false );
+	bool IsInAimMode();
+	void CheckAimMode();
+	int GetAimModeState() { return m_iAimModeState; }
 
 	void SetZoom( int zoom ); 
 	int GetZoomEnd();
-
-	// For debugging only
-	int GetAimModeState() { return m_iAimModeState; }
 
 	// Move the viewmodel closer to us if we are crouched
 	virtual void  CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles);
@@ -101,6 +99,8 @@ private:
 	// Networked aiming variables
 	bool m_bInAimMode;
 	bool m_bResetZoom;
+	// Client-side only to force reset immediately
+	bool m_bResetZoomForced;
 	
 	bool m_bInSpecialMusic;
 	float m_flEndSpecialMusic;

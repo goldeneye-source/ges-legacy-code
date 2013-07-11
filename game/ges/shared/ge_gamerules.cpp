@@ -1118,7 +1118,7 @@ bool CGERules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 
 const unsigned char *CGERules::GetEncryptionKey( void )
 {
-	return GetHash();
+	return GEUTIL_GetSecretHash();
 }
 
 bool CGERules::ShouldUseRobustRadiusDamage( CBaseEntity *pEntity )

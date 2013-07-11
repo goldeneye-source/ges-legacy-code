@@ -64,7 +64,7 @@ public:
 	// -------------------------------------------------
 
 	//This will return true if the player is 'fully' in AimMode
-	void ResetAimMode();
+	void ResetAimMode( bool forced=false );
 	bool IsInAimMode();
 	bool AddArmor( int amount );
 

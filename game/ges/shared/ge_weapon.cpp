@@ -261,6 +261,8 @@ bool CGEWeapon::Reload( void )
 
 	if ( bRet && GetOwner() && GetOwner()->IsPlayer() )
 	{
+		CGEPlayer *pPlayer = ToGEPlayer( GetOwner() );
+
 	#ifdef CLIENT_DLL
 		IGameEvent *event = gameeventmanager->CreateEvent( "weapon_event" );
 		if ( event )
@@ -271,8 +273,11 @@ bool CGEWeapon::Reload( void )
 			gameeventmanager->FireEventClientSide( event );
 		}
 	#endif
+		// Reset our aim mode
+		pPlayer->ResetAimMode();
+
 		m_iShotsFired = 0;
-		ToGEPlayer( GetOwner() )->DoAnimationEvent( PLAYERANIMEVENT_RELOAD );
+		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_RELOAD );
 	}
 
 	return bRet;

@@ -174,9 +174,6 @@
     <ClCompile Include="ges\client\HUD\ge_hudchat.cpp">
       <Filter>GES\HUD</Filter>
     </ClCompile>
-    <ClCompile Include="ges\client\HUD\ge_hudcrosshair.cpp">
-      <Filter>GES\HUD</Filter>
-    </ClCompile>
     <ClCompile Include="ges\client\HUD\ge_huddeathnotice.cpp">
       <Filter>GES\HUD</Filter>
     </ClCompile>
@@ -1803,9 +1800,6 @@
       <Filter>GES\HUD</Filter>
     </ClInclude>
     <ClInclude Include="ges\client\HUD\ge_hudchat.h">
-      <Filter>GES\HUD</Filter>
-    </ClInclude>
-    <ClInclude Include="ges\client\HUD\ge_hudcrosshair.h">
       <Filter>GES\HUD</Filter>
     </ClInclude>
     <ClInclude Include="ges\client\HUD\ge_hudgameplay.h">

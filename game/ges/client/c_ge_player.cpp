@@ -49,6 +49,7 @@ IMPLEMENT_CLIENTCLASS_DT(C_GEPlayer, DT_GE_Player, CGEPlayer)
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_GEPlayer )
+	DEFINE_PRED_FIELD( m_bInAimMode, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bResetZoom, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
@@ -125,7 +126,7 @@ float C_GEPlayer::GetHeadOffset( void )
 
 void C_GEPlayer::SetZoom( int zoom )
 {
-	if ( m_bResetZoom )
+	if ( m_bResetZoomForced )
 		Zoom( zoom, 0 );
 	else
 		Zoom( zoom, (float) abs(zoom - GetZoom()) / WEAPON_ZOOM_RATE );

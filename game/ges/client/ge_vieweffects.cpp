@@ -13,12 +13,16 @@
 #include "view_shared.h"
 #include "iviewrender.h"
 #include "viewrender.h"
+#include "view.h"
 
+#include "ge_utils.h"
 #include "ge_shareddefs.h"
 #include "ge_vieweffects.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+#define CROSSHAIR_SCALE	0.7f
 
 static CGEViewEffects g_ViewEffects;
 IViewEffects *vieweffects = ( IViewEffects * )&g_ViewEffects;
@@ -30,13 +34,39 @@ IViewEffects *vieweffects = ( IViewEffects * )&g_ViewEffects;
 CGEViewEffects::CGEViewEffects( void )
 {
 	ResetBreath();
+	m_MatCrosshair = NULL;
+}
+
+CGEViewEffects::~CGEViewEffects( void )
+{
+	if ( m_MatCrosshair )
+	{
+		m_MatCrosshair->DecrementReferenceCount();
+		m_MatCrosshair = NULL;
+	}
+}
+
+// Called from cdll_client_int.cpp in CHLClient::HudVidInit()
+void CGEViewEffects::VidInit( void )
+{
+	// Reset the pixel scale to our new dimensions
+	m_flPixelScale = XRES( 28.0f );
+
+	// Reload the crosshair material
+	if ( m_MatCrosshair )
+	{
+		m_MatCrosshair->DecrementReferenceCount();
+		m_MatCrosshair = NULL;
+	}
+
+	m_MatCrosshair = materials->FindMaterial( "sprites/crosshair", TEXTURE_GROUP_VGUI );
+	m_MatCrosshair->IncrementReferenceCount();
 }
 
 void CGEViewEffects::LevelInit( void )
 {
+	// Reset our breath state
 	ResetBreath();
-	m_flPixelScale = XRES( 28.0f );
-
 	CViewEffects::LevelInit();
 }
 
@@ -110,4 +140,54 @@ void CGEViewEffects::GenerateRandomAttractor( attractor_t &attractor )
 
 	attractor.spawntime = gpGlobals->curtime;
 	attractor.stepsize = (m_vBO.DistTo( attractor.attr ) / ATTR_TIMEOUT) * gpGlobals->frametime;
+}
+
+// Called from RenderGEPlayerSprites() in clientmode_ge.cpp
+// Draw a 3D crosshair scaled by our current zoom
+void CGEViewEffects::DrawCrosshair( void )
+{
+	C_GEPlayer *pPlayer = ToGEPlayer( C_BasePlayer::GetLocalPlayer() );
+
+	// Check our draw conditions
+	if ( ShouldDrawCrosshair( pPlayer ) )
+	{
+		// Default size
+		float size = XRES( 64 );
+
+		// Base offset from the camera
+		Vector offset( 1200.0f, 0, 0 );
+
+		// Adjust distance for zoom
+		float zoom = pPlayer->GetZoom() + pPlayer->GetDefaultFOV();
+		if (zoom < 90.0f )
+			offset.x *= 1 / tan( DEG2RAD(zoom) / 2.0f );
+
+		GEUTIL_DrawSprite3D( m_MatCrosshair, offset, size, size );
+	}
+}
+
+bool CGEViewEffects::ShouldDrawCrosshair( C_GEPlayer *pPlayer )
+{
+	if ( !pPlayer )
+		return false;
+
+	// Check observer logic
+	if ( pPlayer->IsObserver() )
+	{
+		C_GEPlayer *obsTarget = ToGEPlayer( pPlayer->GetObserverTarget() );
+		if ( obsTarget && obsTarget->IsPlayer() )
+		{
+			// Only show crosshair if we are observing "In Eye"
+			if ( obsTarget->IsInAimMode() && pPlayer->GetObserverMode() == OBS_MODE_IN_EYE )
+				return true;
+		}
+
+		return false;
+	}
+
+	// Only draw the crosshair when we are actually established in aim mode
+	if( pPlayer->IsInAimMode() )
+		return true;
+
+	return false;
 }

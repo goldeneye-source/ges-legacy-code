@@ -139,7 +139,7 @@ void CGERocket::ExplodeTouch( CBaseEntity *pOther )
 
 	// Don't collide with teammates
 	int myteam = GetThrower()->GetTeamNumber();
-	if ( myteam >= FIRST_GAME_TEAM && pOther->GetTeamNumber() == myteam )
+	if ( myteam >= FIRST_GAME_TEAM && pOther->GetTeamNumber() == myteam && !friendlyfire.GetBool() )
 		return;
 
 	trace_t tr;

@@ -265,7 +265,6 @@
     <ClCompile Include="ges\client\HUD\ge_hudammo.cpp" />
     <ClCompile Include="ges\client\HUD\ge_hudbloodscreen.cpp" />
     <ClCompile Include="ges\client\HUD\ge_hudchat.cpp" />
-    <ClCompile Include="ges\client\HUD\ge_hudcrosshair.cpp" />
     <ClCompile Include="ges\client\HUD\ge_huddeathnotice.cpp" />
     <ClCompile Include="ges\client\HUD\ge_hudgameplay.cpp" />
     <ClCompile Include="ges\client\HUD\ge_hudlifebars.cpp" />
@@ -955,7 +954,6 @@
     <ClInclude Include="ges\client\VGUI\ge_teammenu.h" />
     <ClInclude Include="ges\client\HUD\ge_hudammo.h" />
     <ClInclude Include="ges\client\HUD\ge_hudchat.h" />
-    <ClInclude Include="ges\client\HUD\ge_hudcrosshair.h" />
     <ClInclude Include="ges\client\HUD\ge_hudgameplay.h" />
     <ClInclude Include="ges\client\HUD\ge_hudlifebars.h" />
     <ClInclude Include="ges\client\HUD\ge_hudprogressbars.h" />

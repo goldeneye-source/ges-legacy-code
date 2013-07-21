@@ -22,7 +22,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define CROSSHAIR_SCALE	0.7f
+#define CROSSHAIR_SCALE	0.5f
 
 static CGEViewEffects g_ViewEffects;
 IViewEffects *vieweffects = ( IViewEffects * )&g_ViewEffects;
@@ -152,7 +152,7 @@ void CGEViewEffects::DrawCrosshair( void )
 	if ( ShouldDrawCrosshair( pPlayer ) )
 	{
 		// Default size
-		float size = XRES( 64 );
+		float size = YRES( 50 );
 
 		// Base offset from the camera
 		Vector offset( 1200.0f, 0, 0 );

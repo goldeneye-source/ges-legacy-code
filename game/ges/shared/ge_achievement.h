@@ -65,6 +65,9 @@ static CBaseAchievementHelper g_##className##_Helper( Create_##className );
 // HELPER FUNCTIONS TO MAKE FINDING THINGS OUT EASIER!
 bool FindAwardForPlayer( IGameEvent *pEvent, int iAward, int iPlayer );
 int GetAwardsForPlayer( IGameEvent *pEvent, int iPlayer );
+#ifdef CLIENT_DLL
+bool IsScenario( const char *ident, bool official=true );
+#endif
 
 #define GE_ACH_HIDDEN		true
 #define GE_ACH_UNLOCKED		false
@@ -120,6 +123,7 @@ protected:
 		m_bWasCharForRound = false;
 		m_bIsChar = false;
 	}
+
 	virtual void ListenForEvents()
 	{
 		ListenForGameEvent( "round_end" );

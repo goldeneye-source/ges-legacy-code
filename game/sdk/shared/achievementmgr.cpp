@@ -1174,13 +1174,10 @@ int	CalcTeammateCount()
 //-----------------------------------------------------------------------------
 // Purpose: Returns the # of teammates of the local player
 //-----------------------------------------------------------------------------
-#if defined(_DEBUG) && defined(GE_DLL)
-ConVar achievement_ignore_playercnt( "achievement_ignore_playercnt", "0", FCVAR_CLIENTDLL, "Ignore the number of players when determining achievement goals" );
-#endif
 int	CalcPlayerCount()
 {
-#if defined(_DEBUG) && defined(GE_DLL)
-	if ( achievement_ignore_playercnt.GetBool() )
+#if defined(GE_DLL)
+	if ( cc_achievement_debug.GetInt() > 0 )
 		return MAX_PLAYERS;
 #endif
 

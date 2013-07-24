@@ -12,6 +12,10 @@
 #include "achievementmgr.h"
 #include "ge_achievement.h"
 
+#ifdef CLIENT_DLL
+#include "c_ge_gameplayresource.h"
+#endif
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -137,3 +141,22 @@ int GetAwardsForPlayer( IGameEvent *pEvent, int iPlayer )
 
 	return count;
 }
+
+#ifdef CLIENT_DLL
+extern ConVar cc_achievement_debug;
+bool IsScenario( const char *ident, bool official /*=true*/ )
+{
+	if ( !GEGameplayRes() )
+		return false;
+
+	// Check the ident
+	if ( !Q_stricmp( GEGameplayRes()->GetGameplayIdent(), ident ) )
+	{
+		// Return true if we don't specify we want official, or if we are actually official
+		if ( !official || GEGameplayRes()->GetGameplayOfficial() || cc_achievement_debug.GetInt() > 0 )
+			return true;
+	}
+
+	return false;
+}
+#endif

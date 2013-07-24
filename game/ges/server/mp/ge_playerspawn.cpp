@@ -55,7 +55,11 @@ CGEPlayerSpawn::CGEPlayerSpawn( void )
 
 void CGEPlayerSpawn::Spawn( void )
 {
-	BaseClass::Spawn();
+	//
+	// NOTE: We specifically do not call down into our 
+	//		 base spawning methods because they will mess us up!
+	//
+	SetSolid( SOLID_NONE );
 	ResetTrackers();
 
 	// Classify us with a team
@@ -320,4 +324,75 @@ void CGEPlayerSpawn::DEBUG_ShowOverlay( float duration )
 
 	if ( !IsBotFriendly() )
 		EntityText( ++line, "NO BOTS", duration );
+}
+
+#include "gemp_player.h"
+CON_COMMAND_F( ge_debug_checkplayerspawns, "Check player spawns against several criteria including getting stuck.", FCVAR_CHEAT )
+{
+	int playeridx = UTIL_GetCommandClientIndex();
+	CGEMPPlayer *pPlayer = ToGEMPPlayer( UTIL_PlayerByIndex( playeridx ) );
+
+	if ( !UTIL_IsCommandIssuedByServerAdmin() || !pPlayer )
+	{
+		Warning( "You must be a localhost admin to use this command!\n" );
+		return;
+	}
+
+	if ( !pPlayer->IsActive() )
+	{
+		Warning( "You must be spawned into the game in order to use this command!\n" );
+		return;
+	}
+
+	CUtlVector<EHANDLE> spawns;
+	spawns.AddVectorToTail( *GERules()->GetSpawnersOfType( SPAWN_PLAYER ) );
+	spawns.AddVectorToTail( *GERules()->GetSpawnersOfType( SPAWN_PLAYER_MI6 ) );
+	spawns.AddVectorToTail( *GERules()->GetSpawnersOfType( SPAWN_PLAYER_JANUS ) );
+
+	for ( int i=0; i < spawns.Count(); i++ )
+	{
+		CGEPlayerSpawn *spawn = (CGEPlayerSpawn*) spawns[i].Get();
+		if ( !spawn )
+			continue;
+
+		trace_t trace;
+
+		// Move the player to this spawn point
+		Vector origin = spawn->GetAbsOrigin();
+		pPlayer->SetLocalOrigin( origin + Vector(0,0,1) );
+		pPlayer->SetAbsVelocity( vec3_origin );
+		pPlayer->SetLocalAngles( spawn->GetLocalAngles() );
+		pPlayer->m_Local.m_vecPunchAngle = vec3_angle;
+		pPlayer->m_Local.m_vecPunchAngleVel = vec3_angle;
+		pPlayer->SnapEyeAngles( spawn->GetLocalAngles() );
+
+		// Check if the player will get stuck
+		UTIL_TraceEntity( pPlayer, pPlayer->GetAbsOrigin(), pPlayer->GetAbsOrigin(), MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_PLAYER_MOVEMENT, &trace );
+		if ( trace.allsolid || trace.startsolid )
+			Warning( "[%0.2f, %0.2f, %0.2f] Spawn %s will get the player stuck!\n", origin.x, origin.y, origin.z, spawn->GetClassname() );
+
+		// Check for height above the ground
+		UTIL_TraceLine( origin + Vector(0,0,1), origin + Vector(0,0,-100), MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_PLAYER_MOVEMENT, &trace );
+		if ( trace.fraction > 0.1f )
+			Warning( "[%0.2f, %0.2f, %0.2f] Spawn %s is too high off the ground (%0.1f units)!\n", origin.x, origin.y, origin.z, spawn->GetClassname(), trace.fraction*100.0f );
+
+		// Check for overlapping spawn points
+		CBaseEntity *ents[128];
+		Vector mins, maxs;
+
+		spawn->CollisionProp()->WorldSpaceAABB( &mins, &maxs );
+		int count = UTIL_EntitiesInBox( ents, ARRAYSIZE(ents), mins, maxs, 0 );
+		
+		for ( int k = 0; i < count; i++ )
+		{
+			// Check if we collide with a spawn of the same type (ignore spectator spawns)
+			if ( Q_strcmp( ents[k]->GetClassname(), "info_player_spectator" ) && !Q_strcmp( ents[k]->GetClassname(), spawn->GetClassname() ) )
+			{
+				Warning( "[%0.2f, %0.2f, %0.2f] Spawn %s collides with another spawn of the same type!\n", origin.x, origin.y, origin.z, spawn->GetClassname() );
+				break;
+			}
+		}
+	}
+
+	Msg( "Completed testing all player spawns...\n" );
 }

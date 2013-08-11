@@ -1,13 +1,11 @@
-///////////// Copyright © 2009 LodleNet. All rights reserved. /////////////
+///////////// Copyright © 2013, Goldeneye: Source. All rights reserved. /////////////
+// 
+// File: ge_gameplay.h
+// Description:
+//      Gameplay Manager Definition
 //
-//   Project     : Server
-//   File        : ge_gameplay.h
-//   Description :
-//      [TODO: Write the purpose of ge_gameplay.h.]
-//
-//   Created On: 8/31/2009 9:37:45 PM
-//   Created By: Mark Chandler <mailto:mark@moddb.com>
-////////////////////////////////////////////////////////////////////////////
+// Created By: Jonathan White <killermonkey> 
+/////////////////////////////////////////////////////////////////////////////
 
 #ifndef MC_GE_GAMEPLAY_H
 #define MC_GE_GAMEPLAY_H
@@ -20,7 +18,7 @@ class CBaseEntity;
 class CGEWeapon;
 class CGECaptureArea;
 
-enum GES_GAMESTATE
+enum GEGameState
 {
 	GAMESTATE_NONE,
 	GAMESTATE_STARTING,
@@ -129,32 +127,44 @@ public:
 	CGEBaseGameplayManager();
 	~CGEBaseGameplayManager();
 
-	virtual bool SetGamePlay( const char* szIdent )=0;
-	virtual CGEBaseScenario* GetScenario( void )=0;
-
+// Abstract methods to access Python Manager implementation
+protected:
+	// Internal loader for scenarios
+	virtual bool DoLoadScenario( const char *ident )=0;
+public:
+	virtual CGEBaseScenario* GetScenario()=0;
+// End Abstract
+	
 	virtual void Init();
 	virtual void Shutdown();
 
-	virtual void BroadcastGamePlay( void );
-	virtual void BroadcastRoundStart( void );
-	virtual void BroadcastRoundEnd( void );
-
-	virtual void SetIntermission(bool state)	{ m_bRoundIntermission = state; }
-	virtual bool IsInRoundIntermission( void )	{ return m_bRoundIntermission; }
-	virtual float GetRemainingIntermission( void );
-
-	void SetFirstLoad( bool state )			{ m_bFirstLoad = state; }
+	// Loads the next scenario to play
+	bool LoadScenario();
+	bool LoadScenario( const char *ident );
 	
-	void SetState(GES_GAMESTATE iState, bool forcenow = false);
-	bool IsInState( GES_GAMESTATE iState )	{ return iState == m_iGameState; }
-	GES_GAMESTATE GetState()				{ return m_iGameState; }
+	void SetIntermission( bool state )	{ m_bRoundIntermission = state; }
+	bool IsInRoundIntermission()		{ return m_bRoundIntermission; }
+	float GetRemainingIntermission();
+
+	// Check to see if we should end the round or match
+	bool CanEndRound()					{ return m_bCanEndRoundCache; }
+	bool CanEndMatch()					{ return m_bCanEndMatchCache; }
+	bool IsMatchEndBlocked()			{ return m_bMatchBlockedByScenario; }
+	
+	// Controls for the round (does not check conditions)
+	void StartRound();
+	void EndRound( bool showreport = true );
+
+	// Controls for the match (does not check conditions)
+	void StartMatch();
+	void EndMatch();
+	
+	GEGameState GetState()				{ return m_iGameState; }
 	
 	void SetRoundLocked( bool state )	{ m_bRoundLocked = state; }
 	bool IsRoundLocked()				{ return m_bRoundLocked; }
 	bool IsRoundStarted()				{ return m_bInRound; }
-	int  GetNumRounds()					{ return m_iRoundCount; }
-
-	void DisableRoundScoring()			{ m_bDoRoundScores = false; }
+	int  GetRoundCount()				{ return m_iRoundCount; }
 
 	void LoadGamePlayList( const char* path );
 	void PrintGamePlayList();
@@ -162,44 +172,62 @@ public:
 	bool IsValidGamePlay( const char *ident );
 
 	// Gameplay cycle management
-	void OnLoadGamePlay( void );
-	void OnUnloadGamePlay( void );
+	void OnLoadGamePlay();
+	void OnUnloadGamePlay();
 	void OnThink();
-
-	void PreRoundBegin();
-	void PostRoundBegin();
-
-	// Event management
-	static void ClearEventListeners();
-
+	
 	// Flow control
-	bool SetGamePlayOrdered();
-	bool SetGamePlayRandom();
+	bool SetScenarioOrdered();
+	bool SetScenarioRandom();
 
 protected:
-	CGEBaseGameplayManager( const CGEBaseGameplayManager& ) { };
+	void BroadcastGamePlay();
+	void BroadcastRoundStart();
+	void BroadcastRoundEnd( bool showreport );
+	
+	// Return the next scenario to load
+	const char *GetNextScenario();
 
-	void LoadGamePlayCycle();
-	void ResetGameState( void );
-	bool ShouldEndRound( void );
+	
 
+	void CalculatePlayerScores();
+
+private:
+	void SetState( GEGameState state, bool forcenow = false );
+	const char *GetStateName( GEGameState state );
+
+	void CalcCanEndRound();
+	void CalcCanEndMatch();
+
+	void LoadScenarioCycle();
+	void ResetGameState();
+
+	// Time of next think cycle
 	float m_flNextThink;
-
-	bool m_bFirstLoad;
-	bool m_bInReload;
+	
+	// Status variables
 	bool m_bRoundIntermission;
-	bool m_bDoRoundScores;
 	bool m_bRoundLocked;
 	bool m_bInRound;
 	int	 m_iRoundCount;
 	float m_flRoundStart;
 
-	GES_GAMESTATE m_iGameState;
+	// Round and Match end cache
+	bool m_bCanEndRoundCache;
+	bool m_bCanEndMatchCache;
+	bool m_bMatchBlockedByScenario;
 
-	CUtlVector<char*> m_vGamePlayList;
-	CUtlVector<char*> m_vCycleList;
+	GEGameState m_iGameState;
+
+	CUtlVector<char*> m_vScenarioList;
+	CUtlVector<char*> m_vScenarioCycle;
+
+protected:
+	// To satisfy Boost::Python requirements of a wrapper
+	CGEBaseGameplayManager( const CGEBaseGameplayManager& ) { };
 };
 
 extern CGEBaseGameplayManager* GEGameplay();
+extern CGEBaseScenario *GetScenario();
 
 #endif //MC_GE_GAMEPLAY_H

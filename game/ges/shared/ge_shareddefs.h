@@ -509,7 +509,7 @@ unsigned int RSHash(const char *str);
 
 // Random number generator that returns [0, limit) in whatever format you want
 template <class T>
-inline T GERandom(const T limit = T(1.0))
+T GERandom(const T limit = T(1.0))
 {
    static bool seeded = false;
    static const double rand_max_reciprocal = double(1.0) / (double(RAND_MAX) + 1.0);

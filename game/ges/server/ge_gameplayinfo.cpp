@@ -69,7 +69,7 @@ void CGEGameplayInfo::OnRoundRestart()
 	m_outPlayerCount.Set( GEMPRules()->GetNumActivePlayers(), this, this );
 
 	// Call num rounds output
-	m_outRoundCount.Set( GEGameplay()->GetNumRounds(), this, this );
+	m_outRoundCount.Set( GEGameplay()->GetRoundCount(), this, this );
 
 	// Call round start output
 	m_outRoundStart.FireOutput( this, this );
@@ -88,5 +88,5 @@ void CGEGameplayInfo::InputGetPlayerCount( inputdata_t &inputdata )
 
 void CGEGameplayInfo::InputGetRoundCount( inputdata_t &inputdata )
 {
-	m_outRoundCount.Set( GEGameplay()->GetNumRounds(), inputdata.pActivator, this );
+	m_outRoundCount.Set( GEGameplay()->GetRoundCount(), inputdata.pActivator, this );
 }

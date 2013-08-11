@@ -17,7 +17,6 @@
 
 #include <vgui_controls\ImagePanel.h>
 #include "clientscoreboarddialog.h"
-#include "ge_round_timer.h"
 #include "c_ge_gameplayresource.h"
 
 namespace vgui {
@@ -78,7 +77,6 @@ private:
 	vgui::ImagePanel	*m_pBackground;
 	bool				m_bTeamPlay;
 	bool				m_bVisibleOnToggle;
-	CHandle<CGERoundTimer> m_hRoundTimer;
 };
 
 }

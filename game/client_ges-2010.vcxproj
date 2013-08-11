@@ -280,8 +280,8 @@
     <ClCompile Include="ges\shared\ge_bloodscreenvm.cpp" />
     <ClCompile Include="ges\shared\ge_character_data.cpp" />
     <ClCompile Include="ges\shared\ge_gamerules.cpp" />
+    <ClCompile Include="ges\shared\ge_game_timer.cpp" />
     <ClCompile Include="ges\shared\ge_player_shared.cpp" />
-    <ClCompile Include="ges\shared\ge_round_timer.cpp" />
     <ClCompile Include="ges\shared\ge_utils.cpp" />
     <ClCompile Include="ges\shared\ge_webrequest.cpp" />
     <ClCompile Include="ges\shared\script_parser.cpp" />
@@ -963,8 +963,8 @@
     <ClInclude Include="ges\shared\ge_bloodscreenvm.h" />
     <ClInclude Include="ges\shared\ge_character_data.h" />
     <ClInclude Include="ges\shared\ge_gamerules.h" />
+    <ClInclude Include="ges\shared\ge_game_timer.h" />
     <ClInclude Include="ges\shared\ge_player_shared.h" />
-    <ClInclude Include="ges\shared\ge_round_timer.h" />
     <ClInclude Include="ges\shared\ge_shareddefs.h" />
     <ClInclude Include="ges\shared\ge_utils.h" />
     <ClInclude Include="ges\shared\ge_webrequest.h" />

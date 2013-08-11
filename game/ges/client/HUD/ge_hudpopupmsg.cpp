@@ -163,7 +163,6 @@ CHudPopupMessage::CHudPopupMessage( const char *pElementName )
 	HOOK_HUD_MESSAGE( CHudPopupMessage, PopupMessage );
 
 	ListenForGameEvent( "game_newmap" );
-	ListenForGameEvent( "gamemode_change" );
 	ListenForGameEvent( "round_end" );
 
 	ivgui()->AddTickSignal( GetVPanel(), 30 );

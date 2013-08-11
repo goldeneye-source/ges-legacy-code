@@ -15,7 +15,7 @@
 #endif
 
 #include "ge_gamerules.h"
-#include "ge_round_timer.h"
+#include "ge_game_timer.h"
 
 #ifdef GAME_DLL
 	#include "ge_tokenmanager.h"
@@ -51,14 +51,15 @@ public:
 	DECLARE_SERVERCLASS_NOBASE(); // This makes datatables able to access our private vars.
 #endif
 
-	// ---------------
-	// GES Functions
+	// ------------------------------
+	// Server Only -- GES Functions
 #ifdef GAME_DLL
-	// ---------------
+	// ------------------------------
 	// CGEGameplayEventListener
 	virtual void OnMatchStarted();
 	virtual void OnRoundRestart();
 	virtual void OnRoundStarted();
+	virtual void OnRoundEnded();
 
 	// This is used to call functions right before the client spawns into the server
 	virtual void ClientActive( CBasePlayer *pPlayer );
@@ -66,6 +67,13 @@ public:
 
 	bool InRoundRestart();
 
+	// Timer control
+	void SetMatchTimerPaused( bool state );
+	void DisableMatchTimer();
+
+	void SetRoundTimerPaused( bool state );
+	void DisableRoundTimer();
+	
 	float FlArmorRespawnTime( CItem *pItem );
 
 	bool AmmoShouldRespawn();
@@ -101,13 +109,6 @@ public:
 	void SetArmorSpawnState( bool state )	{ m_bEnableArmorSpawns = state; }
 	void SetIntermission( bool state )		{ m_bInIntermission = state; }
 
-	int  GetRoundTime()				{ return m_iRoundTime; }
-	void SetRoundTime( int time_secs );
-
-	void PauseRoundTimer()			{ m_hRoundTimer->PauseTimer(); }
-	void ResumeRoundTimer()			{ m_hRoundTimer->ResumeTimer(); }
-	void ResetRoundTimer()			{ m_hRoundTimer->SetTimeRemaining( m_iRoundTime ); }
-
 	// These accessors control the use of team spawns (if available and team play enabled)
 	bool IsTeamSpawn()				{ return m_bUseTeamSpawns; }
 	bool IsTeamSpawnSwapped()		{ return m_bSwappedTeamSpawns; }
@@ -123,23 +124,29 @@ public:
 	static bool RemoveBot( const char *name );
 #endif
 
-	// -------------------
+	// ------------------------------
 	// Client-Server Shared
 public:
 	virtual bool ShouldCollide( int collisionGroup0, int collisionGroup1 );
 
-	float GetMapTimeLeft();
-	float GetRoundTimeLeft();
+	// Match Timing
+	bool  IsMatchTimeEnabled();
+	bool  IsMatchTimePaused();
+	float GetMatchTimeRemaining();
+
+	// Round Timing
+	bool  IsRoundTimeEnabled();
 	bool  IsRoundTimePaused();
-	bool  IsPlayingRounds();
+	float GetRoundTimeRemaining();
+
 	int   GetTeamplayMode() { return m_iTeamplayMode; }
 
 	bool IsMultiplayer() { return true; }
 	bool IsTeamplay();
 	bool IsIntermission();
 
-	// -------------------
-	// Server Only
+	// ------------------------------
+	// Server Only -- Inherited Functions
 #ifdef GAME_DLL
 	virtual void ClientDisconnected( edict_t *pClient );
 	virtual void CreateStandardEntities();
@@ -157,7 +164,7 @@ public:
 
 	virtual void ChangeLevel();
 	virtual void SetupChangeLevel( const char *levelname );
-	virtual void GoToIntermission( bool forcematchend = false );
+	virtual void GoToIntermission();
 
 	virtual bool OnPlayerSay(CBasePlayer* player, const char* text);
 	virtual void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );
@@ -216,11 +223,11 @@ private:
 #endif
 
 	CNetworkVar( bool,	m_bTeamPlayDesired );
-	CNetworkVar( int,	m_iRoundTime );
 	CNetworkVar( int,	m_iTeamplayMode );
 	CNetworkVar( bool,	m_bInIntermission );
 
-	CNetworkHandle( CGERoundTimer, m_hRoundTimer );
+	CNetworkHandle( CGEGameTimer, m_hMatchTimer );
+	CNetworkHandle( CGEGameTimer, m_hRoundTimer );
 };
 
 

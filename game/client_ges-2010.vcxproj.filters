@@ -1734,7 +1734,7 @@
     <ClCompile Include="ges\shared\ge_player_shared.cpp">
       <Filter>GES\Player</Filter>
     </ClCompile>
-    <ClCompile Include="ges\shared\ge_round_timer.cpp">
+    <ClCompile Include="ges\shared\ge_game_timer.cpp">
       <Filter>GES\Entities</Filter>
     </ClCompile>
   </ItemGroup>
@@ -3602,7 +3602,7 @@
     <ClInclude Include="ges\shared\ge_player_shared.h">
       <Filter>GES\Player</Filter>
     </ClInclude>
-    <ClInclude Include="ges\shared\ge_round_timer.h">
+    <ClInclude Include="ges\shared\ge_game_timer.h">
       <Filter>GES\Entities</Filter>
     </ClInclude>
   </ItemGroup>

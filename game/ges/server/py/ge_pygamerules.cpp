@@ -28,12 +28,12 @@
 
 float pyGetMapTimeLeft()
 {
-	return GEMPRules()->GetMapTimeLeft();
+	return GEMPRules()->GetMatchTimeRemaining();
 }
 
 float pyGetRoundTimeLeft()
 {
-	return GEMPRules()->GetRoundTimeLeft();
+	return GEMPRules()->GetRoundTimeRemaining();
 }
 
 bool pyIsIntermission()
@@ -53,22 +53,20 @@ bool pyIsTeamplay()
 
 void pyEndMatch()
 {
-	// NOTE: This ignores CanMatchEnd!
-	GEMPRules()->GoToIntermission( true );
+	// NOTE: This ignores Scenario.CanMatchEnd()!
+	GEGameplay()->EndMatch();
 }
 
 void pyEndRound( bool bScoreRound = true, bool bChangeWeapons = true )
 {
 	if ( !GEGameplay() )
 		return;
-
-	// NOTE: This ignores CanRoundEnd!
-	if ( !bScoreRound )
-		GEGameplay()->DisableRoundScoring();
+	
 	if ( !bChangeWeapons )
 		GEMPRules()->GetLoadoutManager()->KeepLoadoutOnNextChange();
 
-	GEGameplay()->SetState( GAMESTATE_DELAY );
+	// NOTE: This ignores Scenario.CanRoundEnd()!
+	GEGameplay()->EndRound( bScoreRound );
 }
 
 
@@ -91,10 +89,7 @@ bool pyIsRoundLocked()
 
 void pyToggleRoundTimer( bool state )
 {
-	if ( !state )
-		GEMPRules()->PauseRoundTimer();
-	else
-		GEMPRules()->ResumeRoundTimer();
+	GEMPRules()->SetRoundTimerPaused( state );
 }
 
 

@@ -65,7 +65,6 @@ CGEScoreBoard::CGEScoreBoard(IViewPort *pViewPort):CClientScoreBoardDialog(pView
 	vgui::ivgui()->AddTickSignal( GetVPanel() );
 
 	m_pImageList = NULL;
-	m_hRoundTimer = NULL;
 	m_bVisibleOnToggle = false;
 }
 
@@ -569,7 +568,7 @@ void CGEScoreBoard::UpdateMapTimer( void )
 	Panel *control = FindChildByName( "TimeLeft" );
 	if ( control )
 	{
-		float timeleft = GEMPRules()->GetMapTimeLeft();
+		float timeleft = GEMPRules()->GetMatchTimeRemaining();
 		if ( timeleft > 0 )
 		{
 			int mins = timeleft / 60;

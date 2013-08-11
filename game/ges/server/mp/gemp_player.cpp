@@ -1529,10 +1529,7 @@ void CGEMPPlayer::FinishClientPutInServer()
 
 void CGEMPPlayer::ShowScenarioHelp( void )
 {
-//	if ( m_bPreSpawn )
-//		ShowViewPortPanel( PANEL_SCENARIOHELP, true, new KeyValues("data","pane","-1","nextpanel",PANEL_TEAM) );
-//	else
-		ShowViewPortPanel( PANEL_SCENARIOHELP, true, new KeyValues("data","pane","-1") );
+	ShowViewPortPanel( PANEL_SCENARIOHELP, true, new KeyValues("data","pane","-1") );
 }
 
 // Spawn punch debugging

@@ -40,7 +40,6 @@ extern INetworkStringTable *g_pStringTableInfoPanel;  // for MOTD
 #define OPT_INT		2
 #define OPT_STRING	3
 
-extern ConVar mp_timelimit;
 extern ConVar ge_allowradar;
 extern ConVar ge_allowjump;
 extern ConVar ge_startarmed;
@@ -415,7 +414,7 @@ void CGETeamMenu::GetMapTimeLeft( char* szTime )
 	if ( !GEMPRules() )
 		return;
 
-	float timeleft = GEMPRules()->GetMapTimeLeft();
+	float timeleft = GEMPRules()->GetMatchTimeRemaining();
 	int mins = timeleft / 60;
 	int secs = timeleft - (mins*60);
 

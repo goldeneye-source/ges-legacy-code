@@ -511,7 +511,7 @@ private:
 };
 
 // Stores MD5's loaded from gphashes.txt
-CUtlVector<char*> vGameplayMD5;
+CUtlVector<char*> vScenarioMD5;
 CGEPyScenario gBlankScenario;
 
 class CGEGameplayManager : public CGEBaseGameplayManager, public IPythonListener, public bp::wrapper<CGEGameplayManager>
@@ -519,7 +519,7 @@ class CGEGameplayManager : public CGEBaseGameplayManager, public IPythonListener
 public:
 	CGEGameplayManager()
 	{
-		LoadGameplayMD5File();
+		LoadScenarioMD5File();
 		LoadGamePlayList("scripts\\python\\GamePlay\\*.py");
 	}
 	
@@ -544,8 +544,7 @@ public:
 			try
 			{
 				// Try to load the deathmatch scenario (default)
-				SetFirstLoad( true );
-				SetGamePlay( "deathmatch" );
+				LoadScenario( "deathmatch" );
 			}
 			catch (bp::error_already_set const &)
 			{
@@ -570,7 +569,7 @@ public:
 		return &gBlankScenario;
 	}
 
-	virtual bool SetGamePlay( const char* szIdent )
+	bool DoLoadScenario( const char* ident )
 	{
 		CGEPyScenario *pScenario = NULL;
 		bp::object scenario;
@@ -578,12 +577,12 @@ public:
 		// Load the gameplay from Python
 		try
 		{
-			scenario = bp::call<bp::object>( this->get_override("SetGamePlay").ptr(), szIdent );
+			scenario = bp::call<bp::object>( this->get_override("SetGamePlay").ptr(), ident );
 			
 			// Check for load failure
 			if ( scenario.is_none() )
 			{
-				Warning( "Scenario loading failed for scenario %s\n", szIdent );
+				Warning( "Scenario loading failed for scenario %s\n", ident );
 				return false;
 			}
 
@@ -592,7 +591,7 @@ public:
 		catch (bp::error_already_set const &)
 		{
 			HandlePythonException();
-			Warning( "Scenario loading failed for scenario %s\n", szIdent );
+			Warning( "Scenario loading failed for scenario %s\n", ident );
 			return false;
 		}
 
@@ -605,55 +604,43 @@ public:
 		pScenario->self = scenario;
 
 		// Realign our ident
-		szIdent = pScenario->GetIdent();
+		ident = pScenario->GetIdent();
 
 		char pyFile[128];
-		Q_snprintf( pyFile, 128, "%s\\GamePlay\\%s.py", GEPy()->GetRootPath(), szIdent );
+		Q_snprintf( pyFile, 128, "%s\\GamePlay\\%s.py", GEPy()->GetRootPath(), ident );
 
 		CUtlBuffer buf;
 		char md5hash[33] = "nogood";
 		if ( filesystem->ReadFile( pyFile, "MOD", buf ) )
 			md5( (char*)buf.Base(), md5hash, 33 );
 
-		GetScenario()->SetIsOfficial( CheckGameplayIsOfficial( md5hash ) );
+		// Check the gameplay to see if it is official based on MD5 sum
+		bool official = CheckScenarioIsOfficial( md5hash );
+		DevMsg( "Scenario MD5: %s (%s)\n", md5hash, official ? "OFFICIAL" : "MODDED" );
 
-		DevMsg( "Gameplay MD5: %s (%s)\n", md5hash, GetScenario()->IsOfficial() ? "OFFICIAL" : "MODDED" );
-
-		// Call the gameplay manager's OnLoadGamePlay which sets up the world and calls into python
-		OnLoadGamePlay();
-		Msg("Loaded gamemode %s\n", szIdent);
-
-		if ( !g_bInGameplayReload && m_bFirstLoad )
-		{
-			// This prevents a "round delay" when you first start a server / map
-			SetState( GAMESTATE_RESTART );
-		}
-		else
-		{
-			// Initiate round restart immediately
-			SetState( GAMESTATE_DELAY, true );
-		}
-
-		m_bFirstLoad = false;
+		// Let everyone know if we are official or not
+		GetScenario()->SetIsOfficial( official );
+		
+		Msg("Loaded scenario %s\n", ident);
 
 		return true;
 	}
 
-	bool CheckGameplayIsOfficial( const char *md5 )
+	bool CheckScenarioIsOfficial( const char *md5 )
 	{
-		for( int i=0; i < vGameplayMD5.Count(); i++ )
+		for( int i=0; i < vScenarioMD5.Count(); i++ )
 		{
-			if ( Q_strcmp( vGameplayMD5[i], md5 ) == 0 )
+			if ( Q_strcmp( vScenarioMD5[i], md5 ) == 0 )
 				return true;
 		}
 
 		return false;
 	}
 
-	void LoadGameplayMD5File( void )
+	void LoadScenarioMD5File( void )
 	{
 		// Check if we already loaded us
-		if ( vGameplayMD5.Count() )
+		if ( vScenarioMD5.Count() )
 			return;
 
 		KeyValues *pKV = new KeyValues("Hashes" );
@@ -676,7 +663,7 @@ public:
 				{
 					szHash = new char[33];
 					Q_strncpy( szHash, pKey->GetString(), 33 );
-					vGameplayMD5.AddToTail( szHash );
+					vScenarioMD5.AddToTail( szHash );
 				}
 
 				pKey = pKey->GetNextKey();
@@ -787,7 +774,6 @@ CON_COMMAND(ge_gameplayreload, "Reloads the current gameplay (FOR DEVELOPERS!)")
 		if ( GEGameplay()->IsValidGamePlay( gameplay ) )
 		{
 			// A valid gameplay was specified, so load this after our reboot
-			GEGameplay()->SetFirstLoad( true );
 			ge_gameplay.SetValue( gameplay );
 		}
 	}

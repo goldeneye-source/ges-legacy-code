@@ -1,13 +1,11 @@
-///////////// Copyright © 2009 LodleNet. All rights reserved. /////////////
+///////////// Copyright © 2013, Goldeneye: Source. All rights reserved. /////////////
+// 
+// File: ge_gameplay.cpp
+// Description:
+//      Gameplay Manager Definition
 //
-//   Project     : Server
-//   File        : ge_gameplay.cpp
-//   Description :
-//      [TODO: Write the purpose of ge_gameplay.cpp.]
-//
-//   Created On: 8/31/2009 9:37:47 PM
-//   Created By: Mark Chandler <mailto:mark@moddb.com>
-////////////////////////////////////////////////////////////////////////////
+// Created By: Jonathan White <killermonkey> 
+/////////////////////////////////////////////////////////////////////////////
 
 #include "cbase.h"
 
@@ -29,19 +27,27 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+extern bool g_bInGameplayReload;
+
 CGEBaseGameplayManager *g_GamePlay = NULL;
 CGEBaseGameplayManager *GEGameplay()
 {
 	return g_GamePlay;
 }
 
+CGEBaseScenario *GetScenario()
+{
+	assert( g_GamePlay );
+	return g_GamePlay->GetScenario();
+}
+
 void GEGameplay_Callback( IConVar *var, const char *pOldString, float flOldValue )
 {
-	if ( !GEMPRules() )
+	if ( !GEMPRules() && !g_bInGameplayReload )
 		return;
 
 	ConVar *cVar = static_cast<ConVar*>(var);
-	GEGameplay()->SetGamePlay( cVar->GetString() );
+	GEGameplay()->LoadScenario( cVar->GetString() );
 }
 
 void GEGPCVar_Callback( IConVar *var, const char *pOldString, float flOldValue )
@@ -53,15 +59,14 @@ void GEGPCVar_Callback( IConVar *var, const char *pOldString, float flOldValue )
 	GEGameplay()->GetScenario()->OnCVarChanged( cVar->GetName(), pOldString, cVar->GetString() );
 }
 
-ConVar ge_gp_cyclefile("ge_gp_cyclefile", "gameplaycycle.txt", FCVAR_GAMEDLL, "The gameplay cycle to use for random gameplay or ordered gameplay");
-ConVar ge_autoteam("ge_autoteam", "0", FCVAR_REPLICATED|FCVAR_NOTIFY, "If greater than zero it turns teamplay on when player count is greater than the value and turns teamplay off when lower during round end.");
+ConVar ge_gp_cyclefile( "ge_gp_cyclefile", "gameplaycycle.txt", FCVAR_GAMEDLL, "The gameplay cycle to use for random gameplay or ordered gameplay" );
+ConVar ge_autoteam( "ge_autoteam", "0", FCVAR_REPLICATED|FCVAR_NOTIFY, "Automatically toggles teamplay based on the player count (supplied value) [4-32]",  true, 0, true, MAX_PLAYERS );
 
-ConVar ge_gameplay_mode("ge_gameplay_mode", "0", FCVAR_GAMEDLL, "Mode to choose next gameplay: \n\t0=Same as last map, \n\t1=Random from Gameplay Cycle file, \n\t2=Ordered from Gameplay Cycle file");
-ConVar ge_gameplay( "ge_gameplay", "DeathMatch", FCVAR_GAMEDLL, "Sets the current gameplay mode.\nDefault is 'deathmatch'.", GEGameplay_Callback );
+ConVar ge_gameplay_mode( "ge_gameplay_mode", "0", FCVAR_GAMEDLL, "Mode to choose next gameplay: \n\t0=Same as last map, \n\t1=Random from Gameplay Cycle file, \n\t2=Ordered from Gameplay Cycle file" );
+ConVar ge_gameplay( "ge_gameplay", "DeathMatch", FCVAR_GAMEDLL, "Sets the current gameplay mode.\nDefault is 'deathmatch'", GEGameplay_Callback );
 
 extern ConVar ge_rounddelay;
 extern ConVar ge_teamplay;
-extern void LoadPythonGamePlays();
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -157,7 +162,7 @@ CGEGameplayEventListener::~CGEGameplayEventListener()
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
-int g_iGPCycleIndex = -1;
+int g_iScenarioIndex = -1;
 
 CGEBaseGameplayManager::CGEBaseGameplayManager()
 {
@@ -167,48 +172,28 @@ CGEBaseGameplayManager::CGEBaseGameplayManager()
 
 CGEBaseGameplayManager::~CGEBaseGameplayManager()
 {
-	m_vCycleList.PurgeAndDeleteElements();
-	m_vGamePlayList.PurgeAndDeleteElements();
+	m_vScenarioCycle.PurgeAndDeleteElements();
+	m_vScenarioList.PurgeAndDeleteElements();
 }
 
-bool CGEBaseGameplayManager::IsValidGamePlay( const char *ident )
-{
-	if ( !ident )
-		return false;
-
-	for ( int i=0; i < m_vGamePlayList.Count(); i++ ) 
-	{
-		if ( !Q_stricmp( ident, m_vGamePlayList[i] ) )
-			return true;
-	}
-
-	return false;
-}
 void CGEBaseGameplayManager::Init()
 {
-	m_bFirstLoad = true;
 	m_bInRound = false;
 	m_flRoundStart = 0;
 	m_flNextThink = 0;
 
-	LoadGamePlayCycle();
+	m_bCanEndRoundCache = false;
+	m_bCanEndMatchCache = false;
+	m_bMatchBlockedByScenario = false;
 
-	bool ret = false;
-
-	// Check to see if our ConVar has a valid gamemode in it, otherwise load deathmatch by default
-	switch ( ge_gameplay_mode.GetInt() )
-	{
-	case 0:		ret = SetGamePlay( ge_gameplay.GetString() );	break;
-	case 1:		ret = SetGamePlayRandom();		break;
-	case 2:		ret = SetGamePlayOrdered();		break;
-	};
-
-	if ( !ret )
-		SetGamePlay( "deathmatch" );
+	LoadScenarioCycle();
+	
+	LoadScenario();
 }
 
 void CGEBaseGameplayManager::Shutdown()
 {
+	// TODO: Shouldn't this be "UnloadScenario()"??
 	// Unload the scenario
 	OnUnloadGamePlay();
 }
@@ -238,7 +223,7 @@ void CGEBaseGameplayManager::BroadcastRoundStart( void )
 	}
 }
 
-void CGEBaseGameplayManager::BroadcastRoundEnd( void )
+void CGEBaseGameplayManager::BroadcastRoundEnd( bool showreport )
 {
 	// Let all the clients know that the round ended
 	IGameEvent* pEvent = gameeventmanager->CreateEvent("round_end");
@@ -247,13 +232,67 @@ void CGEBaseGameplayManager::BroadcastRoundEnd( void )
 		pEvent->SetInt( "winnerid", GEMPRules()->GetRoundWinner() );
 		pEvent->SetInt( "teamid", GEMPRules()->GetRoundTeamWinner() );
 		pEvent->SetBool( "isfinal", g_fGameOver );
-		// Always show the match end report!
-		pEvent->SetBool( "showreport", g_fGameOver ? true : m_bDoRoundScores );
+		pEvent->SetBool( "showreport", showreport );
 		pEvent->SetInt( "roundlength", gpGlobals->curtime - m_flRoundStart );
 		pEvent->SetInt( "roundcount", m_iRoundCount );
 		GEStats()->SetAwardsInEvent( pEvent );
 		gameeventmanager->FireEvent(pEvent);
 	}
+}
+
+bool CGEBaseGameplayManager::LoadScenario()
+{
+	return LoadScenario( GetNextScenario() );
+}
+
+bool CGEBaseGameplayManager::LoadScenario( const char *ident )
+{
+	// TODO: Maybe add robust fail checks here
+	if ( !DoLoadScenario( ident ) )
+		return false;
+
+	// Set up the world and notify Python
+	OnLoadGamePlay();
+
+	// Start the match
+	StartMatch();
+
+	return true;
+}
+
+const char *CGEBaseGameplayManager::GetNextScenario()
+{
+	int mode = ge_gameplay_mode.GetInt();
+	int count = m_vScenarioCycle.Count();
+
+	if ( mode == 1 )
+	{
+		// Random game mode, find a scenario in our list to load
+		if ( count > 0 )
+		{
+			int cur = g_iScenarioIndex;
+			do {
+				g_iScenarioIndex = GERandom<int>( count );
+			} while ( count > 1 && g_iScenarioIndex != cur );
+
+			return m_vScenarioCycle[ g_iScenarioIndex ];
+		}
+	}
+	else if ( mode == 2 )
+	{
+		// Ordered game mode, get the next scenario in our list
+		if ( count > 0 )
+		{
+			// Increment our index, rolling over if we exceed our count
+			if ( ++g_iScenarioIndex  >= count )
+				g_iScenarioIndex = 0;
+
+			return m_vScenarioCycle[ g_iScenarioIndex ];
+		}
+	}
+
+	// Static game mode, load the scenario set in our ConVar
+	return ge_gameplay.GetString();
 }
 
 void CGEBaseGameplayManager::OnLoadGamePlay( void )
@@ -304,7 +343,7 @@ void CGEBaseGameplayManager::OnUnloadGamePlay( void )
 void CGEBaseGameplayManager::OnThink()
 {
 	// If we aren't ready to think don't do it
-	if(m_flNextThink > gpGlobals->curtime)
+	if( m_flNextThink > gpGlobals->curtime )
 		return;
 
 	switch ( GetState() )
@@ -315,134 +354,38 @@ void CGEBaseGameplayManager::OnThink()
 	
 	case GAMESTATE_RESTART:
 		// If map time will run out within 30 seconds, ignore a round restart
-		if ( mp_timelimit.GetInt() && GEMPRules()->GetMapTimeLeft() <= 30.0f && GetScenario()->CanMatchEnd() )
+		if ( mp_timelimit.GetBool() && GEMPRules()->GetMatchTimeRemaining() <= 30.0f && GetScenario()->CanMatchEnd() )
 		{
-			GEMPRules()->GoToIntermission( true );
+			Msg( "[MATCH END] Aborting round restart due to insufficient map time, %0.2f\n", gpGlobals->curtime );
+			// TODO: this arrangement is really awkward...
+			EndMatch();
+			SetState( GAMESTATE_NONE );
 			return;
 		}
 
-		// Set teamplay here so we can show a proper round report if we go from team to non-team gameplay
-		GEMPRules()->SetTeamplayMode( GetScenario()->GetTeamPlay() );
+		if ( m_iRoundCount == 0 )
+			StartMatch();
 
-		if ( ge_autoteam.GetInt() > 0 )
-		{
-			// If we had 1 or more people than ge_autoteam on the last map, enforce teamplay immediately
-			// If we have the requisite active players, enforce teamplay
-			// If we don't, and ge_teamplay > 1 (ie not set by the player), then deactivate teamplay
-			if ( g_iLastPlayerCount >= (ge_autoteam.GetInt() + 1) || GEMPRules()->GetNumActivePlayers() >= ge_autoteam.GetInt() )
-				ge_teamplay.SetValue(2);
-			else if ( ge_teamplay.GetInt() > 1 )
-				ge_teamplay.SetValue(0);
-		}
-
-		// Let our clients know what game mode we are playing
-		BroadcastGamePlay();
-
-		PreRoundBegin();
-
-		// Reload the world sparing only level designer placed entities
-		// Keep this here to ensure it happens BEFORE OnRoundRestart
-		GEMPRules()->WorldReload();
-
-		// Call out to our listeners
-		if ( m_iRoundCount == 1 )
-			GP_EVENT( OnMatchStarted );
-
-		GP_EVENT( OnRoundRestart );
-
-		UTIL_ClientPrintAll( HUD_PRINTTALK, "#GES_RoundRestart" );
-
-		SetState(GAMESTATE_STARTING);
-		m_bRoundIntermission = false;
-		m_flNextThink = gpGlobals->curtime;
-		return;
-
-	case GAMESTATE_STARTING:
-		BroadcastRoundStart();
-		PostRoundBegin();
-
-		// Keep this here to ensure it happens BEFORE OnRoundStarted
-		GEMPRules()->SpawnPlayers();
-
-		// Show the scenario help if this is our first round
-		if ( m_iRoundCount == 1 )
-		{
-			FOR_EACH_MPPLAYER( i, pPlayer )
-				pPlayer->ShowScenarioHelp();
-			END_OF_PLAYER_LOOP()
-		}
-
-		m_bInRound = true;
-
-		GP_EVENT( OnRoundStarted );
+		StartRound();
 		
-		SetState(GAMESTATE_PLAYING);
+		SetState( GAMESTATE_PLAYING );
 		break;
 
 	case GAMESTATE_DELAY:
-
-		// Call into python to do post round cleanup and score setting
-		GetScenario()->OnRoundEnd();
-
-		// Make sure players don't do things in intermission...
-		// and update their match scores
-		FOR_EACH_MPPLAYER(i, pPlayer)
-			pPlayer->FreezePlayer();
-			if ( m_bDoRoundScores && !g_fGameOver )
-			{
-				// Fake a kill so we can record their inning time and weapon held time
-				GEStats()->Event_PlayerKilled( pPlayer, CTakeDamageInfo() );
-				pPlayer->AddMatchScore( pPlayer->GetRoundScore() );
-				pPlayer->AddMatchDeaths( pPlayer->DeathCount() );
-			}
-		END_OF_PLAYER_LOOP()
-
-		GEStats()->SetFavoriteWeapons();
-
-		// Add the team round scores to the match scores
-		if ( m_bDoRoundScores && !g_fGameOver )
-		{
-			for ( int i = FIRST_GAME_TEAM; i < MAX_GE_TEAMS; i++ )
-				GetGlobalTeam(i)->AddMatchScore( GetGlobalTeam(i)->GetRoundScore() );
-		}
-
-		// Make sure we capture the latest scores and send them to the clients
-		if ( g_pPlayerResource )
-			g_pPlayerResource->UpdatePlayerData();
-
-		// Tell clients we finished the round
-		BroadcastRoundEnd();
-
 		if ( g_fGameOver )
-		{
-			GP_EVENT( OnMatchEnded );
-			UTIL_ClientPrintAll( HUD_PRINTTALK, "#GES_MatchEnd" );
-		}
+			EndMatch();
 		else
-		{
-			GP_EVENT( OnRoundEnded );
-			UTIL_ClientPrintAll( HUD_PRINTTALK, "#GES_RoundEnd" );
-		}
+			EndRound();
 
-		m_bRoundIntermission = true;
-		GEMPRules()->SetIntermission(true);
-
-		if ( m_bDoRoundScores )
-			// Delay enough so that the scores don't get reset before the round report is visible
-			m_flNextThink = gpGlobals->curtime + max( ge_rounddelay.GetInt(), 0.5f );
-		else
-			// Only give 3 second delay if we didn't count this round
-			m_flNextThink = gpGlobals->curtime + 3.0f;
-
-		// Reset our flag
-		m_bDoRoundScores = true;
-
-		SetState(GAMESTATE_RESTART);
+		SetState( GAMESTATE_RESTART );
 		return;
 
 	case GAMESTATE_PLAYING:
+		CalcCanEndRound();
+		CalcCanEndMatch();
+
 		// Check if we should end the round
-		if ( ShouldEndRound() )
+		if ( CanEndRound() )
 			SetState( GAMESTATE_DELAY );
 		else
 			GetScenario()->OnThink();
@@ -452,25 +395,167 @@ void CGEBaseGameplayManager::OnThink()
 	m_flNextThink = gpGlobals->curtime + 0.1f;
 }
 
-
-void CGEBaseGameplayManager::PreRoundBegin()
+void CGEBaseGameplayManager::StartMatch()
 {
-	GEMPRules()->SetRoundWinner( 0 );
-	GEMPRules()->SetRoundTeamWinner( TEAM_UNASSIGNED );
+	// Reset
+	m_bMatchBlockedByScenario = false;
 
+	// Let our listeners know we are starting a new match
+	GP_EVENT( OnMatchStarted );
+
+	// Let our clients know what game mode we are playing
+	BroadcastGamePlay();
+
+	// Show scenario help
+	FOR_EACH_MPPLAYER( i, pPlayer )
+		pPlayer->ShowScenarioHelp();
+	END_OF_PLAYER_LOOP()
+}
+
+void CGEBaseGameplayManager::StartRound()
+{
 	// Increment our round count
 	m_iRoundCount++;
+
+	m_flRoundStart = gpGlobals->curtime;
+	m_bRoundIntermission = false;
+
+	// TODO: Shouldn't this be in game rules???
+	// Set teamplay here so we can show a proper round report if we go from team to non-team gameplay
+	GEMPRules()->SetTeamplayMode( GetScenario()->GetTeamPlay() );
+
+	if ( ge_autoteam.GetInt() > 0 )
+	{
+		// If we had 1 or more people than ge_autoteam on the last map, enforce teamplay immediately
+		// If we have the requisite active players, enforce teamplay
+		// If we don't, and ge_teamplay > 1 (ie not set by the player), then deactivate teamplay
+		if ( g_iLastPlayerCount >= (ge_autoteam.GetInt() + 1) || GEMPRules()->GetNumActivePlayers() >= ge_autoteam.GetInt() )
+			ge_teamplay.SetValue(2);
+		else if ( ge_teamplay.GetInt() > 1 )
+			ge_teamplay.SetValue(0);
+	}
+
+	GEMPRules()->SetRoundWinner( 0 );
+	GEMPRules()->SetRoundTeamWinner( TEAM_UNASSIGNED );
 
 	FOR_EACH_PLAYER(i, pPlayer)
 		pPlayer->SetScoreBoardColor( SB_COLOR_NORMAL );
 	END_OF_PLAYER_LOOP()
-}
 
-void CGEBaseGameplayManager::PostRoundBegin()
-{
+	// Reload the world sparing only level designer placed entities
+	// Keep this here to ensure it happens BEFORE OnRoundRestart
+	GEMPRules()->WorldReload();
+
+	GP_EVENT( OnRoundRestart );
+
+	UTIL_ClientPrintAll( HUD_PRINTTALK, "#GES_RoundRestart" );
+
+	BroadcastRoundStart();
+
 	// Call into our gameplay "OnRoundBegin"
 	GetScenario()->OnRoundBegin();
-	m_flRoundStart = gpGlobals->curtime;
+	
+	// Keep this here to ensure it happens BEFORE OnRoundStarted
+	GEMPRules()->SpawnPlayers();
+
+	m_bInRound = true;
+
+	GP_EVENT( OnRoundStarted );
+}
+
+void CGEBaseGameplayManager::EndRound( bool showreport /*=true*/ )
+{
+	// Call into python to do post round cleanup and score setting
+	GetScenario()->OnRoundEnd();
+
+	// Freeze players
+	FOR_EACH_MPPLAYER(i, pPlayer)
+		pPlayer->FreezePlayer();
+	END_OF_PLAYER_LOOP()
+
+	// Calculate the player's favorite weapons and set them
+	GEStats()->SetFavoriteWeapons();
+
+	// Calculate the scores for the active players
+	CalculatePlayerScores();
+
+	// Tell players we finished the round
+	BroadcastRoundEnd( showreport );
+
+	GP_EVENT( OnRoundEnded );
+	UTIL_ClientPrintAll( HUD_PRINTTALK, "#GES_RoundEnd" );
+
+	m_bRoundIntermission = true;
+	// TODO: This should be OBE'd
+	GEMPRules()->SetIntermission(true);
+
+	if ( showreport )
+		// Delay enough so that the scores don't get reset before the round report is visible
+		m_flNextThink = gpGlobals->curtime + max( ge_rounddelay.GetInt(), 0.5f );
+	else
+		// Only give 3 second delay if we didn't count this round
+		m_flNextThink = gpGlobals->curtime + 3.0f;
+
+	Msg( "[ROUND END] We are playing rounds, the round has ended, %0.2f\n", gpGlobals->curtime );
+}
+
+void CGEBaseGameplayManager::EndMatch()
+{
+	// TODO: This needs to go away!
+	// Tell the GameRules to go into intermission
+	GEMPRules()->GoToIntermission();
+
+	// Call into python to do post round cleanup and score setting
+	GetScenario()->OnRoundEnd();
+
+	// Freeze players
+	FOR_EACH_MPPLAYER(i, pPlayer)
+		pPlayer->FreezePlayer();
+	END_OF_PLAYER_LOOP()
+
+	// Calculate the player's favorite weapons and set them
+	GEStats()->SetFavoriteWeapons();
+
+	// Calculate the scores for the active players
+	// TODO: We only calculate the scores if we never did it in a round report
+	CalculatePlayerScores();
+
+	// Tell clients we finished the round
+	BroadcastRoundEnd( true );
+
+	GP_EVENT( OnMatchEnded );
+	UTIL_ClientPrintAll( HUD_PRINTTALK, "#GES_MatchEnd" );
+
+	m_bRoundIntermission = true;
+	// TODO: Do we need to differentiate the intermissions??
+	// TODO: This should be OBE'd
+	GEMPRules()->SetIntermission(true);
+
+	Msg( "[MATCH END] The match has ended, %0.2f\n", gpGlobals->curtime );
+}
+
+void CGEBaseGameplayManager::CalculatePlayerScores()
+{
+	FOR_EACH_MPPLAYER(i, pPlayer)
+		// HACK HACK: Fake a kill so we can record their inning time and weapon held time
+		GEStats()->Event_PlayerKilled( pPlayer, CTakeDamageInfo() );
+
+		// Add the player's round scores to their match scores
+		pPlayer->AddMatchScore( pPlayer->GetRoundScore() );
+		pPlayer->AddMatchDeaths( pPlayer->DeathCount() );
+	END_OF_PLAYER_LOOP()
+
+	// Add the team round scores to the match scores
+	for ( int i = FIRST_GAME_TEAM; i < MAX_GE_TEAMS; i++ )
+	{
+		CTeam *team = GetGlobalTeam( i );
+		if ( team )
+			team->AddMatchScore( team->GetRoundScore() );
+	}
+
+	// Make sure we capture the latest scores and send them to the clients
+	if ( g_pPlayerResource )
+		g_pPlayerResource->UpdatePlayerData();
 }
 
 float CGEBaseGameplayManager::GetRemainingIntermission()
@@ -514,63 +599,17 @@ void CGEBaseGameplayManager::ResetGameState( void )
 
 	// This delays resetting scores until AFTER the round delay
 	m_iRoundCount = 0;
-	m_bDoRoundScores = true;
 	m_bInRound = false;
 }
 
-bool CGEBaseGameplayManager::SetGamePlayRandom()
+void CGEBaseGameplayManager::SetState( GEGameState state, bool force_now /*= false*/ )
 {
-	int count = m_vCycleList.Count();
-	int cur = g_iGPCycleIndex;
-	// Uh oh!
-	if ( !count )
-		return false;
-
-	do
+	if ( m_iGameState != state )
 	{
-		g_iGPCycleIndex = GERandom<int>(count);
-	}
-	while ( g_iGPCycleIndex == cur && count > 1 );
+		DevMsg( 2, "[GES GP] Changing state from %s to %s, %s\n", GetStateName( m_iGameState ), GetStateName( state ), force_now ? "FORCED" : "NOT FORCED" );
 
-	if ( !SetGamePlay( m_vCycleList[g_iGPCycleIndex] ) )
-	{
-		// We failed the load, remove this from our cycle
-		m_vCycleList.Remove( g_iGPCycleIndex );
-		return SetGamePlayRandom();
-	}
-
-	return true;
-}
-
-bool CGEBaseGameplayManager::SetGamePlayOrdered()
-{
-	// Uh oh!
-	if ( !m_vCycleList.Count() )
-		return false;
-
-	if ( ++g_iGPCycleIndex  >= m_vCycleList.Count() )
-		g_iGPCycleIndex = 0;
-	
-	if ( !SetGamePlay( m_vCycleList[g_iGPCycleIndex] ) )
-	{
-		m_vCycleList.Remove( g_iGPCycleIndex );
-		return SetGamePlayOrdered();
-	}
-
-	return true;
-}
-
-void CGEBaseGameplayManager::ClearEventListeners( void )
-{
-	g_vGPEventListeners.RemoveAll();
-}
-
-void CGEBaseGameplayManager::SetState( GES_GAMESTATE iState, bool forcenow /*= false*/ )
-{
-	if ( m_iGameState != iState )
-	{
-		m_iGameState = iState;
-		if ( forcenow )
+		m_iGameState = state;
+		if ( force_now )
 		{
 			m_flNextThink = gpGlobals->curtime;
 			OnThink();
@@ -578,37 +617,48 @@ void CGEBaseGameplayManager::SetState( GES_GAMESTATE iState, bool forcenow /*= f
 	}
 }
 
-bool CGEBaseGameplayManager::ShouldEndRound( void )
+void CGEBaseGameplayManager::CalcCanEndRound()
 {
-	// Check if we are even playing rounds
-	if ( !GEMPRules()->IsPlayingRounds() )
-		return false;
+	// Default assumption is that we cannot end
+	m_bCanEndRoundCache = false;
+
+	// We must be playing rounds to end a round!
+	if ( !GEMPRules()->IsRoundTimeEnabled() )
+		return;
 
 	// Check time constraints
-	if ( GEMPRules()->GetRoundTimeLeft() <= 0 && GEMPRules()->GetRoundTime() > 0 )
+	if ( GEMPRules()->GetRoundTimeRemaining() <= 0 )
 	{
-		// Early out if our gameplay says no
-		if ( !GetScenario()->CanRoundEnd() )
-			return false;
-
-		// Round time is over, make sure if we end the round we can start another if the match cannot end
-		if ( GetScenario()->CanMatchEnd() )
-			return true;
-
-		// This means we can't start another round and the match refuses to end so don't end the current round
-		if ( mp_timelimit.GetInt() && GEMPRules()->GetMapTimeLeft() < ge_rounddelay.GetFloat() )
-			return false;
-
-		return true;
+		// We ran out of time and our scenario says we can end
+		if ( GetScenario()->CanRoundEnd() )
+			m_bCanEndRoundCache = true;
 	}
+}
 
-	return false;
+void CGEBaseGameplayManager::CalcCanEndMatch()
+{
+	// Default assumption is that we cannot end
+	m_bCanEndMatchCache = false;
+
+	// We must be able to end our round to end the match
+	if ( !CanEndRound() )
+		return;
+
+	// Check time constraints
+	if ( (CanEndRound() && GEMPRules()->IsMatchTimeEnabled() && GEMPRules()->GetMatchTimeRemaining() <= 0) || m_bMatchBlockedByScenario )
+	{
+		// We ran out of time and our scenario says we can end
+		if ( GetScenario()->CanMatchEnd() )
+			m_bCanEndMatchCache = true;
+		else
+			m_bMatchBlockedByScenario = true;
+	}
 }
 
 extern void StripChar(char *szBuffer, const char cWhiteSpace );
-void CGEBaseGameplayManager::LoadGamePlayCycle()
+void CGEBaseGameplayManager::LoadScenarioCycle()
 {
-	if ( m_vCycleList.Count() > 0 )
+	if ( m_vScenarioCycle.Count() > 0 )
 		return;
 
 	const char *cfile = ge_gp_cyclefile.GetString();
@@ -622,7 +672,7 @@ void CGEBaseGameplayManager::LoadGamePlayCycle()
 		// cycle file does not exist, make a list containing only the current gameplay
 		char *szCurrentGameplay = new char[32];
 		Q_strncpy( szCurrentGameplay, GetScenario()->GetIdent(), 32 );
-		m_vCycleList.AddToTail( szCurrentGameplay );
+		m_vScenarioCycle.AddToTail( szCurrentGameplay );
 	}
 	else
 	{
@@ -659,19 +709,19 @@ void CGEBaseGameplayManager::LoadGamePlayCycle()
 
 				if ( !bIgnore )
 				{
-					m_vCycleList.AddToTail(vList[i]);
+					m_vScenarioCycle.AddToTail(vList[i]);
 					vList[i] = NULL;
 				}
 			}
 
 			// Only resolve our gameplay index if we are out of bounds
-			if ( g_iGPCycleIndex < 0 || g_iGPCycleIndex >= m_vCycleList.Count() )
+			if ( g_iScenarioIndex < 0 || g_iScenarioIndex >= m_vScenarioCycle.Count() )
 			{
-				for (int i=0; i<m_vCycleList.Size(); i++)
+				for (int i=0; i<m_vScenarioCycle.Size(); i++)
 				{
 					// Find the first match for our current game mode if it exists in the list
-					if ( curMode && Q_stricmp(m_vCycleList[i], curMode) == 0 )
-						g_iGPCycleIndex = i;
+					if ( curMode && Q_stricmp(m_vScenarioCycle[i], curMode) == 0 )
+						g_iScenarioIndex = i;
 				}
 			}
 
@@ -687,32 +737,43 @@ void CGEBaseGameplayManager::LoadGamePlayCycle()
 		}
 	}
 
-	// If somehow we have no maps in the list then add the current one
-	if ( 0 == m_vCycleList.Size() )
+	// If somehow we have no scenarios in the list then add the current one
+	if ( m_vScenarioCycle.Count() == 0 )
 	{
-		char *szCurrentGameplay = new char[32];
-		const char *curGamePlay = GetScenario()->GetIdent();
-		Q_strncpy( szCurrentGameplay, curGamePlay, 32 );
-		m_vCycleList.AddToTail( szCurrentGameplay );
+		char *ident = new char[32];
+		Q_strncpy( ident, GetScenario()->GetIdent(), 32 );
+		m_vScenarioCycle.AddToTail( ident );
 	}
 }
 
+bool CGEBaseGameplayManager::IsValidGamePlay( const char *ident )
+{
+	if ( !ident )
+		return false;
+
+	for ( int i=0; i < m_vScenarioList.Count(); i++ ) 
+	{
+		if ( !Q_stricmp( ident, m_vScenarioList[i] ) )
+			return true;
+	}
+
+	return false;
+}
 
 void CGEBaseGameplayManager::PrintGamePlayList()
 {
-
 	Msg("Available Game Modes: \n");
-	for (int i=0; i < m_vGamePlayList.Size(); i++) 
+	for (int i=0; i < m_vScenarioList.Count(); i++) 
 	{
-		Msg( "%s\n", m_vGamePlayList[i] );
+		Msg( "%s\n", m_vScenarioList[i] );
 	}
 }
 
 void CGEBaseGameplayManager::LoadGamePlayList(const char* path)
 {
-	for ( int i=0; i < m_vGamePlayList.Size(); i++ )
-		delete [] m_vGamePlayList[i];
-	m_vGamePlayList.RemoveAll();
+	for ( int i=0; i < m_vScenarioList.Count(); i++ )
+		delete [] m_vScenarioList[i];
+	m_vScenarioList.RemoveAll();
 
 	// TODO: This is on a fast-track to deletion. This stuff should be handled in Python...
 	FileFindHandle_t finder;
@@ -723,12 +784,31 @@ void CGEBaseGameplayManager::LoadGamePlayList(const char* path)
 		{
 			char *fileNameNoExt = new char[64];
 			Q_StripExtension( fileName, fileNameNoExt, 64 );
-			m_vGamePlayList.AddToTail( fileNameNoExt );
+			m_vScenarioList.AddToTail( fileNameNoExt );
 		}
 
 		fileName = filesystem->FindNext( finder );
 	}
 	filesystem->FindClose( finder );
+}
+
+const char *CGEBaseGameplayManager::GetStateName( GEGameState state )
+{
+	switch ( state )
+	{
+	case GAMESTATE_NONE:
+		return "None";
+	case GAMESTATE_DELAY:
+		return "Delay";
+	case GAMESTATE_PLAYING:
+		return "Playing";
+	case GAMESTATE_STARTING:
+		return "Starting";
+	case GAMESTATE_RESTART:
+		return "Restarting";
+	default:
+		return "INVALID";
+	}
 }
 
 extern ConVar nextlevel;
@@ -829,12 +909,8 @@ CON_COMMAND(ge_restartround, "Restart the current round showing scores always")
 		return;
 	}
 
-	// Ignore if we are game over
-	if ( g_fGameOver )
-		return;
-
 	Msg( "Warning! This command is deprecated, use ge_endround instead!\n" );
-	GEGameplay()->SetState( GAMESTATE_DELAY );
+	engine->ServerCommand( args.ArgS() );
 }
 
 CON_COMMAND(ge_endround, "End the current round, use `ge_endround 0` to skip scores" )
@@ -846,13 +922,14 @@ CON_COMMAND(ge_endround, "End the current round, use `ge_endround 0` to skip sco
 	}
 
 	// Ignore if we are not in a playing state
-	if ( GEGameplay()->GetState() != GAMESTATE_PLAYING )
+	if ( !GEGameplay()->IsRoundStarted() )
 		return;
 
+	bool showreport = true;
 	if ( args.ArgC() > 1 && args[1][0] == '0' )
-		GEGameplay()->DisableRoundScoring();
+		showreport = false;
 
-	GEGameplay()->SetState( GAMESTATE_DELAY );
+	GEGameplay()->EndRound( showreport );
 }
 
 CON_COMMAND(ge_endround_keepweapons, "End the current round but keep the same weapon set even if randomized.")
@@ -870,10 +947,11 @@ CON_COMMAND(ge_endround_keepweapons, "End the current round but keep the same we
 	// This is where the magic happens
 	GEMPRules()->GetLoadoutManager()->KeepLoadoutOnNextChange();
 
+	bool showreport = true;
 	if ( args.ArgC() > 1 && args[1][0] == '0' )
-		GEGameplay()->DisableRoundScoring();
+		showreport = false;
 
-	GEGameplay()->SetState( GAMESTATE_DELAY );
+	GEGameplay()->EndRound( showreport );
 }
 
 CON_COMMAND_F_COMPLETION(ge_endmatch, "Ends the match loading the next map or one specified (eg ge_endmatch [mapname]).", 0, MapAutoComplete)
@@ -887,7 +965,7 @@ CON_COMMAND_F_COMPLETION(ge_endmatch, "Ends the match loading the next map or on
 	if ( args.ArgC() > 1 && engine->IsMapValid( args[1] ) )
 		nextlevel.SetValue( args[1] );
 
-	GEMPRules()->GoToIntermission( true );
+	GEGameplay()->EndMatch();
 }
 
 CON_COMMAND(ge_gameplaylist, "Lists the possible gameplay selections.")
@@ -904,17 +982,6 @@ CON_COMMAND(ge_gameplaylist, "Lists the possible gameplay selections.")
 #ifdef _DEBUG
 CON_COMMAND( ge_cyclegameplay, "Simulates a map transition" )
 {
-	bool ret = false;
-
-	switch ( ge_gameplay_mode.GetInt() )
-	{
-	case 0:		ret = GEGameplay()->SetGamePlay( ge_gameplay.GetString() ); break;
-	case 1:		ret = GEGameplay()->SetGamePlayRandom(); break;
-	case 2:		ret = GEGameplay()->SetGamePlayOrdered(); break;
-	};
-
-	if ( !ret )
-		GEGameplay()->SetGamePlay( "deathmatch" );
+	GEGameplay()->LoadScenario();
 }
 #endif
-

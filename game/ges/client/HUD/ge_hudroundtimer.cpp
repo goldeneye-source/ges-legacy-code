@@ -82,14 +82,14 @@ void CGEHudRoundTimer::Think( void )
 	if ( !GEMPRules() || gpGlobals->curtime < m_flNextThink )
 		return;
 
-	if ( GEMPRules()->IsRoundTimePaused() || GEMPRules()->GetRoundTimeLeft() <= 0 )
+	if ( GEMPRules()->IsRoundTimePaused() || GEMPRules()->GetRoundTimeRemaining() <= 0 )
 	{
 		ResetColor();
 		SetDisplayValue( -1 );
 		return;
 	}
 
-	float timeleft = GEMPRules()->GetRoundTimeLeft();
+	float timeleft = GEMPRules()->GetRoundTimeRemaining();
 	SetDisplayValue( timeleft );
 
 	// Don't bother with this if we have hardly any time left or no time at all

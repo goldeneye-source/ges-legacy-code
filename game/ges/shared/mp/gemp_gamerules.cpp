@@ -133,7 +133,8 @@ void GERoundTime_Callback( IConVar *var, const char *pOldString, float flOldValu
 	if ( timechange != 0 )
 	{
 		// Set the round time
-		GEMPRules()->SetRoundTime( round_time );
+		// TODO: Need to rework this relationship
+		//GEMPRules()->SetRoundTime( round_time );
 
 		// Notify if we extended or shortened the round
 		if ( round_time > 0 )
@@ -301,13 +302,13 @@ BEGIN_NETWORK_TABLE_NOBASE( CGEMPRules, DT_GEMPRules )
 	RecvPropBool( RECVINFO( m_bTeamPlayDesired ) ),
 	RecvPropBool( RECVINFO( m_bInIntermission ) ),
 	RecvPropInt( RECVINFO( m_iTeamplayMode ) ),
-	RecvPropInt( RECVINFO( m_iRoundTime ) ),
+	RecvPropEHandle( RECVINFO( m_hMatchTimer ) ),
 	RecvPropEHandle( RECVINFO( m_hRoundTimer ) ),
 #else
 	SendPropBool( SENDINFO( m_bTeamPlayDesired ) ),
 	SendPropBool( SENDINFO( m_bInIntermission ) ),
 	SendPropInt( SENDINFO( m_iTeamplayMode ) ),
-	SendPropInt( SENDINFO( m_iRoundTime ) ),
+	SendPropEHandle( SENDINFO( m_hMatchTimer ) ),
 	SendPropEHandle( SENDINFO( m_hRoundTimer ) ),
 #endif
 END_NETWORK_TABLE()
@@ -395,7 +396,6 @@ CGEMPRules::CGEMPRules()
 	m_bEnableArmorSpawns = true;
 	m_bEnableWeaponSpawns= true;
 
-	m_iRoundTime = ge_roundtime.GetInt();
 	m_iPlayerWinner = m_iTeamWinner = 0;
 
 	m_flIntermissionEndTime = 0;
@@ -410,10 +410,17 @@ CGEMPRules::CGEMPRules()
 	// Find "sv_alltalk" convar and set the value accordingly
 	m_pAllTalkVar = cvar->FindVar( "sv_alltalk" );
 
-	// Create resources
-	g_pRadarResource	= (CGERadarResource*)	 CBaseEntity::Create( "radar_resource", vec3_origin, vec3_angle );
+	// Create entity resources
+	g_pRadarResource = (CGERadarResource*) CBaseEntity::Create( "radar_resource", vec3_origin, vec3_angle );
 	g_pGameplayResource = (CGEGameplayResource*) CBaseEntity::Create( "gameplay_resource", vec3_origin, vec3_angle );
-	m_hRoundTimer		= (CGERoundTimer*)		 CBaseEntity::Create( "ge_round_timer", vec3_origin, vec3_angle );
+
+	// Create timers
+	m_hMatchTimer = (CGEGameTimer*) CBaseEntity::Create( "ge_game_timer", vec3_origin, vec3_angle );
+	m_hRoundTimer = (CGEGameTimer*) CBaseEntity::Create( "ge_game_timer", vec3_origin, vec3_angle );
+
+	// Set the round time
+	// TODO: Need to rework this
+	//SetRoundTime( ge_roundtime.GetInt() );
 
 	// Create the token manager
 	m_pTokenManager = new CGETokenManager;
@@ -517,17 +524,22 @@ void CGEMPRules::OnRoundRestart()
 	GEStats()->ResetRoundStats();
 
 	SetIntermission( false );
-
-	// Setup our round timer
-	ResetRoundTimer();
-	ResumeRoundTimer();
 }
 
 void CGEMPRules::OnRoundStarted()
 {
+	// Start the round timer
+	m_hRoundTimer->Start( ge_roundtime.GetFloat() );
+
 	// Spawn these once everything is settled
 	GetTokenManager()->SpawnTokens();
 	GetTokenManager()->SpawnCaptureAreas();
+}
+
+void CGEMPRules::OnRoundEnded()
+{
+	// Stop the round timer
+	m_hRoundTimer->Stop();
 }
 
 bool CGEMPRules::AmmoShouldRespawn( void )
@@ -784,7 +796,7 @@ const char *CGEMPRules::GetGameDescription( void )
 {
 	if ( GEGameplay() )
 	{
-		const char *gp_desc = GEGameplay()->GetScenario()->GetGameDescription();
+		const char *gp_desc = GetScenario()->GetGameDescription();
 
 		if ( ge_velocity.GetFloat() < 1.0f )
 			Q_snprintf( m_szGameDesc, 32, "Slow %s", gp_desc );
@@ -848,21 +860,25 @@ void CGEMPRules::Think()
 	if ( GEGameplay() )
 		GEGameplay()->OnThink();
 
-	if ( m_flNextIntermissionCheck && gpGlobals->curtime < m_flNextIntermissionCheck )
+	if ( m_flNextIntermissionCheck > 0 && gpGlobals->curtime < m_flNextIntermissionCheck )
 		return;
 
 	// Check if the match has ended
 	if ( g_fGameOver ) 
 	{
+		// We are game over, check to see if it's time to change the level
 		if( m_flIntermissionEndTime > 0 && m_flIntermissionEndTime < gpGlobals->curtime )
 			ChangeLevel();
 
 		return;
 	}
 	
-	if ( m_flNextIntermissionCheck || (GetMapTimeLeft() <= 0 && mp_timelimit.GetBool() && GEGameplay()->GetScenario()->CanMatchEnd()) )
+	// Check if we should end the match
+	if ( m_flNextIntermissionCheck > 0 || GEGameplay()->CanEndMatch() )
 	{
-		GoToIntermission();
+		// We've initiated an intermission sequence and it's now time to start it
+		Msg( "[MATCH END] GameRules::OnThink() is ending the match, %0.2\n", gpGlobals->curtime );
+		GEGameplay()->EndMatch();
 		return;
 	}
 
@@ -882,7 +898,7 @@ void CGEMPRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info
 		weap = info.GetInflictor();
 
 	BaseClass::PlayerKilled( pVictim, info );
-	GEGameplay()->GetScenario()->OnPlayerKilled( ToGEPlayer(pVictim), ToGEPlayer(info.GetAttacker()), weap);
+	GetScenario()->OnPlayerKilled( ToGEPlayer(pVictim), ToGEPlayer(info.GetAttacker()), weap);
 }
 
 
@@ -898,8 +914,7 @@ void CGEMPRules::ClientActive( CBasePlayer *pPlayer )
 	if ( pGEPlayer->IsBotPlayer() )
 		m_vBotList.AddToTail( pGEPlayer );
 
-	GEGameplay()->BroadcastGamePlay();
-	GEGameplay()->GetScenario()->ClientConnect( pGEPlayer );
+	GetScenario()->ClientConnect( pGEPlayer );
 }
 
 // a client just disconnected from the server
@@ -909,7 +924,7 @@ void CGEMPRules::ClientDisconnected( edict_t *pEntity )
 	if ( player )
 	{
 		player->RemoveLeftObjects();
-		GEGameplay()->GetScenario()->ClientDisconnect( player );
+		GetScenario()->ClientDisconnect( player );
 
 		// Stop tracking me if I am a Bot
 		if ( player->IsBotPlayer() )
@@ -925,11 +940,12 @@ void CGEMPRules::ClientDisconnected( edict_t *pEntity )
 
 void CGEMPRules::CalculateCustomDamage( CBasePlayer *pPlayer, CTakeDamageInfo &info, float &health, float &armor  )
 {
-	GEGameplay()->GetScenario()->CalculateCustomDamage( ToGEPlayer(pPlayer), info, health, armor );
+	GetScenario()->CalculateCustomDamage( ToGEPlayer(pPlayer), info, health, armor );
 }
 
 void CGEMPRules::HandleTimeLimitChange()
 {
+	// TODO: This may need to change
 	// Recalculate our round times based on the new map time
 	GERoundCount_Callback( &ge_roundcount, ge_roundcount.GetString(), ge_roundcount.GetFloat() );
 }
@@ -982,7 +998,7 @@ void CGEMPRules::ChangeLevel()
 
 // Purpose: At the end of our time on a map we call this function
 //		it will put us in "good game" mode for specified time mp_chattime
-void CGEMPRules::GoToIntermission( bool forcematchend /* = false */ )
+void CGEMPRules::GoToIntermission()
 {
 	if ( g_fGameOver )
 		return;
@@ -990,30 +1006,23 @@ void CGEMPRules::GoToIntermission( bool forcematchend /* = false */ )
 	// If this is our first time here dump out the round results first
 	// then when we get around to thinking again (after the round delay)
 	// dump out our match results and wait the chat time
-	// NOTE: We don't display round scores when rounds are disabled
-	if ( !m_flNextIntermissionCheck && IsPlayingRounds() )
+	//
+	// NOTE: We go straight to ending the match if we are not playing rounds
+	if ( m_flNextIntermissionCheck == 0 && IsRoundTimeEnabled() )
 	{
-		if ( !GEGameplay()->IsInRoundIntermission() )
-		{
-			// Don't allow the match to end if we can't even end the round
-			if ( !forcematchend && !GEGameplay()->GetScenario()->CanRoundEnd() )
-				return;
-
-			m_flNextIntermissionCheck = gpGlobals->curtime + ge_rounddelay.GetFloat();
-			GEGameplay()->SetState( GAMESTATE_DELAY, true );
-			GEGameplay()->SetState( GAMESTATE_NONE );
-		}
+		// Check to see if we are already in a round intermission, adjust the match-end-wait-time accordingly
+		if ( GEGameplay()->IsInRoundIntermission() )
+			m_flNextIntermissionCheck = gpGlobals->curtime + GEGameplay()->GetRemainingIntermission() + 0.5f;
 		else
-		{
-			// Set our match end to be after the current round intermission
-			m_flNextIntermissionCheck = gpGlobals->curtime + GEGameplay()->GetRemainingIntermission() + 1.0f;
-		}
+			m_flNextIntermissionCheck = gpGlobals->curtime + ge_rounddelay.GetFloat();
+
+		Msg( "[ROUND END] Postponing match end, next check will be at %0.2f, currently %0.2f\n", m_flNextIntermissionCheck, gpGlobals->curtime );
 
 		// We are officially in intermission
 		m_bInIntermission = true;
 		return;
 	}
-	
+
 	// We are already 0 or we are not playing rounds
 	m_flNextIntermissionCheck = 0;
 	m_bInIntermission = true;
@@ -1022,17 +1031,13 @@ void CGEMPRules::GoToIntermission( bool forcematchend /* = false */ )
 	g_fGameOver = true;
 
 	// If we were playing normal rounds, disable scoring of the match report to prevent duplicate scores from showing
-	if ( IsPlayingRounds() )
-		GEGameplay()->DisableRoundScoring();
-
-	// Make sure our gameplay is not trying to do anything while we are in intermission
-	GEGameplay()->SetState( GAMESTATE_DELAY, true );
-	GEGameplay()->SetState( GAMESTATE_NONE );
-
-	GEStats()->ResetMatchStats();
-
+//	if ( IsPlayingRounds() )
+//		GEGameplay()->DisableRoundScoring();
+	
 	// Keep us in this mode until we expire our defined Chat Time
 	m_flIntermissionEndTime = gpGlobals->curtime + mp_chattime.GetInt() - GE_CHANGELEVEL_DELAY;
+
+	Msg( "[MATCH END] Intermission end time set to %0.2f, currently %0.2f\n", m_flIntermissionEndTime, gpGlobals->curtime );
 }
 
 void CGEMPRules::ResetPlayerScores( bool resetmatch /* = false */ )
@@ -1093,31 +1098,57 @@ bool CGEMPRules::InRoundRestart( void )
 	return GEGameplay()->IsInRoundIntermission();
 }
 
+void CGEMPRules::SetMatchTimerPaused( bool state )
+{
+	assert( m_hMatchTimer.Get() != NULL );
+	state ? m_hMatchTimer->Pause() : m_hMatchTimer->Resume();
+}
+
+void CGEMPRules::DisableMatchTimer()
+{
+	assert( m_hMatchTimer.Get() != NULL );
+	m_hMatchTimer->Stop();
+}
+
+void CGEMPRules::SetRoundTimerPaused( bool state )
+{
+	assert( m_hRoundTimer.Get() != NULL );
+	state ? m_hRoundTimer->Pause() : m_hRoundTimer->Resume();
+}
+
+void CGEMPRules::DisableRoundTimer()
+{
+	assert( m_hRoundTimer.Get() != NULL );
+	m_hRoundTimer->Stop();
+}
+
+/*
 void CGEMPRules::SetRoundTime( int time_secs )
 {
 	if ( time_secs > 0 )
 	{
-		if ( !IsPlayingRounds() )
+		if ( !IsRoundTimeEnabled() )
 		{
-			m_hRoundTimer->SetTimeRemaining( time_secs );
+			m_hRoundTimer->Start( time_secs );
 		}
 		else
 		{
-			int new_time = GEMPRules()->GetRoundTimeLeft() + (time_secs - m_iRoundTime);
+			int new_time = GEMPRules()->GetRoundTimeRemaining() + (time_secs - m_iRoundTime);
 			if ( new_time > 0 )
-				m_hRoundTimer->SetTimeRemaining( new_time );
+				m_hRoundTimer->Start( new_time );
 			else
-				m_hRoundTimer->SetTimeRemaining( 30 );
+				m_hRoundTimer->Start( 30 );
 		}
 
 		m_iRoundTime = time_secs;
 	}
 	else
 	{
-		m_hRoundTimer->SetTimeRemaining( 0 );
+		m_hRoundTimer->Start( 0 );
 		m_iRoundTime = 0;
 	}
 }
+*/
 
 void CGEMPRules::SetTeamplay( bool state, bool force /*= false*/ )
 {
@@ -1296,7 +1327,7 @@ void CGEMPRules::BalanceTeams( void )
 		return;
 
 	// Don't do switches if we have less than a minute left in the round/match!
-	if ( (m_iRoundTime > 0 && GetRoundTimeLeft() < 45.0f) || (mp_timelimit.GetInt() > 0 && GetMapTimeLeft() < 45.0f) )
+	if ( (IsRoundTimeEnabled() && GetRoundTimeRemaining() < 45.0f) || (IsMatchTimeEnabled() && GetMatchTimeRemaining() < 45.0f) )
 		return;
 
 	// Is it even time to check yet?
@@ -1333,7 +1364,7 @@ void CGEMPRules::BalanceTeams( void )
 			for ( int i=0; i < pHeavyTeam->GetNumPlayers(); ++i )
 			{
 				pPlayer = ToGEMPPlayer( pHeavyTeam->GetPlayer(i) );
-				if ( !pPlayer || !GEGameplay()->GetScenario()->CanPlayerChangeTeam( pPlayer, pHeavyTeam->GetTeamNumber(), pLightTeam->GetTeamNumber() ) )
+				if ( !pPlayer || !GetScenario()->CanPlayerChangeTeam( pPlayer, pHeavyTeam->GetTeamNumber(), pLightTeam->GetTeamNumber() ) )
 					continue;
 
 				players.AddToTail( pPlayer );
@@ -1456,57 +1487,57 @@ bool CGEMPRules::OnPlayerSay(CBasePlayer* player, const char* text)
 	if (!pPlayer || !text)
 		return false;
 
-	return GEGameplay()->GetScenario()->OnPlayerSay(pPlayer, text);
+	return GetScenario()->OnPlayerSay(pPlayer, text);
 }
 
 #endif // GAME_DLL
 
-
-float CGEMPRules::GetMapTimeLeft( void )
+// Match Timer Functions
+bool CGEMPRules::IsMatchTimeEnabled()
 {
-	// if time limit is disabled, return 0
-	if ( mp_timelimit.GetInt() <= 0 )
-		return 0;
-
-	// Prevent negative countdowns
-	return max( (mp_timelimit.GetInt() * 60.0f ) - gpGlobals->curtime, 0 );
+	assert( m_hMatchTimer.Get() != NULL );
+	return m_hMatchTimer->IsEnabled();
 }
 
-
-float CGEMPRules::GetRoundTimeLeft( void )
+bool CGEMPRules::IsMatchTimePaused()
 {
-	if ( !m_hRoundTimer.Get() )
-		return -1.0f;
-
-	// We aren't playing rounds, return the map time
-	if ( !IsPlayingRounds() )
-		return GetMapTimeLeft();
-	// If we are playing rounds and we have map time, return the min of the two
-	else if ( mp_timelimit.GetInt() > 0 )
-		return min( m_hRoundTimer->GetTimeRemaining(), GetMapTimeLeft() );
-	else
-		return m_hRoundTimer->GetTimeRemaining();
+	assert( m_hMatchTimer.Get() != NULL );
+	return m_hMatchTimer->IsPaused();
 }
 
-bool CGEMPRules::IsRoundTimePaused( void )
+float CGEMPRules::GetMatchTimeRemaining()
 {
-	if ( !m_hRoundTimer.Get() )
-		return true;
-
-	return m_hRoundTimer->IsTimerPaused();
+	assert( m_hMatchTimer.Get() != NULL );
+	return m_hMatchTimer->GetTimeRemaining();
 }
 
-bool CGEMPRules::IsPlayingRounds( void )
+// Round Timer Functions
+bool CGEMPRules::IsRoundTimeEnabled()
 {
-	// Round timer disabled - Gameplay controlling rounds
-	if ( IsRoundTimePaused() )
-		return false;
+	assert( m_hRoundTimer.Get() != NULL );
+	return m_hRoundTimer->IsEnabled();
+}
 
-	// Map time is less than 1 round length
-	if ( mp_timelimit.GetInt() > 0 && m_iRoundTime > mp_timelimit.GetInt() * 60 )
-		return false;
+bool CGEMPRules::IsRoundTimePaused()
+{
+	assert( m_hRoundTimer.Get() != NULL );
+	return m_hRoundTimer->IsPaused();
+}
 
-	return m_iRoundTime > 0;
+float CGEMPRules::GetRoundTimeRemaining()
+{
+	assert( m_hRoundTimer.Get() != NULL );
+	
+	// We aren't playing rounds, return the match time
+	if ( !IsRoundTimeEnabled() )
+		return GetMatchTimeRemaining();
+
+	// If we are playing rounds, and match timing is enabled, return the min of the round time and the match time
+	if ( IsMatchTimeEnabled() )
+		return min( m_hRoundTimer->GetTimeRemaining(), m_hMatchTimer->GetTimeRemaining() );
+
+	// Otherwise, just return the round time
+	return m_hRoundTimer->GetTimeRemaining();
 }
 
 bool CGEMPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )

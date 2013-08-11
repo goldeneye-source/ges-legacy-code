@@ -1758,14 +1758,14 @@
     <ClCompile Include="ges\shared\ge_player_shared.cpp">
       <Filter>GES\Player</Filter>
     </ClCompile>
-    <ClCompile Include="ges\shared\ge_round_timer.cpp">
-      <Filter>GES\Entities</Filter>
-    </ClCompile>
     <ClCompile Include="ges\server\ge_recipientfilter.cpp">
       <Filter>GES</Filter>
     </ClCompile>
     <ClCompile Include="ges\server\py\ge_pyutil.cpp">
       <Filter>GES\Python\modules</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\ge_game_timer.cpp">
+      <Filter>GES\Entities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -3491,11 +3491,11 @@
     <ClInclude Include="ges\shared\ge_player_shared.h">
       <Filter>GES\Player</Filter>
     </ClInclude>
-    <ClInclude Include="ges\shared\ge_round_timer.h">
-      <Filter>GES\Entities</Filter>
-    </ClInclude>
     <ClInclude Include="ges\server\ge_recipientfilter.h">
       <Filter>GES</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_game_timer.h">
+      <Filter>GES\Entities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

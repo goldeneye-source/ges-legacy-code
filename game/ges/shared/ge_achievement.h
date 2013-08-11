@@ -88,18 +88,9 @@ bool IsScenario( const char *ident, bool official=true );
 			m_bIsLTK = false;									\
 			m_iKillInterp = 0;									\
 		}														\
-		virtual void ListenForEvents() {						\
-			ListenForGameEvent( "gamemode_change" );			\
-		}														\
-		virtual void FireGameEvent_Internal( IGameEvent *event )	{		\
-			if ( !Q_stricmp(event->GetString("ident"), "ltk") && event->GetBool("official") )	\
-				m_bIsLTK = true;								\
-			else												\
-				m_bIsLTK = false;								\
-		}														\
 		virtual void Event_EntityKilled( CBaseEntity *pVictim, CBaseEntity *pAttacker, CBaseEntity *pInflictor, IGameEvent *event )	{ \
 			m_iKillInterp++;									\
-			if ( m_bIsLTK && m_iKillInterp % 3 ) return;		\
+			if ( IsScenario( "ltk", false ) && m_iKillInterp % 3 ) return;		\
 			if ( event->GetInt("weaponid") == weapid ) IncrementCount(); \
 		}														\
 	private:													\

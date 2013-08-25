@@ -9,6 +9,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Server", "game\server_ges-2
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vgui_controls", "vgui2\vgui_controls\vgui_controls-2005.vcxproj", "{BF3EDBF5-ED65-4567-B348-504C1310A1BB}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServerTest", "game\server_test.vcxproj", "{CC60E593-0A10-4D9C-8867-AB00FBE694FD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4998DCA8-9606-46C7-8B28-6506E34992DC} = {4998DCA8-9606-46C7-8B28-6506E34992DC}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -27,6 +32,10 @@ Global
 		{BF3EDBF5-ED65-4567-B348-504C1310A1BB}.Debug|Win32.Build.0 = Debug|Win32
 		{BF3EDBF5-ED65-4567-B348-504C1310A1BB}.Release|Win32.ActiveCfg = Release|Win32
 		{BF3EDBF5-ED65-4567-B348-504C1310A1BB}.Release|Win32.Build.0 = Release|Win32
+		{CC60E593-0A10-4D9C-8867-AB00FBE694FD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CC60E593-0A10-4D9C-8867-AB00FBE694FD}.Debug|Win32.Build.0 = Debug|Win32
+		{CC60E593-0A10-4D9C-8867-AB00FBE694FD}.Release|Win32.ActiveCfg = Release|Win32
+		{CC60E593-0A10-4D9C-8867-AB00FBE694FD}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

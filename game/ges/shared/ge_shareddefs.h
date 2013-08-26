@@ -24,6 +24,11 @@
 #define GES_AUTH_URL		"http://update.geshl2.com/gesauth.txt"
 #define GES_VERSION_URL		"http://update.geshl2.com/gesupdate.txt"
 
+// Deal with testing
+#ifdef GES_TESTING
+extern bool IsTesting();
+#endif
+
 //--------------------------------------------------------------
 // Take care of some incompatible sharing
 //

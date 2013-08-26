@@ -771,14 +771,14 @@ void CGERules::WorldReload( void )
 	CBaseEntity *pCur = gEntList.FirstEnt();
 	while ( pCur )
 	{
-		CGEWeapon *pWeapon = dynamic_cast<CGEWeapon*>( pCur );
-		// Weapons with owners don't want to be removed..
-		if ( pWeapon )
+		// Entities are removed from the world if they will be recreated
+		// we don't remove entities owned by players (handled when player spawns)
+		CBaseEntity *owner = pCur->GetOwnerEntity();
+		if ( owner )
 		{
-			if ( !pWeapon->GetPlayerOwner() )
+			if ( !owner->IsPlayer() )
 				UTIL_Remove( pCur );
 		}
-		// remove entities that has to be restored on roundrestart (breakables etc)
 		else if ( GEMapEntityFilter()->ShouldCreateEntity(pCur->GetClassname()) )
 		{
 			UTIL_Remove( pCur );
@@ -786,29 +786,27 @@ void CGERules::WorldReload( void )
 
 		pCur = gEntList.NextEnt( pCur );
 	}
+
 	// Really remove the entities so we can have access to their slots below.
 	gEntList.CleanupDeleteList();
-
 	engine->AllowImmediateEdictReuse();
 
-	// Clear any events sent to the server (mine detonate?)
+	// Clear any events sent to the server (e.g., mine detonate)
 	g_EventQueue.Clear();
 
-	// with any unrequired entities removed, we use MapEntity_ParseAllEntities to reparse the map entities
-	// this in effect causes them to spawn back to their normal position.
+	// with any unrequired entities removed, we reparse the map entities
+	// causing them to spawn back to their positions as if the map just loaded
 	MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), GEMapEntityFilter(), true);
 
-	// Reload our Spawner Locations
+	// Refresh our spawner locations
 	UpdateSpawnerLocations();
 }
-
 
 void CGERules::SpawnPlayers( void )
 {
 	for (int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
-		CGEPlayer *pPlayer = (CGEPlayer *)(UTIL_PlayerByIndex( i ));
-
+		CGEPlayer *pPlayer = (CGEPlayer*) UTIL_PlayerByIndex( i );
 		if ( !pPlayer )
 			continue;
 		
@@ -839,7 +837,6 @@ CBaseEntity *CGERules::GetSpectatorSpawnSpot( CGEPlayer *pPlayer )
 		return NULL;
 
 	CBaseEntity *pSpawnSpot = pPlayer->EntSelectSpawnPoint();
-
 	if ( pSpawnSpot )
 		pPlayer->JumptoPosition( pSpawnSpot->GetAbsOrigin() + VEC_VIEW, pSpawnSpot->GetAbsAngles() );
 
@@ -853,10 +850,9 @@ CBaseEntity *CGERules::GetSpectatorSpawnSpot( CGEPlayer *pPlayer )
 //-----------------------------------------------------------------------------
 const char *CGERules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 {
-	if ( !pPlayer )  // dedicated server output
-	{
+	// Filter out dedicated server output
+	if ( !pPlayer )
 		return NULL;
-	}
 
 	const char *pszFormat = NULL;
 

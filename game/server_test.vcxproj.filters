@@ -5,10 +5,6 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
     <Filter Include="Precompiled Header">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
@@ -16,44 +12,32 @@
     <Filter Include="Link Libraries">
       <UniqueIdentifier>{a8865de9-ea3b-45e6-a475-dbcfef3958b4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Tests">
+      <UniqueIdentifier>{46b45ebc-d392-47dc-8ffd-78be8c37ab49}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="tests\server\ge_game_timer_test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sdk\server\stdafx.cpp">
       <Filter>Precompiled Header</Filter>
     </ClCompile>
+    <ClCompile Include="tests\server\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\sdk_listener.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\server\ge_game_timer_test.cpp">
+      <Filter>Source Files\Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\env.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\server\ge_gamerules_test.cpp">
+      <Filter>Source Files\Tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\lib\public\choreoobjects.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="..\lib\public\dmxloader.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="..\lib\public\mathlib.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="..\lib\public\particles.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="..\lib\public\steam_api.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="..\lib\public\tier0.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="..\lib\public\tier1.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="..\lib\public\tier2.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="..\lib\public\tier3.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="..\lib\public\vstdlib.lib">
+    <Library Include="..\lib\gtest\gtestd.lib">
       <Filter>Link Libraries</Filter>
     </Library>
   </ItemGroup>

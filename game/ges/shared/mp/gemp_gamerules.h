@@ -84,7 +84,7 @@ public:
 	CGELoadoutManager *GetLoadoutManager()  { return m_pLoadoutManager; }
 	CGETokenManager   *GetTokenManager()	{ return m_pTokenManager;	}
 
-	int GetSpawnPointType( CGEPlayer *pPlayer );
+	int	  GetSpawnPointType( CGEPlayer *pPlayer );
 	float GetSpeedMultiplier( CGEPlayer *pPlayer );
 
 	int GetNumActivePlayers();

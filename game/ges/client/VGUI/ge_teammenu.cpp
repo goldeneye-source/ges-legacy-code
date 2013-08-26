@@ -126,7 +126,6 @@ void CGETeamMenu::OnGameplayDataUpdate( void )
 void CGETeamMenu::FireGameEvent( IGameEvent *pEvent )
 {
 	SetMapName( pEvent->GetString("mapname") );
-	Update();
 }
 
 //-----------------------------------------------------------------------------

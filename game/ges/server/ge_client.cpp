@@ -32,8 +32,25 @@ extern CBaseEntity*	FindPickerEntityClass( CBasePlayer *pPlayer, char *classname
 extern bool			g_fGameOver;
 extern ConVar		ge_teamplay;
 
-#ifdef _DEBUG
-ConVar ge_singleplayer("ge_singleplayer", "0", FCVAR_REPLICATED | FCVAR_GAMEDLL, "Enables SinglePlayer");
+#ifdef GES_TESTING
+// Define global testing status variable
+static bool g_bIsTesting = false;
+bool IsTesting() { return g_bIsTesting; }
+
+// Pull in our tests from the ServerTest.lib
+bool RunTests();
+CON_COMMAND( ge_run_tests, "Runs tests" )
+{
+	g_bIsTesting = true;
+
+	Msg( "Running google tests...\n" );
+	if ( RunTests() )
+		Msg( "Completed running all tests\n" );
+	else
+		Warning( "You can only run tests once per session!\n" );
+
+	g_bIsTesting = false;
+}
 #endif
 
 void FinishClientPutInServer( CGEPlayer *pPlayer )

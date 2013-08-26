@@ -24,10 +24,6 @@ class CGEWeapon;
 #include "utldict.h"
 #include "shareddefs.h"
 
-#ifdef _DEBUG
-extern ConVar ge_singleplayer;
-#endif
-
 //=============================================================================
 // >> CGEPlayer
 //=============================================================================

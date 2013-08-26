@@ -52,11 +52,6 @@ void CGEPlayerResource::UpdatePlayerData( void )
 {
 	BaseClass::UpdatePlayerData();
 
-#ifdef _DEBUG
-	if ( ge_singleplayer.GetBool() )
-		return;
-#endif
-
 	string_t nochar = AllocPooledString("nochar");
 
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )

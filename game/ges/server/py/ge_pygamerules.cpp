@@ -15,6 +15,8 @@
 #include "ge_shareddefs.h"
 #include "ge_radarresource.h"
 #include "ge_generictoken.h"
+#include "ge_loadoutmanager.h"
+#include "ge_tokenmanager.h"
 #include "ge_spawner.h"
 #include "gemp_gamerules.h"
 #include "gemp_player.h"
@@ -43,7 +45,7 @@ bool pyIsIntermission()
 
 bool pyIsGameOver()
 {
-	return g_fGameOver;
+	return GEGameplay()->IsInFinalIntermission();
 }
 
 bool pyIsTeamplay()
@@ -185,7 +187,7 @@ void pySetTeamWinner(CTeam *team)
 void pyResetAllPlayerDeaths()
 {
 	// Reset all the player's deaths
-	FOR_EACH_MPPLAYER(i, pPlayer)
+	FOR_EACH_MPPLAYER( pPlayer )
 		pPlayer->ResetDeathCount();
 	END_OF_PLAYER_LOOP()
 }
@@ -241,7 +243,7 @@ int pyGetNumActiveTeamPlayers( bp::object team_obj )
 	else
 		team_num = to_int();
 
-	FOR_EACH_MPPLAYER( i, pPlayer )
+	FOR_EACH_MPPLAYER( pPlayer )
 		if ( pPlayer->GetTeamNumber() == team_num && pPlayer->IsActive() )
 			count++;
 	END_OF_PLAYER_LOOP()
@@ -262,7 +264,7 @@ int pyGetNumInRoundTeamPlayers( bp::object team_obj )
 	else
 		team_num = to_int();
 
-	FOR_EACH_MPPLAYER( i, pPlayer )
+	FOR_EACH_MPPLAYER( pPlayer )
 
 		if ( pPlayer->GetTeamNumber() == team_num && pPlayer->IsInRound() )
 			count++;

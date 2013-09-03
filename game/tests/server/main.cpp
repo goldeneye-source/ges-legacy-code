@@ -42,3 +42,6 @@ static int test1 = ge_game_timer_test;
 // Gamerules Test
 extern int ge_gamerules_test;
 static int test2 = ge_gamerules_test;
+// Gameplay Test
+extern int ge_gameplay_test;
+static int test3 = ge_gameplay_test;

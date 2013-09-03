@@ -8,30 +8,25 @@
 // Created By: Jonathan White <killermonkey> 
 /////////////////////////////////////////////////////////////////////////////
 #include "cbase.h"
-#include "gemp_gamerules.h"
-#include "ge_gamerules.h"
-#include "viewport_panel_names.h"
-#include "gameeventdefs.h"
-#include <KeyValues.h>
+
+//#include "viewport_panel_names.h"
 #include "ammodef.h"
+#include "utlbuffer.h"
+
 #include "ge_shareddefs.h"
 #include "ge_utils.h"
+#include "ge_game_timer.h"
 
 #ifdef CLIENT_DLL
 	#include "c_ge_player.h"
+	#include "c_ge_gameplayresource.h"
 #else
 	#include "ge_ai.h"
 	#include "ai_network.h"
 	#include "npc_gebase.h"
 	#include "ge_gameplay.h"
 	#include "eventqueue.h"
-	#include "player.h"
-	#include "game.h"
 	#include "items.h"
-	#include "entitylist.h"
-	#include "mapentities.h"
-	#include "in_buttons.h"
-	#include <ctype.h>
 	#include "voice_gamemgr.h"
 
 	#include "gemp_player.h"
@@ -44,6 +39,8 @@
 	#include "ge_radarresource.h"
 	#include "ge_gameplayresource.h"
 	#include "ge_tokenmanager.h"
+	#include "ge_loadoutmanager.h"
+	#include "ge_stats_recorder.h"
 	#include "ge_bot.h"
 
 	extern void respawn(CBaseEntity *pEdict, bool fCopyCorpse);
@@ -63,6 +60,8 @@
 	void GEBotThreshold_Callback( IConVar *var, const char *pOldString, float fOldValue );
 	void GEVelocity_Callback( IConVar *var, const char *pOldString, float fOldValue );
 #endif
+
+#include "gemp_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -109,55 +108,29 @@ ConVar ge_velocity	( "ge_velocity", "1.0", FCVAR_REPLICATED|FCVAR_NOTIFY, "Playe
 
 void GERoundTime_Callback( IConVar *var, const char *pOldString, float flOldValue )
 {
-	static bool denyReentrant = false;
-	if ( denyReentrant || !GEMPRules() )
+	static bool in_func = false;
+	if ( in_func || !GEMPRules() )
 		return;
-
-	denyReentrant = true;
+	
+	// Guard against recursion
+	in_func = true;
+	// Grab the desired round time
 	ConVar *cVar = static_cast<ConVar*>(var);
 	int round_time = cVar->GetInt();
 
 #ifndef _DEBUG
 	if ( round_time > 0 && round_time < 60 )
 	{
+		round_time = 60;
+		cVar->SetValue( round_time );
 		Warning( "Minimum round time is 60 seconds (use 0 to disable rounds)!\n" );
-		cVar->SetValue( 60 );
 	}
 #endif
 
-	// We are done setting variables with possible re-entrance
-	denyReentrant = false;
+	GEMPRules()->SetRoundTime( round_time );
 
-	// Calculate the difference
-	int timechange = round_time - (int)flOldValue;
-	if ( timechange != 0 )
-	{
-		// Set the round time
-		// TODO: Need to rework this relationship
-		//GEMPRules()->SetRoundTime( round_time );
-
-		// Notify if we extended or shortened the round
-		if ( round_time > 0 )
-		{
-			char szMinSec[8], szDir[16];
-			float min = round_time / 60.0f;
-			int sec = (int)( 60 * (min - (int)min) );
-			Q_snprintf( szMinSec, 8, "%d:%02d", (int)min, sec );
-
-			// If we don't have enough time left in the round append the difference
-			if ( round_time > flOldValue )
-				Q_strncpy( szDir, "#Extended", 16 );
-			else
-				Q_strncpy( szDir, "#Shortened", 16 );
-
-			UTIL_ClientPrintAll( HUD_PRINTTALK, "#GES_RoundTime_Changed", szDir, szMinSec );			
-		}
-		else
-		{
-			// We set the round time to 0, notify of disabling rounds
-			UTIL_ClientPrintAll( HUD_PRINTTALK, "#GES_RoundTime_Disabled" );
-		}
-	}
+	// Reset our guard
+	in_func = false;
 }
 
 void GERoundCount_Callback( IConVar *var, const char *pOldString, float flOldValue )
@@ -275,7 +248,7 @@ CON_COMMAND( ge_bot_remove, "Removes the number of specified bots, if no number 
 	if ( args.ArgC() > 1 )
 		to_remove = atoi( args[1] );
 	
-	FOR_EACH_BOTPLAYER( idx, pBot )
+	FOR_EACH_BOTPLAYER( pBot )
 		if ( to_remove != 0 )
 		{
 			// Try to kick it, otherwise remove outright
@@ -300,13 +273,11 @@ IMPLEMENT_NETWORKCLASS_ALIASED( GEMPGameRulesProxy, DT_GEMPGameRulesProxy )
 BEGIN_NETWORK_TABLE_NOBASE( CGEMPRules, DT_GEMPRules )
 #ifdef CLIENT_DLL
 	RecvPropBool( RECVINFO( m_bTeamPlayDesired ) ),
-	RecvPropBool( RECVINFO( m_bInIntermission ) ),
 	RecvPropInt( RECVINFO( m_iTeamplayMode ) ),
 	RecvPropEHandle( RECVINFO( m_hMatchTimer ) ),
 	RecvPropEHandle( RECVINFO( m_hRoundTimer ) ),
 #else
 	SendPropBool( SENDINFO( m_bTeamPlayDesired ) ),
-	SendPropBool( SENDINFO( m_bInIntermission ) ),
 	SendPropInt( SENDINFO( m_iTeamplayMode ) ),
 	SendPropEHandle( SENDINFO( m_hMatchTimer ) ),
 	SendPropEHandle( SENDINFO( m_hRoundTimer ) ),
@@ -387,7 +358,6 @@ CGEMPRules::CGEMPRules()
 	}
 
 	m_bTeamPlayDesired	 = false;
-	m_bInIntermission	 = false;
 	m_bInTeamBalance	 = false;
 	m_bUseTeamSpawns	 = true;
 	m_bSwappedTeamSpawns = false;
@@ -417,10 +387,6 @@ CGEMPRules::CGEMPRules()
 	// Create timers
 	m_hMatchTimer = (CGEGameTimer*) CBaseEntity::Create( "ge_game_timer", vec3_origin, vec3_angle );
 	m_hRoundTimer = (CGEGameTimer*) CBaseEntity::Create( "ge_game_timer", vec3_origin, vec3_angle );
-
-	// Set the round time
-	// TODO: Need to rework this
-	//SetRoundTime( ge_roundtime.GetInt() );
 
 	// Create the token manager
 	m_pTokenManager = new CGETokenManager;
@@ -472,8 +438,48 @@ CGEMPRules::~CGEMPRules()
 }
 
 #ifdef GAME_DLL
+void CGEMPRules::OnGameplayEvent( GPEvent event )
+{
+	switch( event )
+	{
+	case SCENARIO_INIT:
+		OnScenarioInit();
+		break;
 
-void CGEMPRules::OnMatchStarted()
+	case MATCH_START:
+		OnMatchStart();
+		break;
+
+	case ROUND_START:
+		OnRoundStart();
+		break;
+
+	case ROUND_END:
+		OnRoundEnd();
+		break;
+	}
+}
+
+void CGEMPRules::OnScenarioInit()
+{
+	// Reset the token manager
+	GetTokenManager()->Reset();
+
+	// Reset our states
+	SetAmmoSpawnState( true );
+	SetWeaponSpawnState( true );
+	SetArmorSpawnState( true );
+	SetTeamSpawn( true );
+
+	// Reset the radar
+	g_pRadarResource->SetForceRadar( false );
+	g_pRadarResource->DropAllContacts();
+
+	// Reset the excluded characters
+	g_pGameplayResource->SetCharacterExclusion( "" );
+}
+
+void CGEMPRules::OnMatchStart()
 {
 	// Reset player round/match scores and stats
 	ResetPlayerScores( true );
@@ -484,7 +490,7 @@ void CGEMPRules::OnMatchStarted()
 	SetTeamplay( ge_teamplay.GetBool(), true );
 
 	// Reload bot's brains based on the current gameplay
-	FOR_EACH_BOTPLAYER( idx, pBot )
+	FOR_EACH_BOTPLAYER( pBot )
 		pBot->LoadBrain();
 	END_OF_PLAYER_LOOP()
 
@@ -492,16 +498,10 @@ void CGEMPRules::OnMatchStarted()
 	g_iLastPlayerCount = 0;
 }
 
-void CGEMPRules::OnRoundRestart()
+void CGEMPRules::OnRoundStart()
 {
-	// Set our teamplay variable, if we need too
-	SetTeamplay( ge_teamplay.GetBool() );
-
-	// Drop our contacts
+	// Drop all contacts
 	g_pRadarResource->DropAllContacts();
-
-	// Swap the team spawns
-	SwapTeamSpawns();
 
 	// Remove all left over tokens from the field
 	GetTokenManager()->RemoveTokens();
@@ -519,15 +519,15 @@ void CGEMPRules::OnRoundRestart()
 	for ( int i=0; i < spawners.Count(); i++ )
 		((CGESpawner*) spawners[i].Get())->Init();
 
-	// Reset team scores storing in match
+	// Reset team round scores
 	ResetTeamScores( false );
+	// Reset round stats
 	GEStats()->ResetRoundStats();
 
-	SetIntermission( false );
-}
+	// Reset winner information
+	SetRoundWinner( 0 );
+	SetRoundTeamWinner( TEAM_UNASSIGNED );
 
-void CGEMPRules::OnRoundStarted()
-{
 	// Start the round timer
 	m_hRoundTimer->Start( ge_roundtime.GetFloat() );
 
@@ -536,18 +536,34 @@ void CGEMPRules::OnRoundStarted()
 	GetTokenManager()->SpawnCaptureAreas();
 }
 
-void CGEMPRules::OnRoundEnded()
+void CGEMPRules::OnRoundEnd()
 {
 	// Stop the round timer
 	m_hRoundTimer->Stop();
 }
 
-bool CGEMPRules::AmmoShouldRespawn( void )
+// This is called prior to OnRoundStart from GEGameplay
+// the baseclass handles the actual reload, this class
+// handles special particulars like swapping team spawns
+void CGEMPRules::SetupRound()
+{
+	// Reload the world entities (unless protected)
+	WorldReload();
+
+	// Swap the team spawns
+	SwapTeamSpawns();
+
+	// Setup teamplay from our scenario
+	SetTeamplayMode( GetScenario()->GetTeamPlay() );
+	SetTeamplay( ge_teamplay.GetBool() );
+}
+
+bool CGEMPRules::AmmoShouldRespawn()
 {
 	return m_bEnableAmmoSpawns;
 }
 
-bool CGEMPRules::ArmorShouldRespawn( void )
+bool CGEMPRules::ArmorShouldRespawn()
 {
 	return m_bEnableArmorSpawns;
 }
@@ -632,13 +648,13 @@ void CGEMPRules::RemoveWeaponsFromWorld( const char *szClassName /*= NULL*/ )
 	m_pLoadoutManager->RemoveWeapons( szClassName );
 }
 
-int CGEMPRules::GetNumActivePlayers( void )
+int CGEMPRules::GetNumActivePlayers()
 {
 	if ( m_iNumActivePlayers == -1 )
 	{
 		m_iNumActivePlayers = 0;
 
-		FOR_EACH_MPPLAYER( i, pPlayer )
+		FOR_EACH_MPPLAYER( pPlayer )
 			if ( pPlayer->IsActive() )
 				m_iNumActivePlayers++;
 		END_OF_PLAYER_LOOP()
@@ -647,13 +663,13 @@ int CGEMPRules::GetNumActivePlayers( void )
 	return m_iNumActivePlayers;
 }
 
-int CGEMPRules::GetNumAlivePlayers( void )
+int CGEMPRules::GetNumAlivePlayers()
 {
 	if ( m_iNumAlivePlayers == -1 )
 	{
 		m_iNumAlivePlayers = 0;
 
-		FOR_EACH_MPPLAYER( i, pPlayer )
+		FOR_EACH_MPPLAYER( pPlayer )
 			if ( !pPlayer->IsObserver() )
 				m_iNumAlivePlayers++;
 		END_OF_PLAYER_LOOP()
@@ -662,13 +678,13 @@ int CGEMPRules::GetNumAlivePlayers( void )
 	return m_iNumAlivePlayers;
 }
 
-int CGEMPRules::GetNumInRoundPlayers( void )
+int CGEMPRules::GetNumInRoundPlayers()
 {
 	if ( m_iNumInRoundPlayers == -1 )
 	{
 		m_iNumInRoundPlayers = 0;
 
-		FOR_EACH_MPPLAYER( i, pPlayer )
+		FOR_EACH_MPPLAYER( pPlayer )
 			if ( pPlayer->IsInRound() )
 				m_iNumInRoundPlayers++;
 		END_OF_PLAYER_LOOP()
@@ -677,18 +693,19 @@ int CGEMPRules::GetNumInRoundPlayers( void )
 	return m_iNumInRoundPlayers;
 }
 
-int CGEMPRules::GetRoundTeamWinner( void )
+int CGEMPRules::GetRoundTeamWinner()
 {
 	int winnerid = TEAM_UNASSIGNED;
+	bool game_over = GEGameplay()->IsInFinalIntermission();
 
 	if ( !IsTeamplay() )
 		return winnerid;
 
 	// See if we set the team winner already from python
-	if ( m_iTeamWinner >= FIRST_GAME_TEAM && m_iTeamWinner < MAX_GE_TEAMS  && !g_fGameOver )
+	if ( m_iTeamWinner >= FIRST_GAME_TEAM && m_iTeamWinner < MAX_GE_TEAMS  && !game_over )
 		return m_iTeamWinner;
 
-	if ( g_fGameOver )
+	if ( game_over )
 	{
 		if ( g_Teams[TEAM_MI6]->GetMatchScore() > g_Teams[TEAM_JANUS]->GetMatchScore() )
 			winnerid = TEAM_MI6;
@@ -706,19 +723,20 @@ int CGEMPRules::GetRoundTeamWinner( void )
 	return winnerid;
 }
 
-int CGEMPRules::GetRoundWinner( void )
+int CGEMPRules::GetRoundWinner()
 {
+	bool game_over = GEGameplay()->IsInFinalIntermission();
 	int score  = 0, maxscore  = 0, 
 		deaths = 0, maxdeaths = 0, 
 		winnerid = 0;
 
-	if ( UTIL_PlayerByIndex( m_iPlayerWinner ) && !g_fGameOver )
+	if ( UTIL_PlayerByIndex( m_iPlayerWinner ) && !game_over )
 		return m_iPlayerWinner;
 
-	FOR_EACH_MPPLAYER( i, pPlayer )
+	FOR_EACH_MPPLAYER( pPlayer )
 
 		// Gather scores based on our match state
-		if ( g_fGameOver )
+		if ( game_over )
 		{
 			score = pPlayer->GetMatchScore();
 			deaths = pPlayer->GetMatchDeaths();
@@ -734,12 +752,12 @@ int CGEMPRules::GetRoundWinner( void )
 		{
 			maxscore = score;
 			maxdeaths = deaths;
-			winnerid = i;
+			winnerid = pPlayer->entindex();
 		} 
 		else if ( score == maxscore && deaths < maxdeaths )
 		{
 			maxdeaths = deaths;
-			winnerid = i;
+			winnerid = pPlayer->entindex();
 		}
 		else if ( score == maxscore && deaths == maxdeaths )
 		{
@@ -792,7 +810,7 @@ void CGEMPRules::GetTaggedConVarList( KeyValues *pCvarTagList )
 	pCvarTagList->AddSubKey( key );
 }
 
-const char *CGEMPRules::GetGameDescription( void )
+const char *CGEMPRules::GetGameDescription()
 {
 	if ( GEGameplay() )
 	{
@@ -856,29 +874,13 @@ void CGEMPRules::Think()
 {
 	BaseClass::Think();
 
-	// Call our Python scenario think function
-	if ( GEGameplay() )
-		GEGameplay()->OnThink();
+	// Let our gameplay think
+	Assert( GEGameplay() != NULL );
+	GEGameplay()->OnThink();
 
-	if ( m_flNextIntermissionCheck > 0 && gpGlobals->curtime < m_flNextIntermissionCheck )
-		return;
-
-	// Check if the match has ended
-	if ( g_fGameOver ) 
+	if ( m_flChangeLevelTime > 0 && gpGlobals->curtime > m_flChangeLevelTime )
 	{
-		// We are game over, check to see if it's time to change the level
-		if( m_flIntermissionEndTime > 0 && m_flIntermissionEndTime < gpGlobals->curtime )
-			ChangeLevel();
-
-		return;
-	}
-	
-	// Check if we should end the match
-	if ( m_flNextIntermissionCheck > 0 || GEGameplay()->CanEndMatch() )
-	{
-		// We've initiated an intermission sequence and it's now time to start it
-		Msg( "[MATCH END] GameRules::OnThink() is ending the match, %0.2\n", gpGlobals->curtime );
-		GEGameplay()->EndMatch();
+		ChangeLevel();
 		return;
 	}
 
@@ -945,38 +947,19 @@ void CGEMPRules::CalculateCustomDamage( CBasePlayer *pPlayer, CTakeDamageInfo &i
 
 void CGEMPRules::HandleTimeLimitChange()
 {
-	// TODO: This may need to change
+	// Change our match timer
+	SetMatchTime( mp_timelimit.GetInt() * 60.0f );
+
 	// Recalculate our round times based on the new map time
 	GERoundCount_Callback( &ge_roundcount, ge_roundcount.GetString(), ge_roundcount.GetFloat() );
 }
 
-void CGEMPRules::SetupChangeLevel( const char *levelname )
+void CGEMPRules::SetupChangeLevel( const char *next_level /*= NULL*/ )
 {
-	nextlevel.SetValue( levelname );
-	m_flChangeLevelTime = 0;
-	m_flIntermissionEndTime = gpGlobals->curtime;
-	ChangeLevel();
-}
-
-void CGEMPRules::ChangeLevel()
-{
-	if ( m_flChangeLevelTime > 0 ) 
+	if ( next_level != NULL )
 	{
-		if ( gpGlobals->curtime > m_flChangeLevelTime )
-		{
-			Msg( "CHANGE LEVEL: %s\n", m_szNextLevel );
-			g_fGameOver = true;
-			engine->ServerCommand( UTIL_VarArgs( "changelevel %s 0\n", m_szNextLevel ) );
-			// Reset intermission time so we stop calling into this function
-			m_flIntermissionEndTime = 0;
-		}
-
-		return;
-	}
-
-	if ( nextlevel.GetString() && *nextlevel.GetString() && engine->IsMapValid( nextlevel.GetString() ) )
-	{
-		Q_strncpy( m_szNextLevel, nextlevel.GetString(), sizeof(m_szNextLevel) );
+		nextlevel.SetValue( next_level );
+		Q_strncpy( m_szNextLevel, next_level, sizeof(m_szNextLevel) );
 	}
 	else
 	{
@@ -991,59 +974,33 @@ void CGEMPRules::ChangeLevel()
 		gameeventmanager->FireEvent( event );
 	}
 
-	g_fGameOver = true;
-	g_iLastPlayerCount = GetNumActivePlayers();
 	m_flChangeLevelTime = gpGlobals->curtime + GE_CHANGELEVEL_DELAY;
 }
 
-// Purpose: At the end of our time on a map we call this function
-//		it will put us in "good game" mode for specified time mp_chattime
+void CGEMPRules::ChangeLevel()
+{
+	// Reset the flag
+	m_flChangeLevelTime = 0;
+	// Record our player count
+	g_iLastPlayerCount = GetNumActivePlayers();
+
+	// Notify everyone
+	Msg( "CHANGE LEVEL: %s\n", m_szNextLevel );
+
+	// Tell the engine to change the level
+	engine->ServerCommand( UTIL_VarArgs( "changelevel %s 0\n", m_szNextLevel ) );
+}
+
 void CGEMPRules::GoToIntermission()
 {
-	if ( g_fGameOver )
-		return;
-
-	// If this is our first time here dump out the round results first
-	// then when we get around to thinking again (after the round delay)
-	// dump out our match results and wait the chat time
-	//
-	// NOTE: We go straight to ending the match if we are not playing rounds
-	if ( m_flNextIntermissionCheck == 0 && IsRoundTimeEnabled() )
-	{
-		// Check to see if we are already in a round intermission, adjust the match-end-wait-time accordingly
-		if ( GEGameplay()->IsInRoundIntermission() )
-			m_flNextIntermissionCheck = gpGlobals->curtime + GEGameplay()->GetRemainingIntermission() + 0.5f;
-		else
-			m_flNextIntermissionCheck = gpGlobals->curtime + ge_rounddelay.GetFloat();
-
-		Msg( "[ROUND END] Postponing match end, next check will be at %0.2f, currently %0.2f\n", m_flNextIntermissionCheck, gpGlobals->curtime );
-
-		// We are officially in intermission
-		m_bInIntermission = true;
-		return;
-	}
-
-	// We are already 0 or we are not playing rounds
-	m_flNextIntermissionCheck = 0;
-	m_bInIntermission = true;
-
-	// Set our "Match End" flag
-	g_fGameOver = true;
-
-	// If we were playing normal rounds, disable scoring of the match report to prevent duplicate scores from showing
-//	if ( IsPlayingRounds() )
-//		GEGameplay()->DisableRoundScoring();
-	
-	// Keep us in this mode until we expire our defined Chat Time
-	m_flIntermissionEndTime = gpGlobals->curtime + mp_chattime.GetInt() - GE_CHANGELEVEL_DELAY;
-
-	Msg( "[MATCH END] Intermission end time set to %0.2f, currently %0.2f\n", m_flIntermissionEndTime, gpGlobals->curtime );
+	// We should never get here since we are not using this function anymore
+	Assert( 0 );
 }
 
 void CGEMPRules::ResetPlayerScores( bool resetmatch /* = false */ )
 {
 	// Reset all the player's scores
-	FOR_EACH_MPPLAYER(i, pPlayer)
+	FOR_EACH_MPPLAYER( pPlayer )
 		pPlayer->ResetScores();
 		if ( resetmatch )
 			pPlayer->ResetMatchScores();
@@ -1093,32 +1050,79 @@ float CGEMPRules::GetSpeedMultiplier( CGEPlayer *pPlayer )
 		return ge_velocity.GetFloat();
 }
 
-bool CGEMPRules::InRoundRestart( void )
+void CGEMPRules::SetMatchTime( float new_time_sec )
 {
-	return GEGameplay()->IsInRoundIntermission();
+	// Check to make sure we will actually make a change
+	if ( new_time_sec != m_hMatchTimer->GetLength() )
+	{
+		// Notify if we extended or shortened the round
+		if ( new_time_sec > 0 )
+		{
+			// Set the new time
+			m_hMatchTimer->ChangeLength( new_time_sec );
+		}
+		else
+		{
+			// The round timer has been disabled
+			DisableMatchTimer();
+		}
+	}
 }
 
 void CGEMPRules::SetMatchTimerPaused( bool state )
 {
-	assert( m_hMatchTimer.Get() != NULL );
+	Assert( m_hMatchTimer.Get() != NULL );
 	state ? m_hMatchTimer->Pause() : m_hMatchTimer->Resume();
 }
 
 void CGEMPRules::DisableMatchTimer()
 {
-	assert( m_hMatchTimer.Get() != NULL );
+	Assert( m_hMatchTimer.Get() != NULL );
 	m_hMatchTimer->Stop();
+}
+
+void CGEMPRules::SetRoundTime( float new_time_sec )
+{
+	// Check to make sure we will actually make a change
+	if ( new_time_sec != m_hRoundTimer->GetLength() )
+	{
+		// Notify if we extended or shortened the round
+		if ( new_time_sec > 0 )
+		{
+			char szMinSec[8], szDir[16];
+			float min = new_time_sec / 60.0f;
+			int sec = (int)( 60 * (min - (int)min) );
+			Q_snprintf( szMinSec, 8, "%d:%02d", (int)min, sec );
+
+			// If we don't have enough time left in the round append the difference
+			if ( new_time_sec > m_hRoundTimer->GetLength() )
+				Q_strncpy( szDir, "#Extended", 16 );
+			else
+				Q_strncpy( szDir, "#Shortened", 16 );
+
+			// Set the new time
+			m_hRoundTimer->ChangeLength( new_time_sec );
+
+			UTIL_ClientPrintAll( HUD_PRINTTALK, "#GES_RoundTime_Changed", szDir, szMinSec );
+		}
+		else
+		{
+			// The round timer has been disabled
+			DisableRoundTimer();
+		}
+	}
 }
 
 void CGEMPRules::SetRoundTimerPaused( bool state )
 {
-	assert( m_hRoundTimer.Get() != NULL );
+	Assert( m_hRoundTimer.Get() != NULL );
 	state ? m_hRoundTimer->Pause() : m_hRoundTimer->Resume();
 }
 
 void CGEMPRules::DisableRoundTimer()
 {
-	assert( m_hRoundTimer.Get() != NULL );
+	Assert( m_hRoundTimer.Get() != NULL );
+	UTIL_ClientPrintAll( HUD_PRINTTALK, "#GES_RoundTime_Disabled" );
 	m_hRoundTimer->Stop();
 }
 
@@ -1163,6 +1167,9 @@ void CGEMPRules::SetTeamplay( bool state, bool force /*= false*/ )
 	// Set our desired state
 	m_bTeamPlayDesired = state;
 
+	// Update the global variable
+	gpGlobals->teamplay = IsTeamplay();
+
 	// Let everyone know of the change
 	UTIL_ClientPrintAll( HUD_PRINTTALK, "#GES_Teamplay_Changed", state ? "#Enabled" : "#Disabled" );
 
@@ -1171,7 +1178,7 @@ void CGEMPRules::SetTeamplay( bool state, bool force /*= false*/ )
 	ResetTeamScores( true );
 }
 
-bool CGEMPRules::CreateBot( void )
+bool CGEMPRules::CreateBot()
 {
 	if ( g_pBigAINet->NumNodes() < 10 )
 	{
@@ -1209,7 +1216,7 @@ bool CGEMPRules::RemoveBot( const char *name )
 	return false;
 }
 
-void CGEMPRules::EnforceTeamplay( void )
+void CGEMPRules::EnforceTeamplay()
 {
 	// Always try to balance teams
 	BalanceTeams();
@@ -1243,7 +1250,7 @@ void CGEMPRules::EnforceTeamplay( void )
 	}
 }
 
-void CGEMPRules::EnforceBotCount( void )
+void CGEMPRules::EnforceBotCount()
 {
 	// We have to have nodes in the map!
 	if ( g_pBigAINet->NumNodes() < 10 )
@@ -1262,7 +1269,7 @@ void CGEMPRules::EnforceBotCount( void )
 	int spec_count = 0;
 	int total_count = 0;
 
-	FOR_EACH_MPPLAYER( idx, pPlayer )
+	FOR_EACH_MPPLAYER( pPlayer )
 		if ( pPlayer->IsBotPlayer() )
 			continue;
 
@@ -1320,7 +1327,7 @@ void CGEMPRules::EnforceBotCount( void )
 	m_flNextBotCheck = gpGlobals->curtime + 3.5f;
 }
 
-void CGEMPRules::BalanceTeams( void )
+void CGEMPRules::BalanceTeams()
 {
 	// Don't balance in set tournaments or if we turn it off
 	if ( !ge_teamautobalance.GetBool() || !IsTeamplay() || ge_tournamentmode.GetBool() )
@@ -1495,38 +1502,38 @@ bool CGEMPRules::OnPlayerSay(CBasePlayer* player, const char* text)
 // Match Timer Functions
 bool CGEMPRules::IsMatchTimeEnabled()
 {
-	assert( m_hMatchTimer.Get() != NULL );
+	Assert( m_hMatchTimer.Get() != NULL );
 	return m_hMatchTimer->IsEnabled();
 }
 
 bool CGEMPRules::IsMatchTimePaused()
 {
-	assert( m_hMatchTimer.Get() != NULL );
+	Assert( m_hMatchTimer.Get() != NULL );
 	return m_hMatchTimer->IsPaused();
 }
 
 float CGEMPRules::GetMatchTimeRemaining()
 {
-	assert( m_hMatchTimer.Get() != NULL );
+	Assert( m_hMatchTimer.Get() != NULL );
 	return m_hMatchTimer->GetTimeRemaining();
 }
 
 // Round Timer Functions
 bool CGEMPRules::IsRoundTimeEnabled()
 {
-	assert( m_hRoundTimer.Get() != NULL );
+	Assert( m_hRoundTimer.Get() != NULL );
 	return m_hRoundTimer->IsEnabled();
 }
 
 bool CGEMPRules::IsRoundTimePaused()
 {
-	assert( m_hRoundTimer.Get() != NULL );
+	Assert( m_hRoundTimer.Get() != NULL );
 	return m_hRoundTimer->IsPaused();
 }
 
 float CGEMPRules::GetRoundTimeRemaining()
 {
-	assert( m_hRoundTimer.Get() != NULL );
+	Assert( m_hRoundTimer.Get() != NULL );
 	
 	// We aren't playing rounds, return the match time
 	if ( !IsRoundTimeEnabled() )
@@ -1571,7 +1578,7 @@ bool CGEMPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 }
 
 
-bool CGEMPRules::IsTeamplay( void )
+bool CGEMPRules::IsTeamplay()
 {
 	if ( m_iTeamplayMode == TEAMPLAY_TOGGLE )
 		return m_bTeamPlayDesired;
@@ -1581,16 +1588,16 @@ bool CGEMPRules::IsTeamplay( void )
 		return false;
 }
 
-bool CGEMPRules::IsIntermission( void )
+bool CGEMPRules::IsIntermission()
 {
-#ifndef CLIENT_DLL
-	if ( g_fGameOver )
-		return true;
-
-	if ( GEGameplay()->IsInRoundIntermission() )
-		return true;
+#ifdef GAME_DLL
+	return GEGameplay()->IsInIntermission();
+#else
+	if ( GEGameplayRes() )
+		return GEGameplayRes()->GetGameplayIntermission();
+	else
+		return false;
 #endif
-	return m_bInIntermission;
 }
 
 #if defined(GAME_DLL) && defined(DEBUG)

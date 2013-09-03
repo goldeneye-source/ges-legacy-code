@@ -1733,7 +1733,6 @@
     <ClInclude Include="sdk\server\toolframework_server.h" />
     <ClInclude Include="ges\server\ge_bot.h" />
     <ClInclude Include="ges\server\ge_gameinterface.h" />
-    <ClInclude Include="ges\server\ge_md5util.h" />
     <ClInclude Include="ges\server\ge_player.h" />
     <ClInclude Include="ges\server\sp\npc_gebase.h" />
     <ClInclude Include="ges\server\mp\ge_gameplay.h" />

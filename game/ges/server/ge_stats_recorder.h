@@ -13,9 +13,6 @@
 
 #ifndef GE_STATS_H
 #define GE_STATS_H
-#ifdef _WIN32
-#pragma once
-#endif
 
 #include "ge_gamerules.h"
 #include "ge_gameplay.h"

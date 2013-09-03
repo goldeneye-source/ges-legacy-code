@@ -7,8 +7,9 @@
 // Created By: KillerMonkey
 ///////////////////////////////////////////////////////////////////////////////
 #include "cbase.h"
-#include "ge_spawner.h"
 #include "gemp_gamerules.h"
+#include "ge_tokenmanager.h"
+#include "ge_spawner.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

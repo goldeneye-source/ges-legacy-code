@@ -22,6 +22,7 @@ IMPLEMENT_CLIENTCLASS_DT(C_GEGameplayResource, DT_GEGameplayResource, CGEGamepla
 	RecvPropBool( RECVINFO(m_GameplayOfficial) ),
 	RecvPropInt( RECVINFO(m_GameplayRoundNum) ),
 	RecvPropFloat( RECVINFO(m_GameplayRoundStart) ),
+	RecvPropBool( RECVINFO(m_GameplayIntermission) ),
 	// Loadout Data
 	RecvPropString( RECVINFO(m_LoadoutIdent) ),
 	RecvPropString( RECVINFO(m_LoadoutName) ),
@@ -42,7 +43,7 @@ C_GEGameplayResource *GEGameplayRes()
 }
 
 // -------------------
-// Class Definition
+// GameplayResourceListener definition
 // -------------------
 C_GEGameplayResourceListener::C_GEGameplayResourceListener()
 {
@@ -55,6 +56,9 @@ C_GEGameplayResourceListener::~C_GEGameplayResourceListener()
 }
 
 
+// -------------------
+// GameplayResource Client definition
+// -------------------
 C_GEGameplayResource::C_GEGameplayResource()
 {
 	m_GameplayIdent[0] = m_GameplayName[0] = '\0';
@@ -62,6 +66,7 @@ C_GEGameplayResource::C_GEGameplayResource()
 
 	m_GameplayHelp = INVALID_STRING_INDEX;
 	m_GameplayOfficial = false;
+	m_GameplayIntermission = true;
 	m_GameplayRoundNum = 0;
 	m_GameplayRoundStart = 0;
 

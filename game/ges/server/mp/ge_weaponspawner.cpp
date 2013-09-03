@@ -7,8 +7,10 @@
 // Created By: Killer Monkey (With Help from Mario Cacciatore <mailto:mariocatch@gmail.com>)
 ///////////////////////////////////////////////////////////////////////////////
 #include "cbase.h"
-#include "gemp_gamerules.h"
+
 #include "ge_shareddefs.h"
+#include "gemp_gamerules.h"
+#include "ge_loadoutmanager.h"
 #include "ge_weapon.h"
 #include "ge_spawner.h"
 

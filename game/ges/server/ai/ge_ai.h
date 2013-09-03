@@ -17,6 +17,7 @@
 
 class CNPC_GEBase;
 struct Task_t;
+enum NPC_STATE;
 
 // --------------------
 // Creation, Shutdown, Reboot

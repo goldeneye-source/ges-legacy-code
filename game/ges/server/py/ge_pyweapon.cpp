@@ -8,12 +8,15 @@
 //   Created On: 9/1/2009 10:27:58 PM
 //   Created By: Mark Chandler <mailto:mark@moddb.com>
 ////////////////////////////////////////////////////////////////////////////
-
 #include "ge_pyprecom.h"
+
+#include "ammodef.h"
+
+#include "ge_ai.h"
 #include "ge_weapon.h"
 #include "ge_weapon_parse.h"
+#include "ge_loadoutmanager.h"
 #include "gemp_gamerules.h"
-#include "ge_ai.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

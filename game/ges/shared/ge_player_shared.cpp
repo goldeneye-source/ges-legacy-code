@@ -17,7 +17,7 @@
 #else
 	#include "ge_player.h"
 	#include "ilagcompensationmanager.h"
-	#include "GameStats.h"
+	#include "ge_stats_recorder.h"
 	#include "te_effect_dispatch.h"
 	#include "iservervehicle.h"
 	#include "soundent.h"
@@ -31,6 +31,7 @@
 #include "ai_debug_shared.h"
 #include "in_buttons.h"
 #include "ge_gamerules.h"
+#include "ammodef.h"
 #include "ge_weapon.h"
 #include "rumble_shared.h"
 #include "engine/IEngineSound.h"

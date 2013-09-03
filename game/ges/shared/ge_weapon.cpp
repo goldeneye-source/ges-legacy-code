@@ -26,6 +26,7 @@
 	#include "ge_player.h"
 	#include "npc_gebase.h"
 	#include "particle_parse.h"
+	#include "ge_tokenmanager.h"
 #endif
 
 #include "gemp_gamerules.h"

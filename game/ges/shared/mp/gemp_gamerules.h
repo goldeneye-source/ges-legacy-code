@@ -10,17 +10,21 @@
 
 #ifndef GEMP_GAMERULES_H
 #define GEMP_GAMERULES_H
-#ifdef _WIN32
-#pragma once
-#endif
 
 #include "ge_gamerules.h"
-#include "ge_game_timer.h"
 
-#ifdef GAME_DLL
-	#include "ge_tokenmanager.h"
-	#include "ge_loadoutmanager.h"
+#ifdef CLIENT_DLL
+	#define CGEMPRules			C_GEMPRules
+	#define CGEMPGameRulesProxy C_GEMPGameRulesProxy
+#else
+	#include "ge_gameplay.h"
+
+	class CGETokenManager;
+	class CGELoadoutManager;
 #endif
+
+class CGEGameTimer;
+class CGEMPGameRulesProxy;
 
 // Teamplay desirability
 enum GES_TEAMPLAY
@@ -29,13 +33,6 @@ enum GES_TEAMPLAY
 	TEAMPLAY_ONLY,
 	TEAMPLAY_TOGGLE
 };
-
-#ifdef CLIENT_DLL
-	#define CGEMPRules			C_GEMPRules
-	#define CGEMPGameRulesProxy C_GEMPGameRulesProxy
-#endif
-
-class CGEMPGameRulesProxy;
 
 class CGEMPRules : public CGERules, public CGEGameplayEventListener
 {
@@ -54,23 +51,30 @@ public:
 	// ------------------------------
 	// Server Only -- GES Functions
 #ifdef GAME_DLL
-	// ------------------------------
-	// CGEGameplayEventListener
-	virtual void OnMatchStarted();
-	virtual void OnRoundRestart();
-	virtual void OnRoundStarted();
-	virtual void OnRoundEnded();
+	// Gameplay event listener
+	virtual void OnGameplayEvent( GPEvent event );
 
+	// Round Setup Interface
+	void SetupRound();
+
+protected:
+	// Gameplay event handlers
+	void OnScenarioInit();
+	void OnMatchStart();
+	void OnRoundStart();
+	void OnRoundEnd();
+
+public:
 	// This is used to call functions right before the client spawns into the server
 	virtual void ClientActive( CBasePlayer *pPlayer );
 	virtual void CalculateCustomDamage( CBasePlayer *pPlayer, CTakeDamageInfo &info, float &health, float &armor );
-
-	bool InRoundRestart();
-
+	
 	// Timer control
+	void SetMatchTime( float new_time_sec );
 	void SetMatchTimerPaused( bool state );
 	void DisableMatchTimer();
 
+	void SetRoundTime( float new_time_sec );
 	void SetRoundTimerPaused( bool state );
 	void DisableRoundTimer();
 	
@@ -107,7 +111,6 @@ public:
 	void SetWeaponSpawnState( bool state )	{ m_bEnableWeaponSpawns = state; }
 	void SetAmmoSpawnState( bool state )	{ m_bEnableAmmoSpawns = state; }
 	void SetArmorSpawnState( bool state )	{ m_bEnableArmorSpawns = state; }
-	void SetIntermission( bool state )		{ m_bInIntermission = state; }
 
 	// These accessors control the use of team spawns (if available and team play enabled)
 	bool IsTeamSpawn()				{ return m_bUseTeamSpawns; }
@@ -162,8 +165,7 @@ public:
 
 	virtual void HandleTimeLimitChange( void );
 
-	virtual void ChangeLevel();
-	virtual void SetupChangeLevel( const char *levelname );
+	virtual void SetupChangeLevel( const char *next_level = NULL );
 	virtual void GoToIntermission();
 
 	virtual bool OnPlayerSay(CBasePlayer* player, const char* text);
@@ -187,6 +189,8 @@ public:
 private:
 
 #ifdef GAME_DLL
+	virtual void ChangeLevel();
+
 	CGELoadoutManager	*m_pLoadoutManager;
 	CGETokenManager		*m_pTokenManager;
 
@@ -224,7 +228,6 @@ private:
 
 	CNetworkVar( bool,	m_bTeamPlayDesired );
 	CNetworkVar( int,	m_iTeamplayMode );
-	CNetworkVar( bool,	m_bInIntermission );
 
 	CNetworkHandle( CGEGameTimer, m_hMatchTimer );
 	CNetworkHandle( CGEGameTimer, m_hRoundTimer );

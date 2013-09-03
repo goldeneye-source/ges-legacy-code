@@ -27,7 +27,9 @@ static char team_names[MAX_TEAMS][MAX_TEAMNAME_LENGTH];
 static int team_scores[MAX_TEAMS];
 static int num_teams = 0;
 
+#ifndef GE_DLL
 extern bool		g_fGameOver;
+#endif
 
 REGISTER_GAMERULES_CLASS( CTeamplayRules );
 
@@ -69,12 +71,14 @@ void CTeamplayRules::Think ( void )
 	BaseClass::Think();
 
 	///// Check game rules /////
-
+#ifndef GE_DLL
+	// GE_DLL: Removing g_fGameOver
 	if ( g_fGameOver )   // someone else quit the game already
 	{
 		BaseClass::Think();
 		return;
 	}
+#endif
 
 	float flTimeLimit = mp_timelimit.GetFloat() * 60;
 	

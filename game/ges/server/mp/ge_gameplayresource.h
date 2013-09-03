@@ -27,8 +27,7 @@ public:
 	virtual int  UpdateTransmitState( void );
 
 	// Gameplay Events
-	virtual void OnGameplayLoaded();
-	virtual void OnRoundStarted();
+	virtual void OnGameplayEvent( GPEvent event );
 
 	// Loadout Events
 	virtual void OnLoadoutChanged( const char *ident, const char *name, CUtlVector<int> &weapons );
@@ -44,6 +43,7 @@ protected:
 	CNetworkVar( bool, m_GameplayOfficial );
 	CNetworkVar( int,  m_GameplayRoundNum );
 	CNetworkVar( float, m_GameplayRoundStart );
+	CNetworkVar( bool, m_GameplayIntermission );
 	// Loadout Data
 	CNetworkString( m_LoadoutIdent, 32 );
 	CNetworkString( m_LoadoutName,  64 );

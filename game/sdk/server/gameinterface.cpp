@@ -2407,6 +2407,9 @@ void CServerGameClients::ClientActive( edict_t *pEdict, bool bLoadGame )
 	SceneManager_ClientActive( pPlayer );
 }
 
+#ifndef GE_DLL
+// GE_DLL: This function is defined in ge_gameinterface.cpp
+//
 //-----------------------------------------------------------------------------
 // Purpose: called when a player disconnects from a server
 // Input  : *pEdict - the player
@@ -2455,6 +2458,7 @@ void CServerGameClients::ClientDisconnect( edict_t *pEdict )
 #endif
 	}
 }
+#endif // GE_DLL
 
 void CServerGameClients::ClientPutInServer( edict_t *pEntity, const char *playername )
 {

@@ -9,55 +9,47 @@
 
 #ifndef MC_GE_GAMEPLAY_H
 #define MC_GE_GAMEPLAY_H
-#ifdef _WIN32
-#pragma once
-#endif
 
 class CGEPlayer;
 class CBaseEntity;
 class CGEWeapon;
 class CGECaptureArea;
 
-enum GEGameState
-{
-	GAMESTATE_NONE,
-	GAMESTATE_STARTING,
-	GAMESTATE_RESTART,
-	GAMESTATE_DELAY,
-	GAMESTATE_PLAYING,
-};
-
 // --------------------
-// Creation, Shutdown, Reboot
+// Control of the gameplay manager
 // --------------------
 extern void CreateGameplayManager();
 extern void ShutdownGameplayManager();
 
-
 // --------------------
-// Base Scenario Linker
+// Base Scenario Definition
 // --------------------
-
 class CGEBaseScenario
 {
 public:
 	CGEBaseScenario();
 
+protected:
+	virtual void Init()=0;
+	virtual void Shutdown()=0;
+
+	friend class CGEBaseGameplayManager;
+
+public:
+	// Convar controls
 	void LoadConfig();
 	void CreateCVar(const char* name, const char* defValue, const char* help);
-	void SetIsOfficial(bool state)	{ m_bIsOfficial = state; };
-	bool IsOfficial( void )			{ return m_bIsOfficial; };
+	void UnloadConfig();
 
-	virtual void Cleanup();
+	// Check official
+	bool IsOfficial()  { return m_bIsOfficial; }
+	void SetIsOfficial( bool state )  { m_bIsOfficial = state; }
 
 	virtual const char* GetIdent()=0;
 	virtual const char* GetGameDescription()=0;
 	virtual const char* GetPrintName()=0;
 	virtual int GetHelpString()=0;
 	virtual int GetTeamPlay()=0;
-
-	virtual void OnLoadGamePlay()=0;
-	virtual void OnUnloadGamePlay()=0;
 
 	virtual void ClientConnect(CGEPlayer *pPlayer)=0;
 	virtual void ClientDisconnect(CGEPlayer *pPlayer)=0;
@@ -97,6 +89,7 @@ private:
 	bool m_bIsOfficial;
 	CUtlVector<ConVar*> m_vCVarList;
 
+	// No copies allowed
 	CGEBaseScenario(const CGEBaseScenario &) { }
 };
 
@@ -104,20 +97,23 @@ private:
 // Class that enables event based messaging of gameplay events
 // to all registered listeners. Listeners are registered automatically
 // in the CGEGameplayEventListener constructor
+enum GPEvent {
+	SCENARIO_INIT,
+	MATCH_START,
+	ROUND_START,
+	ROUND_END,
+	MATCH_END,
+	SCENARIO_SHUTDOWN
+};
+
 class CGEGameplayEventListener
 {
 public:
+	// Self register/deregister
 	CGEGameplayEventListener();
 	~CGEGameplayEventListener();
 
-	// Replace these with inherited versions!
-	virtual void OnGameplayLoaded()		{ }		// When gameplay is loaded
-	virtual void OnMatchStarted()		{ }		// Before first round of current gameplay on current level
-	virtual void OnRoundRestart()		{ }		// Called after the world respawns, but before players
-	virtual void OnRoundStarted()		{ }		// After players are spawned in the new round
-	virtual void OnRoundEnded()			{ }		// After the round timer ends
-	virtual void OnMatchEnded()			{ }		// After the last round's intermission time is over
-	virtual void OnGameplayUnloaded()	{ }		// When gameplay is unloaded
+	virtual void OnGameplayEvent( GPEvent event )=0;
 };
 
 
@@ -133,6 +129,7 @@ protected:
 	virtual bool DoLoadScenario( const char *ident )=0;
 public:
 	virtual CGEBaseScenario* GetScenario()=0;
+	virtual bool IsValidScenario()=0;
 // End Abstract
 	
 	virtual void Init();
@@ -140,85 +137,82 @@ public:
 
 	// Loads the next scenario to play
 	bool LoadScenario();
+	// Loads the named scenario to play
 	bool LoadScenario( const char *ident );
-	
-	void SetIntermission( bool state )	{ m_bRoundIntermission = state; }
-	bool IsInRoundIntermission()		{ return m_bRoundIntermission; }
-	float GetRemainingIntermission();
 
-	// Check to see if we should end the round or match
-	bool CanEndRound()					{ return m_bCanEndRoundCache; }
-	bool CanEndMatch()					{ return m_bCanEndMatchCache; }
-	bool IsMatchEndBlocked()			{ return m_bMatchBlockedByScenario; }
-	
-	// Controls for the round (does not check conditions)
+	// Round controls (does not check conditions)
 	void StartRound();
 	void EndRound( bool showreport = true );
 
-	// Controls for the match (does not check conditions)
+	// Match controls (does not check conditions)
 	void StartMatch();
 	void EndMatch();
-	
-	GEGameState GetState()				{ return m_iGameState; }
-	
+
+	// Round state checks
+	bool IsInRound()		{ return m_iRoundState == RoundState::PLAYING; }
+	int  GetRoundCount()	{ return m_iRoundCount; }
+
+	// Round locking [TODO: Move into Python Scenario]
 	void SetRoundLocked( bool state )	{ m_bRoundLocked = state; }
 	bool IsRoundLocked()				{ return m_bRoundLocked; }
-	bool IsRoundStarted()				{ return m_bInRound; }
-	int  GetRoundCount()				{ return m_iRoundCount; }
-
+	
+	// Intermission checks
+	bool IsInIntermission()			{ return IsInRoundIntermission() || IsInFinalIntermission(); }
+	bool IsInRoundIntermission()	{ return m_iRoundState == RoundState::INTERMISSION; }
+	bool IsInFinalIntermission()	{ return m_iRoundState == RoundState::GAME_OVER; }
+	float GetRemainingIntermission();
+	
 	void LoadGamePlayList( const char* path );
 	void PrintGamePlayList();
 	// Merely verifies that the python file exists
 	bool IsValidGamePlay( const char *ident );
 
-	// Gameplay cycle management
-	void OnLoadGamePlay();
-	void OnUnloadGamePlay();
 	void OnThink();
-	
-	// Flow control
-	bool SetScenarioOrdered();
-	bool SetScenarioRandom();
 
 protected:
-	void BroadcastGamePlay();
-	void BroadcastRoundStart();
-	void BroadcastRoundEnd( bool showreport );
-	
 	// Return the next scenario to load
 	const char *GetNextScenario();
 
-	
+	// Gameplay cycle management
+	void InitScenario();
+	void ShutdownScenario();
+
+private:
+	enum RoundState {
+		NONE,  // No state yet, this is the null condition
+		PRE_START, // Round is ready to start
+		PLAYING,  // Round is being played (timer active)
+		INTERMISSION, // In an intermission (timer inactive)
+		GAME_OVER,  // The match is over, waiting to change map
+	};
+
+	void BroadcastMatchStart();
+	void BroadcastRoundStart();
+	void BroadcastRoundEnd( bool showreport );
+	void BroadcastMatchEnd();
 
 	void CalculatePlayerScores();
 
-private:
-	void SetState( GEGameState state, bool forcenow = false );
-	const char *GetStateName( GEGameState state );
-
-	void CalcCanEndRound();
-	void CalcCanEndMatch();
+	bool CanEndRound();
+	bool CanEndMatch();
 
 	void LoadScenarioCycle();
+	void ResetState();
 	void ResetGameState();
 
-	// Time of next think cycle
+	// Think Timer
 	float m_flNextThink;
-	
-	// Status variables
-	bool m_bRoundIntermission;
-	bool m_bRoundLocked;
-	bool m_bInRound;
-	int	 m_iRoundCount;
+
+	// Round and Match Timers
 	float m_flRoundStart;
-
-	// Round and Match end cache
-	bool m_bCanEndRoundCache;
-	bool m_bCanEndMatchCache;
-	bool m_bMatchBlockedByScenario;
-
-	GEGameState m_iGameState;
-
+	float m_flMatchStart;
+	
+	// Round state tracker
+	int m_iRoundState;
+	int	m_iRoundCount;
+	bool m_bRoundLocked;
+	float m_flIntermissionEndTime;
+	
 	CUtlVector<char*> m_vScenarioList;
 	CUtlVector<char*> m_vScenarioCycle;
 

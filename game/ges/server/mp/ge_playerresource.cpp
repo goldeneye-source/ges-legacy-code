@@ -61,13 +61,16 @@ void CGEPlayerResource::UpdatePlayerData( void )
 		if ( pPlayer && pPlayer->IsConnected() )
 		{
 			// Use GE's scoring system instead of kills (Python support)
-			if ( g_fGameOver )
+			// TODO: This might not work well with our event driven system
+			if ( GEGameplay()->IsInFinalIntermission() )
 			{
 				m_iScore.Set( i, pPlayer->GetMatchScore() );
 				m_iDeaths.Set( i, pPlayer->GetMatchDeaths() );
 			}
 			else
+			{
 				m_iScore.Set( i, pPlayer->GetRoundScore() );
+			}
 
 			m_iFavWeapon.Set( i, pPlayer->GetFavoriteWeapon() );
 			m_iDevStatus.Set( i, pPlayer->GetDevStatus() );

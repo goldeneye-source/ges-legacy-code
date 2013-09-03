@@ -37,20 +37,21 @@ public:
 
 	virtual void OnDataChanged( DataUpdateType_t type );
 
-	virtual const char* GetGameplayIdent()	{ return m_GameplayIdent; }
-	virtual const char* GetGameplayName()	{ return m_GameplayName; }
-	virtual const char* GetLoadoutIdent()	{ return m_LoadoutIdent; }
-	virtual const char* GetLoadoutName()	{ return m_LoadoutName; }
+	const char* GetGameplayIdent()	{ return m_GameplayIdent; }
+	const char* GetGameplayName()	{ return m_GameplayName; }
+	const char* GetLoadoutIdent()	{ return m_LoadoutIdent; }
+	const char* GetLoadoutName()	{ return m_LoadoutName; }
 
-	virtual int	  GetGameplayHelp()			{ return m_GameplayHelp; }
-	virtual bool  GetGameplayOfficial()		{ return m_GameplayOfficial; }
-	virtual int   GetGameplayRoundNum()		{ return m_GameplayRoundNum; }
-	virtual float GetGameplayRoundStart()	{ return m_GameplayRoundStart; }
+	int	  GetGameplayHelp()			{ return m_GameplayHelp; }
+	bool  GetGameplayOfficial()		{ return m_GameplayOfficial; }
+	int   GetGameplayRoundNum()		{ return m_GameplayRoundNum; }
+	float GetGameplayRoundStart()	{ return m_GameplayRoundStart; }
+	bool  GetGameplayIntermission()	{ return m_GameplayIntermission; }
 
-	virtual int  GetLoadoutWeapon( int slot );
-	virtual void GetLoadoutWeaponList( CUtlVector<int>& list );
+	int  GetLoadoutWeapon( int slot );
+	void GetLoadoutWeaponList( CUtlVector<int>& list );
 
-	virtual void GetCharacterExclusion( CUtlVector<char*> &list );
+	void GetCharacterExclusion( CUtlVector<char*> &list );
 
 protected:
 	// Gameplay Data
@@ -60,6 +61,7 @@ protected:
 	bool  m_GameplayOfficial;
 	int   m_GameplayRoundNum;
 	float m_GameplayRoundStart;
+	bool  m_GameplayIntermission;
 
 	// Loadout Data
 	char m_LoadoutIdent[32];

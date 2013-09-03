@@ -96,21 +96,30 @@ void CGEGameTimer::Stop()
 
 void CGEGameTimer::ChangeLength( float length_seconds )
 {
-	// Check if we are enabled
-	if ( m_bEnabled ) {
-		// Temporarily resume the time to reset our state
-		bool was_paused = IsPaused();
-		if ( was_paused )
-			Resume();
-
-		// Find time diff and modify the end time
-		int time_diff = length_seconds - m_flLength;
-		m_flEndTime += time_diff;
-
-		// If we were paused, put as back in that state
-		if ( was_paused )
-			Pause();
+	// Stop the timer if we change to 0 length
+	if ( length_seconds <= 0 ) {
+		Stop();
+		return;
 	}
+
+	// Start the timer if we were not started before
+	if ( !IsEnabled() ) {
+		Start( length_seconds );
+		return;
+	}
+
+	// If paused, resume the time to capture our real end time
+	bool was_paused = IsPaused();
+	if ( was_paused )
+		Resume();
+
+	// Find time diff and modify the end time
+	int time_diff = length_seconds - m_flLength;
+	m_flEndTime += time_diff;
+
+	// If we were paused, put as back in that state
+	if ( was_paused )
+		Pause();
 }
 
 //-----------------------------------------------------------------------------

@@ -8,11 +8,13 @@
 //   Created On: 8/24/2009 3:39:38 PM
 //   Created By: Mark Chandler <mailto:mark@moddb.com>
 ////////////////////////////////////////////////////////////////////////////
-
 #include "ge_pyprecom.h"
-#include "gebot_player.h"
-#include "gemp_player.h"
+
+#include "ammodef.h"
+
 #include "ge_player.h"
+#include "gemp_player.h"
+#include "gebot_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

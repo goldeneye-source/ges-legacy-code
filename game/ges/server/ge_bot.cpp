@@ -137,15 +137,17 @@ void Bot_RunAll( void )
 	// Don't even look for bots if there are none
 	if ( BotNumber == 0 )
 		return;
+	
+	// Don't run during intermission times
+	if ( GEGameplay()->IsInIntermission() )
+		return;
 
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CGEPlayer *pPlayer = ToGEPlayer( UTIL_PlayerByIndex( i ) );
 
 		if ( pPlayer && pPlayer->IsBot() && !pPlayer->IsBotPlayer() )
-		{
 			Bot_Think( pPlayer );
-		}
 	}
 }
 

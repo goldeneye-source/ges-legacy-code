@@ -12,9 +12,8 @@ static const char kUniversalFilter[] = "*";
 // Formats a countable noun.  Depending on its quantity, either the
 // singular form or the plural form is used. e.g.
 static std::string FormatCountableNoun(int count, const char * singular_form, const char * plural_form) {
-	std::stringstream out;
-	out << count << " " << (count == 1 ? singular_form : plural_form);
-	return out.str();
+	return (Message() 
+		<< count << " " << (count == 1 ? singular_form : plural_form) ).GetString();
 }
 
 // Formats the count of tests.
@@ -112,7 +111,7 @@ void SDKUnitTestListener::OnTestPartResult(const TestPartResult& result) {
 
 	// Print failure message from the assertion (e.g. expected this and got that).
 	std::string res = PrintTestPartResultToString(result);
-	Msg( "%s", res.c_str() );
+	Msg( "%s\n", res.c_str() );
 }
 
 void SDKUnitTestListener::OnTestEnd(const TestInfo& test_info) {

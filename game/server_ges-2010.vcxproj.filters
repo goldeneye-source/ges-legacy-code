@@ -3335,9 +3335,6 @@
     <ClInclude Include="ges\server\ge_gameinterface.h">
       <Filter>GES</Filter>
     </ClInclude>
-    <ClInclude Include="ges\server\ge_md5util.h">
-      <Filter>GES</Filter>
-    </ClInclude>
     <ClInclude Include="ges\server\mp\ge_gameplay.h">
       <Filter>GES\Gameplay</Filter>
     </ClInclude>

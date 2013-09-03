@@ -9,29 +9,27 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include "cbase.h"
-#include "globalstate.h"
-#include "game.h"
-#include "eventqueue.h"
-#include "in_buttons.h"
 
-#include "gemp_gamerules.h"
+#include "in_buttons.h"
+#include "ammodef.h"
+#include "predicted_viewmodel.h"
+#include "viewport_panel_names.h"
+#include "engine/IEngineSound.h"
+#include "SoundEmitterSystem/isoundemittersystembase.h"
+#include "ilagcompensationmanager.h"
+
 #include "ge_tokenmanager.h"
 #include "ge_player_shared.h"
 #include "ge_playerresource.h"
 #include "ge_character_data.h"
-
-#include "ge_player.h"
+#include "ge_stats_recorder.h"
 #include "ge_weapon.h"
 #include "ge_bloodscreenvm.h"
-#include "predicted_viewmodel.h"
 #include "grenade_gebase.h"
 #include "ent_hat.h"
+#include "gemp_gamerules.h"
 
-#include "viewport_panel_names.h"
-
-#include "engine/IEngineSound.h"
-#include "SoundEmitterSystem/isoundemittersystembase.h"
-#include "ilagcompensationmanager.h"
+#include "ge_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

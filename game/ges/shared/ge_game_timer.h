@@ -25,6 +25,8 @@ public:
 
 	// Get the remaining time on this timer
 	float GetTimeRemaining();
+	// Get the length of the timer
+	float GetLength()	{ return m_flLength; }
 
 	// See if we are enabled
 	bool IsEnabled()	{ return m_bEnabled; }

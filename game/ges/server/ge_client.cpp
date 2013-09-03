@@ -136,13 +136,6 @@ void respawn( CBaseEntity *pEdict, bool fCopyCorpse )
 void GameStartFrame( void )
 {
 	VPROF("GameStartFrame()");
-	if ( g_fGameOver )
-		return;
-
-	gpGlobals->teamplay = GERules()->IsTeamplay();
-#ifdef GE_OLD_AI
-	GEAi()->AiThink();
-#endif
 
 #ifdef GES_ENABLE_OLD_BOTS
 	extern void Bot_RunAll();

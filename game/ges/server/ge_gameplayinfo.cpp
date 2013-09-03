@@ -15,14 +15,11 @@
 
 class CGEGameplayInfo : public CPointEntity, public CGEGameplayEventListener
 {
-	DECLARE_CLASS( CGEGameplayInfo, CPointEntity );
-
 public:
-	CGEGameplayInfo();
+	DECLARE_CLASS( CGEGameplayInfo, CPointEntity );
 	DECLARE_DATADESC();
 
-	void OnRoundRestart();
-	void OnRoundEnded();
+	virtual void OnGameplayEvent( GPEvent event );
 
 	void InputGetPlayerCount( inputdata_t &inputdata );
 	void InputGetRoundCount( inputdata_t &inputdata );
@@ -51,34 +48,30 @@ BEGIN_DATADESC( CGEGameplayInfo )
 	DEFINE_OUTPUT( m_outRoundEnd, "RoundEnd"),
 END_DATADESC()
 
-CGEGameplayInfo::CGEGameplayInfo()
-{
-
-}
-
 // Called BEFORE players spawn
-void CGEGameplayInfo::OnRoundRestart()
+void CGEGameplayInfo::OnGameplayEvent( GPEvent event )
 {
-	// Call teamplay output
-	if ( GEMPRules()->IsTeamplay() )
-		m_outTeamplayOn.FireOutput( this, this );
-	else
-		m_outTeamplayOff.FireOutput( this, this );
+	if ( event == ROUND_START )
+	{
+		// Call teamplay output
+		if ( GEMPRules()->IsTeamplay() )
+			m_outTeamplayOn.FireOutput( this, this );
+		else
+			m_outTeamplayOff.FireOutput( this, this );
 
-	// Call players output
-	m_outPlayerCount.Set( GEMPRules()->GetNumActivePlayers(), this, this );
+		// Call players output
+		m_outPlayerCount.Set( GEMPRules()->GetNumActivePlayers(), this, this );
 
-	// Call num rounds output
-	m_outRoundCount.Set( GEGameplay()->GetRoundCount(), this, this );
+		// Call num rounds output
+		m_outRoundCount.Set( GEGameplay()->GetRoundCount(), this, this );
 
-	// Call round start output
-	m_outRoundStart.FireOutput( this, this );
-}
-
-// Called when the round timer ends
-void CGEGameplayInfo::OnRoundEnded()
-{
-	m_outRoundEnd.FireOutput( this, this );
+		// Call round start output
+		m_outRoundStart.FireOutput( this, this );
+	}
+	else if ( event == ROUND_END )
+	{
+		m_outRoundEnd.FireOutput( this, this );
+	}
 }
 
 void CGEGameplayInfo::InputGetPlayerCount( inputdata_t &inputdata )

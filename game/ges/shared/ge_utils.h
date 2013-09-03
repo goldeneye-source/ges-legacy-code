@@ -79,4 +79,8 @@ void GEUTIL_DelayRemove( CBaseEntity *pEnt, float delay );
 
 // Get the current version of GES as defined in version.txt
 bool GEUTIL_GetVersion( string_t &text, int &major, int &minor, int &client, int &server );
+
+// Calculates the MD5 Sum of the given string (defined in ge_md5util.cpp)
+void GEUTIL_MD5( const char *str, char *out, int out_len );
+
 #endif

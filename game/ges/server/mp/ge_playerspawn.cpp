@@ -109,7 +109,7 @@ int CGEPlayerSpawn::GetDesirability( CGEPlayer *pRequestor )
 	m_iLastEnemyWeight = m_iLastUseWeight = m_iLastDeathWeight = 0;
 
 	// Knock us down for nearby enemies
-	FOR_EACH_PLAYER( k, pPlayer )
+	FOR_EACH_PLAYER( pPlayer )
 	{
 		if ( pPlayer->IsObserver() || pPlayer->IsDead() )
 			continue;

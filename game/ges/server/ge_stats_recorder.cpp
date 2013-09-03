@@ -554,7 +554,7 @@ bool CGEStats::GetAwardWinner( int iAward, GEStatSort &winner )
 		entry->idx = i;
 
 		// If this is the last report, then take the match stats, average them over the rounds, and use that as our stat
-		if ( g_fGameOver )
+		if ( GEGameplay()->IsInFinalIntermission() )
 			entry->m_iStat = m_pPlayerStats[i]->GetMatchStat( iAward ) / m_iRoundCount;
 		else
 			entry->m_iStat = m_pPlayerStats[i]->GetRoundStat( iAward );
@@ -627,7 +627,7 @@ bool CGEStats::GetFavoriteWeapon( int iPlayer, GEWeaponSort &fav )
 	for ( int i=WEAPON_NONE+1; i < WEAPON_MAX; i++ )
 	{
 		GEWeaponSort *entry = new GEWeaponSort;
-		if ( g_fGameOver )
+		if ( GEGameplay()->IsInFinalIntermission() )
 		{
 			entry->m_iPercentage = stats->m_iMatchWeapons[i];
 		}

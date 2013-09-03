@@ -19,6 +19,7 @@
 #include "gemp_gamerules.h"
 #include "gemp_player.h"
 #include "ge_gameplay.h"
+#include "ge_tokenmanager.h"
 
 #include "particle_parse.h"
 #include "networkstringtable_gamedll.h"

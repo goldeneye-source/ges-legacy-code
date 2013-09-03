@@ -7,23 +7,17 @@
 // Created On: 28 Feb 08, 23:00
 // Created By: Jonathan White <killermonkey> 
 /////////////////////////////////////////////////////////////////////////////
-
 #ifndef GE_GAMERULES_H
 #define GE_GAMERULES_H
-#pragma once
 
-#include "multiplay_gamerules.h"
 #include "ge_shareddefs.h"
-#include "ammodef.h"
-
-#ifdef GAME_DLL
-	#include "ge_player.h"
-	#include "ge_stats_recorder.h"
-#endif
+#include "multiplay_gamerules.h"
 
 #ifdef CLIENT_DLL
 	#define CGERules C_GERules
 #endif
+
+class CGEPlayer;
 
 // Mins & Maxs for dynamic collision bounds for proper hit detection
 static Vector VEC_DUCK_SHOT_MIN( -20, -20,  0 );
@@ -51,12 +45,15 @@ public:
 	void UpdateSpawnerLocations();
 	bool GetSpawnerStats( int spawn_type, Vector &mins, Vector &maxs, Vector &centroid );
 
+	// Respawns all active players
+	void SpawnPlayers();
+
 	bool HaveStatusListsUpdated() { return m_bStatusListsUpdated; }
 
-	virtual void SpawnPlayers();
-	virtual void WorldReload();
-
 protected:
+	// Reload the game world
+	void WorldReload();
+
 	void LoadMapCycle();
 	void ClearSpawnerLocations();
 #endif

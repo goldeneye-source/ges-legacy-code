@@ -8,10 +8,11 @@
 // Created By: Jonathan White <killermonkey> 
 /////////////////////////////////////////////////////////////////////////////
 #include "cbase.h"
-#include "ent_capturearea.h"
 #include "gemp_gamerules.h"
+#include "ge_tokenmanager.h"
 #include "ge_gameplay.h"
 #include "npc_gebase.h"
+#include "ent_capturearea.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

@@ -8,12 +8,16 @@
 // Created On: 6/20/2011
 // Created By: Killer Monkey
 ////////////////////////////////////////////////////////////////////////////////
-
 #include "cbase.h"
-#include "ge_ammocrate.h"
-#include "gemp_gamerules.h"
+
+#include "ammodef.h"
+
 #include "ge_shareddefs.h"
+#include "ge_tokenmanager.h"
 #include "gebot_player.h"
+#include "gemp_gamerules.h"
+
+#include "ge_ammocrate.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

@@ -10,25 +10,26 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "cbase.h"
-#include "globalstate.h"
-#include "game.h"
-#include "team.h"
-#include "in_buttons.h"
 
-#include "gebot_player.h"
-#include "gemp_gamerules.h"
+#include "viewport_panel_names.h"
+#include "predicted_viewmodel.h"
+#include "in_buttons.h"
+#include "ammodef.h"
+#include "team.h"
+
+#include "ge_utils.h"
+#include "ent_hat.h"
 #include "ge_gameplay.h"
+#include "ge_loadoutmanager.h"
 #include "ge_tokenmanager.h"
 #include "ge_radarresource.h"
 #include "ge_character_data.h"
 #include "ge_achievement_defs.h"
-#include "ge_utils.h"
-
 #include "ge_weapon.h"
-#include "predicted_viewmodel.h"
-#include "ent_hat.h"
+#include "ge_stats_recorder.h"
+#include "gemp_gamerules.h"
 
-#include "viewport_panel_names.h"
+#include "gebot_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

@@ -160,12 +160,16 @@
     </ClCompile>
     <ClCompile Include="tests\env.cpp" />
     <ClCompile Include="tests\sdk_listener.cpp" />
+    <ClCompile Include="tests\server\ge_gameplay_test.cpp" />
     <ClCompile Include="tests\server\ge_gamerules_test.cpp" />
     <ClCompile Include="tests\server\ge_game_timer_test.cpp" />
     <ClCompile Include="tests\server\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\lib\gtest\gtestd.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="tests\common_test.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

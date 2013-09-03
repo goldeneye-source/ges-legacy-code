@@ -14,6 +14,7 @@
 #include "cbase.h"
 #include "ge_gamerules.h"
 #include "ge_gameinterface.h"
+#include "GameStats.h"
 #include "mapentities.h"
 #include "ge_utils.h"
 
@@ -33,6 +34,46 @@ void CServerGameClients::GetPlayerLimits( int& minplayers, int& maxplayers, int 
 	minplayers = 2;
 	maxplayers = MAX_PLAYERS;
 	defaultMaxPlayers = 16;
+}
+
+void CServerGameClients::ClientDisconnect( edict_t *pEdict )
+{
+	CBasePlayer *player = ( CBasePlayer * )CBaseEntity::Instance( pEdict );
+	if ( player )
+	{
+		player->SetMaxSpeed( 0.0f );
+
+		CSound *pSound;
+		pSound = CSoundEnt::SoundPointerForIndex( CSoundEnt::ClientSoundIndex( pEdict ) );
+		{
+			// since this client isn't around to think anymore, reset their sound. 
+			if ( pSound )
+			{
+				pSound->Reset();
+			}
+		}
+
+		// since the edict doesn't get deleted, fix it so it doesn't interfere.
+		player->RemoveFlag( FL_AIMTARGET ); // don't attract autoaim
+		player->AddFlag( FL_DONTTOUCH );	// stop it touching anything
+		player->AddFlag( FL_NOTARGET );	// stop NPCs noticing it
+		player->AddSolidFlags( FSOLID_NOT_SOLID );		// nonsolid
+
+		if ( g_pGameRules )
+		{
+			g_pGameRules->ClientDisconnected( pEdict );
+			gamestats->Event_PlayerDisconnected( player );
+		}
+
+		// Make sure all Untouch()'s are called for this client leaving
+		CBaseEntity::PhysicsRemoveTouchedList( player );
+		CBaseEntity::PhysicsRemoveGroundList( player );
+
+#if !defined( NO_ENTITY_PREDICTION )
+		// Make sure anything we "own" is simulated by the server from now on
+		player->ClearPlayerSimulationList();
+#endif
+	}
 }
 
 void CServerGameDLL::LevelInit_ParseAllEntities( const char *pMapEntities )

@@ -1,15 +1,15 @@
 #include "cbase.h"
-#include "gtest/gtest.h"
+#include "../common_test.h"
 
+#include "ge_gameplay.h"
 #include "gemp_gamerules.h"
 
 int ge_gamerules_test = 1;
 
-class GameRulesTest : public ::testing::Test {
+class GameRulesTest : public CGECommonTest {
 protected:
-	GameRulesTest() {
-		// Setup, NO exceptions
-	}
+	GameRulesTest() { }
+	virtual ~GameRulesTest() { }
 
 	virtual void SetUp() {
 		// Create a brand new game rules
@@ -19,10 +19,4 @@ protected:
 	virtual void TearDown() {
 		// Nothing to see here
 	}
-
-	virtual ~GameRulesTest() {
-		// Cleanup, NO exceptions
-	}
 };
-
-TEST_F(GameRulesTest, 

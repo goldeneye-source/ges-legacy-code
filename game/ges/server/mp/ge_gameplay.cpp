@@ -371,6 +371,7 @@ void CGEBaseGameplayManager::ShutdownScenario()
 
 void CGEBaseGameplayManager::ResetState()
 {
+	m_bGameOver = false;
 	m_bRoundLocked = false;
 	m_iRoundState = RoundState::NONE;
 	m_iRoundCount = 0;
@@ -399,7 +400,7 @@ void CGEBaseGameplayManager::OnThink()
 	}
 
 	// Check if the game over time is over
-	if ( IsInFinalIntermission() && GetRemainingIntermission() <= 0 )
+	if ( IsGameOver() && GetRemainingIntermission() <= 0 )
 	{
 		GEMPRules()->SetupChangeLevel();
 		return;
@@ -453,6 +454,7 @@ void CGEBaseGameplayManager::StartMatch()
 	m_flMatchStart = gpGlobals->curtime;
 
 	// Set us up to start the round on the next think cycle
+	m_bGameOver = false;
 	m_iRoundState = RoundState::PRE_START;
 
 	// Let our listeners know we are starting a new match
@@ -523,6 +525,9 @@ void CGEBaseGameplayManager::EndRound( bool showreport /*=true*/ )
 
 void CGEBaseGameplayManager::EndMatch()
 {
+	// Set this upfront
+	m_bGameOver = true;
+
 	// If we are currently in our 2nd or higher round, end it first
 	if ( IsInRound() && m_iRoundCount > 1 )
 	{
@@ -603,11 +608,11 @@ bool CGEBaseGameplayManager::CanEndRound()
 bool CGEBaseGameplayManager::CanEndMatch()
 {
 	// We are already over!
-	if ( m_iRoundState == RoundState::GAME_OVER )
+	if ( m_bGameOver )
 		return true;
 
 	// We must be able to end our round to end the match
-	if ( !CanEndRound() )
+	if ( IsInRound() && !CanEndRound() )
 		return false;
 
 	// Check time constraints

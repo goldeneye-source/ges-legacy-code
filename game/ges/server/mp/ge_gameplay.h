@@ -160,6 +160,7 @@ public:
 	bool IsInIntermission()			{ return IsInRoundIntermission() || IsInFinalIntermission(); }
 	bool IsInRoundIntermission()	{ return m_iRoundState == RoundState::INTERMISSION; }
 	bool IsInFinalIntermission()	{ return m_iRoundState == RoundState::GAME_OVER; }
+	bool IsGameOver()				{ return m_bGameOver; }
 	float GetRemainingIntermission();
 	
 	void LoadGamePlayList( const char* path );
@@ -180,7 +181,7 @@ protected:
 private:
 	enum RoundState {
 		NONE,  // No state yet, this is the null condition
-		PRE_START, // Round is ready to start
+		PRE_START, // First round is ready to start
 		PLAYING,  // Round is being played (timer active)
 		INTERMISSION, // In an intermission (timer inactive)
 		GAME_OVER,  // The match is over, waiting to change map
@@ -211,6 +212,7 @@ private:
 	int m_iRoundState;
 	int	m_iRoundCount;
 	bool m_bRoundLocked;
+	bool m_bGameOver;	// Set only when you call EndMatch(), indicates map change is coming
 	float m_flIntermissionEndTime;
 	
 	CUtlVector<char*> m_vScenarioList;

@@ -958,12 +958,21 @@ void CGEMPRules::SetupChangeLevel( const char *next_level /*= NULL*/ )
 {
 	if ( next_level != NULL )
 	{
+		// We explicitly set our next level
 		nextlevel.SetValue( next_level );
 		Q_strncpy( m_szNextLevel, next_level, sizeof(m_szNextLevel) );
 	}
 	else
 	{
-		GetNextLevelName( m_szNextLevel, sizeof(m_szNextLevel) );
+		// Check if we already setup for the next level
+		if ( m_flChangeLevelTime > 0 )
+			return;
+
+		// If we have defined a "nextlevel" use that instead of choosing one
+		if ( *nextlevel.GetString() )
+			Q_strncpy( m_szNextLevel, nextlevel.GetString(), sizeof(m_szNextLevel) );
+		else
+			GetNextLevelName( m_szNextLevel, sizeof(m_szNextLevel) );
 	}
 
 	// Tell our players what the next map will be
@@ -974,21 +983,22 @@ void CGEMPRules::SetupChangeLevel( const char *next_level /*= NULL*/ )
 		gameeventmanager->FireEvent( event );
 	}
 
+	// Notify everyone
+	Msg( "CHANGE LEVEL: %s\n", m_szNextLevel );
+
 	m_flChangeLevelTime = gpGlobals->curtime + GE_CHANGELEVEL_DELAY;
 }
 
 void CGEMPRules::ChangeLevel()
 {
-	// Reset the flag
-	m_flChangeLevelTime = 0;
+	// Arbitrarily move the timer into infinity so we never call us again
+	m_flChangeLevelTime += 9999.0f;
+
 	// Record our player count
 	g_iLastPlayerCount = GetNumActivePlayers();
 
-	// Notify everyone
-	Msg( "CHANGE LEVEL: %s\n", m_szNextLevel );
-
-	// Tell the engine to change the level
-	engine->ServerCommand( UTIL_VarArgs( "changelevel %s 0\n", m_szNextLevel ) );
+	// Actually change the level by calling the original command
+	engine->ServerCommand( UTIL_VarArgs( "__real_changelevel %s\n", m_szNextLevel ) );
 }
 
 void CGEMPRules::GoToIntermission()

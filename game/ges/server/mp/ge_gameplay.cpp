@@ -400,7 +400,7 @@ void CGEBaseGameplayManager::OnThink()
 	}
 
 	// Check if the game over time is over
-	if ( IsGameOver() && GetRemainingIntermission() <= 0 )
+	if ( IsGameOver() && IsInFinalIntermission() && GetRemainingIntermission() <= 0 )
 	{
 		GEMPRules()->SetupChangeLevel();
 		return;
@@ -410,7 +410,7 @@ void CGEBaseGameplayManager::OnThink()
 	if ( IsInRoundIntermission() && GetRemainingIntermission() <= 0 )
 	{
 		// Check if the match should end instead of starting a new round
-		if ( CanEndMatch() )
+		if ( ShouldEndMatch() )
 			EndMatch();
 		else
 			StartRound();
@@ -421,31 +421,16 @@ void CGEBaseGameplayManager::OnThink()
 	// Check if we are in a round
 	if ( IsInRound() )
 	{
-		// Should we end this round?
-		if ( CanEndRound() )
-		{
+		// Check if we need to end this round
+		if ( ShouldEndRound() )		
 			EndRound();
-			return;
-		}
-		
-		// Otherwise, let the scenario think
-		GetScenario()->OnThink();
-	}
-
-	/*
-	switch ( GetState() )
-	{
-	case GAMESTATE_RESTART:
-		// If map time will run out within 30 seconds, ignore a round restart
-		if ( mp_timelimit.GetBool() && GEMPRules()->GetMatchTimeRemaining() <= 30.0f && GetScenario()->CanMatchEnd() )
-		{
-			Msg( "[MATCH END] Aborting round restart due to insufficient map time, %0.2f\n", gpGlobals->curtime );
-			// TODO: this arrangement is really awkward...
+		// Otherwise, check if we need to end the match
+		else if ( ShouldEndMatch() )
 			EndMatch();
-			return;
-		}
+		// Otherwise, let the scenario think
+		else		
+			GetScenario()->OnThink();
 	}
-	*/
 }
 
 void CGEBaseGameplayManager::StartMatch()
@@ -588,14 +573,10 @@ float CGEBaseGameplayManager::GetRemainingIntermission()
 	return max(m_flIntermissionEndTime - gpGlobals->curtime, 0 );
 }
 
-bool CGEBaseGameplayManager::CanEndRound()
+bool CGEBaseGameplayManager::ShouldEndRound()
 {
-	// We must be playing rounds to end a round!
-	if ( !GEMPRules()->IsRoundTimeEnabled() )
-		return false;
-
 	// Check time constraints
-	if ( GEMPRules()->GetRoundTimeRemaining() <= 0 )
+	if ( GEMPRules()->IsRoundTimeEnabled() && GEMPRules()->GetRoundTimeRemaining() <= 0 )
 	{
 		// We ran out of time and our scenario says we can end
 		if ( GetScenario()->CanRoundEnd() )
@@ -605,18 +586,19 @@ bool CGEBaseGameplayManager::CanEndRound()
 	return false;
 }
 
-bool CGEBaseGameplayManager::CanEndMatch()
+bool CGEBaseGameplayManager::ShouldEndMatch()
 {
 	// We are already over!
 	if ( m_bGameOver )
 		return true;
 
 	// We must be able to end our round to end the match
-	if ( IsInRound() && !CanEndRound() )
+	if ( IsInRound() && GEMPRules()->IsRoundTimeEnabled() && !ShouldEndRound() )
 		return false;
 
 	// Check time constraints
-	if ( (GEMPRules()->IsMatchTimeEnabled() && GEMPRules()->GetMatchTimeRemaining() <= 0) )
+	if ( GEMPRules()->IsMatchTimeEnabled() && (GEMPRules()->GetMatchTimeRemaining() <= 0 
+		|| (IsInRoundIntermission() && GEMPRules()->GetMatchTimeRemaining() <= 30.0f)) )
 	{
 		// We ran out of time and our scenario says we can end
 		if ( GetScenario()->CanMatchEnd() )

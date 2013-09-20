@@ -6,13 +6,9 @@ using namespace testing;
 // This class implements the TestEventListener interface.
 //
 // Class SDKUnitTestResultPrinter is copyable.
-class SDKUnitTestListener : public EmptyTestEventListener {
- public:
-  SDKUnitTestListener() {}
-  static void PrintTestName(const char * test_case, const char * test) {
-    Msg("%s.%s", test_case, test);
-  }
-
+class SDKUnitTestListener : public EmptyTestEventListener
+{
+public:
   // The following methods override what's in the TestEventListener class.
   virtual void OnTestIterationStart(const UnitTest& unit_test, int iteration);
   virtual void OnEnvironmentsSetUpStart(const UnitTest& unit_test);
@@ -24,8 +20,13 @@ class SDKUnitTestListener : public EmptyTestEventListener {
   virtual void OnEnvironmentsTearDownStart(const UnitTest& unit_test);
   virtual void OnTestIterationEnd(const UnitTest& unit_test, int iteration);
 
- private:
-  static void PrintFailedTests(const UnitTest& unit_test);
+private:
+  void PrintTestName(const char * test_case, const char * test);
+  void PrintFailedTests(const UnitTest& unit_test);
+  void PrintTestResults();
+
+  void PushResult( std::string res );
+  std::vector< std::string > test_msgs;
 };
 
 #endif

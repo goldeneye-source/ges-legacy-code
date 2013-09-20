@@ -11,18 +11,18 @@ static const char kUniversalFilter[] = "*";
 
 // Formats a countable noun.  Depending on its quantity, either the
 // singular form or the plural form is used. e.g.
-static std::string FormatCountableNoun(int count, const char * singular_form, const char * plural_form) {
+std::string FormatCountableNoun(int count, const char * singular_form, const char * plural_form) {
 	return (Message() 
 		<< count << " " << (count == 1 ? singular_form : plural_form) ).GetString();
 }
 
 // Formats the count of tests.
-static std::string FormatTestCount(int test_count) {
+std::string FormatTestCount(int test_count) {
 	return FormatCountableNoun(test_count, "test", "tests");
 }
 
 // Formats the count of test cases.
-static std::string FormatTestCaseCount(int test_case_count) {
+std::string FormatTestCaseCount(int test_case_count) {
 	return FormatCountableNoun(test_case_count, "test case", "test cases");
 }
 
@@ -30,7 +30,7 @@ static std::string FormatTestCaseCount(int test_case_count) {
 // representation.  Both kNonFatalFailure and kFatalFailure are translated
 // to "Failure", as the user usually doesn't care about the difference
 // between the two when viewing the test result.
-static const char * TestPartResultTypeToString(TestPartResult::Type type) {
+const char * TestPartResultTypeToString(TestPartResult::Type type) {
 	switch (type) {
 	case TestPartResult::kSuccess:
 		return "Success";
@@ -48,7 +48,7 @@ static const char * TestPartResultTypeToString(TestPartResult::Type type) {
 }
 
 // Prints a TestPartResult to an std::string.
-static std::string PrintTestPartResultToString(const TestPartResult& test_part_result) {
+std::string PrintTestPartResultToString(const TestPartResult& test_part_result) {
 	return (Message()
 		<< internal::FormatFileLocation(test_part_result.file_name(),
 		test_part_result.line_number())
@@ -59,48 +59,47 @@ static std::string PrintTestPartResultToString(const TestPartResult& test_part_r
 // Fired before each iteration of tests starts.
 void SDKUnitTestListener::OnTestIterationStart(const UnitTest& unit_test, int iteration) {
 	if (GTEST_FLAG(repeat) != 1)
-		Msg("\nRepeating all tests (iteration %d) . . .\n\n", iteration + 1);
+		PushResult( UTIL_VarArgs("\nRepeating all tests (iteration %d) . . .\n\n", iteration + 1) );
 
 	const char* const filter = GTEST_FLAG(filter).c_str();
 
 	// Prints the filter if it's not *.  This reminds the user that some
 	// tests may be skipped.
 	if (!internal::String::CStringEquals(filter, kUniversalFilter)) {
-		Msg( "Note: %s filter = %s\n", GTEST_NAME_, filter );
+		PushResult( UTIL_VarArgs( "Note: %s filter = %s\n", GTEST_NAME_, filter ) );
 	}
 
 	if (GTEST_FLAG(shuffle)) {
-		Msg( "Note: Randomizing tests' orders with a seed of %d .\n",
-			unit_test.random_seed());
+		PushResult( UTIL_VarArgs( "Note: Randomizing tests' orders with a seed of %d .\n",
+			unit_test.random_seed()) );
 	}
 
-	Msg( "[==========] ");
-	Msg("Running %s from %s.\n",
+	PushResult( "[==========] " );
+	PushResult( UTIL_VarArgs("Running %s from %s.\n",
 		FormatTestCount(unit_test.test_to_run_count()).c_str(),
-		FormatTestCaseCount(unit_test.test_case_to_run_count()).c_str());
+		FormatTestCaseCount(unit_test.test_case_to_run_count()).c_str()) );
 }
 
 void SDKUnitTestListener::OnEnvironmentsSetUpStart(const UnitTest& /*unit_test*/) {
-		Msg( "[----------] ");
-		Msg("Global test environment set-up.\n");
+		PushResult( "[----------] Global test environment set-up.\n" );
 }
 
 void SDKUnitTestListener::OnTestCaseStart(const TestCase& test_case) {
 	const std::string counts =
 		FormatCountableNoun(test_case.test_to_run_count(), "test", "tests");
-	Msg( "[----------] ");
-	Msg("%s from %s", counts.c_str(), test_case.name());
+	PushResult( "[----------] " );
+	PushResult( UTIL_VarArgs("%s from %s", counts.c_str(), test_case.name()) );
 	if (test_case.type_param() == NULL) {
-		Msg("\n");
+		PushResult( "\n" );
 	} else {
-		Msg(", where %s = %s\n", kTypeParamLabel, test_case.type_param());
+		PushResult( UTIL_VarArgs(", where %s = %s\n", kTypeParamLabel, test_case.type_param()) );
 	}
 }
 
 void SDKUnitTestListener::OnTestStart(const TestInfo& test_info) {
-	Msg( "[ RUN      ] ");
+	PushResult( "[ RUN      ] " );
 	PrintTestName(test_info.test_case_name(), test_info.name());
-	Msg("\n");
+	PushResult( "\n" );
 }
 
 // Called after an assertion failure.
@@ -111,23 +110,23 @@ void SDKUnitTestListener::OnTestPartResult(const TestPartResult& result) {
 
 	// Print failure message from the assertion (e.g. expected this and got that).
 	std::string res = PrintTestPartResultToString(result);
-	Msg( "%s\n", res.c_str() );
+	PushResult( UTIL_VarArgs( "%s\n", res.c_str() ) );
 }
 
 void SDKUnitTestListener::OnTestEnd(const TestInfo& test_info) {
 	if (test_info.result()->Passed()) {
-		Msg( "[       OK ] ");
+		PushResult( "[       OK ] " );
 	} else {
-		Msg( "[  FAILED  ] ");
+		PushResult( "[  FAILED  ] " );
 	}
 
-	PrintTestName(test_info.test_case_name(), test_info.name());
+	PrintTestName(test_info.test_case_name(), test_info.name() );
 
 	if (GTEST_FLAG(print_time)) {
-		Msg(" (%s ms)\n", internal::StreamableToString(
-			test_info.result()->elapsed_time()).c_str());
+		PushResult( UTIL_VarArgs(" (%s ms)\n", internal::StreamableToString(
+			test_info.result()->elapsed_time()).c_str()) );
 	} else {
-		Msg("\n");
+		PushResult( "\n" );
 	}
 }
 
@@ -135,16 +134,19 @@ void SDKUnitTestListener::OnTestCaseEnd(const TestCase& test_case) {
 	if (!GTEST_FLAG(print_time)) return;
 
 	const std::string counts = FormatCountableNoun(test_case.test_to_run_count(), "test", "tests");
-	Msg( "[----------] ");
-	Msg("%s from %s (%s ms total)\n\n",
+	PushResult( "[----------] " );
+	PushResult( UTIL_VarArgs("%s from %s (%s ms total)\n\n",
 		counts.c_str(), test_case.name(),
-		internal::StreamableToString(test_case.elapsed_time()).c_str());
+		internal::StreamableToString(test_case.elapsed_time()).c_str() ) );
 }
 
 void SDKUnitTestListener::OnEnvironmentsTearDownStart(
 	const UnitTest& /*unit_test*/) {
-		Msg( "[----------] ");
-		Msg("Global test environment tear-down\n");
+		PushResult( "[----------] Global test environment tear-down\n" );
+}
+
+void SDKUnitTestListener::PrintTestName(const char * test_case, const char * test) {
+    PushResult( UTIL_VarArgs("%s.%s", test_case, test) );
 }
 
 // Internal helper for printing the list of failed tests.
@@ -171,7 +173,21 @@ void SDKUnitTestListener::PrintFailedTests(const UnitTest& unit_test) {
 	}
 }
 
+void SDKUnitTestListener::PrintTestResults() {
+	for ( size_t i = 0; i < test_msgs.size(); i++ ) {
+		Msg( test_msgs[i].c_str() );
+	}
+}
+
+void SDKUnitTestListener::PushResult( std::string res ) {
+	test_msgs.push_back( res );
+}
+
 void SDKUnitTestListener::OnTestIterationEnd(const UnitTest& unit_test, int /*iteration*/) {
+	// Print stored test results
+	PrintTestResults();
+
+	// Print final results
 	Msg( "[==========] ");
 	Msg("%s from %s ran.",
 		FormatTestCount(unit_test.test_to_run_count()).c_str(),

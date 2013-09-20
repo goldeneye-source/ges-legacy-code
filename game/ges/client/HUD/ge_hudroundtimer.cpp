@@ -27,6 +27,8 @@
 
 using namespace vgui;
 
+ConVar cl_ge_show_matchtime( "cl_ge_show_matchtime", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Show the match time when rounds are disabled instead of --:--" );
+
 class CGEHudRoundTimer : public CHudNumericDisplay, public CHudElement
 {
 	DECLARE_CLASS_SIMPLE( CGEHudRoundTimer, CHudNumericDisplay );
@@ -34,13 +36,15 @@ class CGEHudRoundTimer : public CHudNumericDisplay, public CHudElement
 public:
 	CGEHudRoundTimer( const char *pElementName );
 
-	virtual void ResetColor( void );
-	virtual void Reset( void );
-	virtual void Think( void );
-	virtual bool ShouldDraw( void );
+	virtual void Reset();
+	virtual bool ShouldDraw();
+	virtual void Think();
+	
+	void ResetColor( bool paused=false );
 
 	CPanelAnimationVar( Color, m_NormColor, "fontcolor", "255 255 255 255" );
 	CPanelAnimationVar( Color, m_SpecColor, "speccolor", "0 0 0 235" );
+	CPanelAnimationVar( Color, m_PausedColor, "pausecolor", "120 120 120 255" );
 
 private:
 	float m_flNextAnim;
@@ -60,12 +64,12 @@ CGEHudRoundTimer::CGEHudRoundTimer( const char *pElementName ) :
 	m_flNextThink = 0;
 }
 
-void CGEHudRoundTimer::Reset( void )
+void CGEHudRoundTimer::Reset()
 {
 	m_flNextThink = 0;
 }
 
-bool CGEHudRoundTimer::ShouldDraw( void )
+bool CGEHudRoundTimer::ShouldDraw()
 {
 	// Don't show if we are in intermission time!
 	if ( GEMPRules() && GEMPRules()->IsIntermission() )
@@ -77,58 +81,79 @@ bool CGEHudRoundTimer::ShouldDraw( void )
 	return CHudElement::ShouldDraw();
 }
 
-void CGEHudRoundTimer::Think( void )
+void CGEHudRoundTimer::Think()
 {
 	if ( !GEMPRules() || gpGlobals->curtime < m_flNextThink )
 		return;
 
-	if ( GEMPRules()->IsRoundTimePaused() || GEMPRules()->GetRoundTimeRemaining() <= 0 )
+	// Default is to show "--:--"
+	float timeleft = 0;
+
+	// Extract a time to use, clamp to the minimum between the match and round timers
+	if ( GEMPRules()->IsRoundTimeEnabled() && GEMPRules()->IsMatchTimeEnabled() )
+		timeleft = min( GEMPRules()->GetRoundTimeRemaining(), GEMPRules()->GetMatchTimeRemaining() );
+	else if ( GEMPRules()->IsRoundTimeEnabled() )
+		timeleft = GEMPRules()->GetRoundTimeRemaining();
+	else if ( cl_ge_show_matchtime.GetBool() && GEMPRules()->IsMatchTimeEnabled() )
+		timeleft = GEMPRules()->GetMatchTimeRemaining();
+
+	// Check if we have time to display
+	if ( timeleft <= 0 )
 	{
-		ResetColor();
+		// Set the timer display to show "--:--" and reset the coloring
 		SetDisplayValue( -1 );
-		return;
+		ResetColor();
+		
+		m_flNextThink = gpGlobals->curtime + 1.0f;
 	}
-
-	float timeleft = GEMPRules()->GetRoundTimeRemaining();
-	SetDisplayValue( timeleft );
-
-	// Don't bother with this if we have hardly any time left or no time at all
-	if ( timeleft > 0.5f )
+	else if ( GEMPRules()->IsRoundTimePaused() )
 	{
-		// If we only have 10 seconds left start going beserk!
+		// Set our timer display to show the time left
+		SetDisplayValue( timeleft );
+		// Color us as paused
+		ResetColor( true );
+	}
+	else
+	{
+		// Set our timer display to show the time left
+		SetDisplayValue( timeleft );
+
+		// Check if we need to add some special coloring / animations
 		if ( timeleft <= 10.0f && m_flNextAnim < gpGlobals->curtime )
 		{
+			// If we only have 10 seconds left start going beserk! (every second)
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("RoundTimeCritical");
 			m_flNextAnim = gpGlobals->curtime + g_pClientMode->GetViewportAnimationController()->GetAnimationSequenceLength("RoundTimeCritical");
 		}
-		// If we only have 30 seconds left start notifying the player!
 		else if ( timeleft <= 30.0f && m_flNextAnim < gpGlobals->curtime )
 		{
+			// If we only have 30 seconds left start notifying the player! (every 5 seconds)
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("RoundTimeExpiring");
-			m_flNextAnim = gpGlobals->curtime + 5.0f; //Do this every 5 seconds
+			m_flNextAnim = gpGlobals->curtime + 5.0f;
 		}
 		else if ( m_flNextAnim == 0 )
 		{	
+			// Reset the color since we have no animation time
 			ResetColor();
 		}
-	}
-	else
-	{
-		m_flNextAnim = 0;
-		ResetColor();
+
+		m_flNextThink = gpGlobals->curtime + 0.1f;
 	}
 
-	m_flNextThink = gpGlobals->curtime + 0.1f;
+	
 }
 
-void CGEHudRoundTimer::ResetColor( void )
+void CGEHudRoundTimer::ResetColor( bool paused /*=false*/ )
 {
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-
-	if ( pPlayer && (pPlayer->IsObserver() || pPlayer->GetTeamNumber() == TEAM_SPECTATOR) )
+	// Reset the color immediately, spectators only see one color regardless of paused
+	if ( pPlayer && pPlayer->IsObserver() )
 		SetFgColor( m_SpecColor );
+	else if ( paused )
+		SetFgColor( m_PausedColor );
 	else
 		SetFgColor( m_NormColor );
 
+	// Reset the blur
 	m_flBlur = 0;
 }

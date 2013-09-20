@@ -91,7 +91,10 @@ bool pyIsRoundLocked()
 
 void pyToggleRoundTimer( bool state )
 {
-	GEMPRules()->SetRoundTimerPaused( state );
+	if ( state )
+		GEMPRules()->StopRoundTimer();
+	else
+		GEMPRules()->StartRoundTimer();
 }
 
 

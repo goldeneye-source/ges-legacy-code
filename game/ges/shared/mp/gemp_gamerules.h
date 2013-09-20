@@ -70,13 +70,15 @@ public:
 	virtual void CalculateCustomDamage( CBasePlayer *pPlayer, CTakeDamageInfo &info, float &health, float &armor );
 	
 	// Timer control
-	void SetMatchTime( float new_time_sec );
+	void StartMatchTimer( float time_sec=-1 );
+	void ChangeMatchTimer( float new_time_sec );
 	void SetMatchTimerPaused( bool state );
-	void DisableMatchTimer();
+	void StopMatchTimer();
 
-	void SetRoundTime( float new_time_sec );
+	void StartRoundTimer( float time_sec=-1 );
+	void ChangeRoundTimer( float new_time_sec );
 	void SetRoundTimerPaused( bool state );
-	void DisableRoundTimer();
+	void StopRoundTimer();
 	
 	float FlArmorRespawnTime( CItem *pItem );
 

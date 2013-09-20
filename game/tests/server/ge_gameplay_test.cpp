@@ -166,10 +166,12 @@ protected:
 	}
 
 	void SetMatchTime( int minutes ) {
+		GEMPRules()->StopMatchTimer();
 		mp_timelimit.SetValue( minutes );
 	}
 
 	void SetRoundTime( int seconds ) {
+		GEMPRules()->StopRoundTimer();
 		ge_roundtime.SetValue( seconds );
 	}
 
@@ -188,9 +190,6 @@ protected:
 };
 
 TEST_F( GameplayTest, StartRound ) {
-	// Grab the length of the round
-	int round_time = GEMPRules()->GetRoundTimeRemaining();
-
 	// Start the round
 	AdvanceGameTime( 1.0f );
 	gameplay->OnThink();
@@ -225,7 +224,8 @@ TEST_F( GameplayTest, EndRound_ByTime ) {
 	gameplay->OnThink();
 
 	// Move us past the end of the round
-	AdvanceGameTime( round_time );
+	AdvanceGameTime( round_time + 1.0f );
+	EXPECT_EQ( 0, GEMPRules()->GetRoundTimeRemaining() );
 	gameplay->OnThink();
 
 	// Make sure we are in a round intermission
@@ -289,7 +289,8 @@ TEST_F( GameplayTest, EndMatch_ByTime ) {
 	gameplay->OnThink();
 
 	// End round 1
-	AdvanceGameTime( round_time );
+	AdvanceGameTime( round_time + 1.0f );
+	EXPECT_EQ( 0, GEMPRules()->GetRoundTimeRemaining() );
 	gameplay->OnThink();
 
 	// Start round 2
@@ -298,6 +299,8 @@ TEST_F( GameplayTest, EndMatch_ByTime ) {
 
 	// End round 2 and the match all at once
 	AdvanceGameTime( match_time );
+	EXPECT_EQ( 0, GEMPRules()->GetRoundTimeRemaining() );
+	EXPECT_EQ( 0, GEMPRules()->GetMatchTimeRemaining() );
 	gameplay->OnThink();
 
 	// Check for round intermission
@@ -315,7 +318,7 @@ TEST_F( GameplayTest, EndMatch_ByTime ) {
 	EXPECT_TRUE( gameplay->IsInFinalIntermission() );
 }
 
-TEST_F( GameplayTest, CanEndRound_ByScenario ) {
+TEST_F( GameplayTest, EndRound_Blocked_ByScenario ) {
 	// Disable round ending
 	gameplay->GetTestScenario()->can_round_end = false;
 	
@@ -336,7 +339,37 @@ TEST_F( GameplayTest, CanEndRound_ByScenario ) {
 	EXPECT_FALSE( gameplay->IsInFinalIntermission() );
 }
 
-TEST_F( GameplayTest, CanEndMatch_ByScenario ) {
+TEST_F( GameplayTest, EndRound_Blocked_ByTimer ) {
+	// Disable the round timer
+	DisableRoundTime();
+
+	// Check disabled
+	EXPECT_EQ( 0, GEMPRules()->GetRoundTimeRemaining() );
+	EXPECT_FALSE( GEMPRules()->IsRoundTimeEnabled() );
+
+	// Grab the length of the match
+	int match_time = GEMPRules()->GetMatchTimeRemaining();
+
+	// Start the round
+	AdvanceGameTime( 1.0f );
+	gameplay->OnThink();
+
+	// Move us to the middle of the match
+	AdvanceGameTime( match_time / 2.0f );
+	gameplay->OnThink();
+
+	// Move us to the end of the match
+	AdvanceGameTime( match_time / 2.0f );
+	gameplay->OnThink();
+
+	// We expect to have only played 1 round and be in the final intermission
+	EXPECT_EQ( 1, gameplay->GetRoundCount() );
+	EXPECT_FALSE( gameplay->IsInRound() );
+	EXPECT_FALSE( gameplay->IsInRoundIntermission() );
+	EXPECT_TRUE( gameplay->IsInFinalIntermission() );
+}
+
+TEST_F( GameplayTest, EndMatch_Blocked_ByScenario ) {
 	// Disable match ending
 	gameplay->GetTestScenario()->can_match_end = false;
 	
@@ -349,6 +382,8 @@ TEST_F( GameplayTest, CanEndMatch_ByScenario ) {
 
 	// Move us past the end of the match
 	AdvanceGameTime( match_time );
+	EXPECT_EQ( 0, GEMPRules()->GetRoundTimeRemaining() );
+	EXPECT_EQ( 0, GEMPRules()->GetMatchTimeRemaining() );
 	gameplay->OnThink();
 
 	// Move us past round intermission (should start a new round)
@@ -361,7 +396,59 @@ TEST_F( GameplayTest, CanEndMatch_ByScenario ) {
 	EXPECT_FALSE( gameplay->IsInFinalIntermission() );
 }
 
-// TEST: CanEndRound_ByTimer (Disable round timer)
-// TEST: CanEndMatch_ByTimer (Disable match timer)
-// TEST: RoundLocked
+TEST_F( GameplayTest, EndMatch_Blocked_ByTimer ) {
+	// Disable the match timer
+	DisableMatchTime();
+
+	// Check disabled
+	EXPECT_EQ( 0, GEMPRules()->GetMatchTimeRemaining() );
+	EXPECT_FALSE( GEMPRules()->IsMatchTimeEnabled() );
+	
+	// Grab the length of the round
+	int round_time = GEMPRules()->GetRoundTimeRemaining();
+	
+	// Start the round
+	AdvanceGameTime( 1.0f );
+	gameplay->OnThink();
+
+	// End Round 1
+	AdvanceGameTime( round_time + 1.0f );
+	EXPECT_EQ( 0, GEMPRules()->GetRoundTimeRemaining() );
+	gameplay->OnThink();
+
+	EXPECT_TRUE( gameplay->IsInRoundIntermission() );
+
+	// Move us past round intermission (should start a new round)
+	AdvanceGameTime( gameplay->GetRemainingIntermission() + 1.0f );
+	gameplay->OnThink();
+
+	EXPECT_TRUE( gameplay->IsInRound() );
+
+	// Move Really far into the future (should only end round)
+	AdvanceGameTime( 99999.0f );
+	EXPECT_EQ( 0, GEMPRules()->GetRoundTimeRemaining() );
+	gameplay->OnThink();
+
+	EXPECT_TRUE( gameplay->IsInRoundIntermission() );
+
+	// Move us past round intermission (should start a new round)
+	AdvanceGameTime( gameplay->GetRemainingIntermission() + 1.0f );
+	gameplay->OnThink();
+
+	// Check the round started
+	EXPECT_TRUE( gameplay->IsInRound() );
+	EXPECT_FALSE( gameplay->IsInRoundIntermission() );
+	EXPECT_FALSE( gameplay->IsInFinalIntermission() );
+}
+
+TEST_F( GameplayTest, CheckRoundLock ) {
+	EXPECT_FALSE( gameplay->IsRoundLocked() );
+
+	gameplay->SetRoundLocked( true );
+	EXPECT_TRUE( gameplay->IsRoundLocked() );
+
+	gameplay->SetRoundLocked( false );
+	EXPECT_FALSE( gameplay->IsRoundLocked() );
+}
+
 // TEST: Scenario loading (invalid identity, shutdown/init, etc)

@@ -127,7 +127,7 @@ void GERoundTime_Callback( IConVar *var, const char *pOldString, float flOldValu
 	}
 #endif
 
-	GEMPRules()->SetRoundTime( round_time );
+	GEMPRules()->ChangeRoundTimer( round_time );
 
 	// Reset our guard
 	in_func = false;
@@ -150,7 +150,7 @@ void GERoundCount_Callback( IConVar *var, const char *pOldString, float flOldVal
 	else
 	{
 		int match_time = mp_timelimit.GetInt() * 60;
-		int total_round_delay = max( ge_rounddelay.GetInt(), 3 ) * (num_rounds - 1);
+		int total_round_delay = max( ge_rounddelay.GetInt(), 3 ) * (num_rounds - 1) + mp_chattime.GetInt();
 		int round_time = ge_roundtime.GetInt();
 
 		if ( match_time > total_round_delay )
@@ -259,6 +259,32 @@ CON_COMMAND( ge_bot_remove, "Removes the number of specified bots, if no number 
 		}
 	END_OF_PLAYER_LOOP()
 }
+
+#ifdef _DEBUG
+CON_COMMAND( ge_toggle_timer, "" )
+{
+	if ( args.ArgC() < 3 )
+		return;
+
+	if ( atoi( args.Arg(1) ) == 0 )
+	{
+		if ( atoi( args.Arg(2) ) == 1 )
+			GEMPRules()->StartRoundTimer();
+		else
+			GEMPRules()->StopRoundTimer();
+	}
+	else if ( atoi( args.Arg(1) ) == 1 )
+	{
+		// Round Timer
+		GEMPRules()->SetRoundTimerPaused( atoi( args.Arg(2) ) != 1 );
+	}
+	else
+	{
+		// Match Timer
+		GEMPRules()->SetMatchTimerPaused( atoi( args.Arg(2) ) != 1 );
+	}
+}
+#endif
 
 #endif // GAME_DLL
 
@@ -387,6 +413,9 @@ CGEMPRules::CGEMPRules()
 	// Create timers
 	m_hMatchTimer = (CGEGameTimer*) CBaseEntity::Create( "ge_game_timer", vec3_origin, vec3_angle );
 	m_hRoundTimer = (CGEGameTimer*) CBaseEntity::Create( "ge_game_timer", vec3_origin, vec3_angle );
+
+	// Make sure we setup our match time
+	HandleTimeLimitChange();
 
 	// Create the token manager
 	m_pTokenManager = new CGETokenManager;
@@ -529,7 +558,7 @@ void CGEMPRules::OnRoundStart()
 	SetRoundTeamWinner( TEAM_UNASSIGNED );
 
 	// Start the round timer
-	m_hRoundTimer->Start( ge_roundtime.GetFloat() );
+	StartRoundTimer( ge_roundtime.GetFloat() );
 
 	// Spawn these once everything is settled
 	GetTokenManager()->SpawnTokens();
@@ -948,7 +977,7 @@ void CGEMPRules::CalculateCustomDamage( CBasePlayer *pPlayer, CTakeDamageInfo &i
 void CGEMPRules::HandleTimeLimitChange()
 {
 	// Change our match timer
-	SetMatchTime( mp_timelimit.GetInt() * 60.0f );
+	ChangeMatchTimer( mp_timelimit.GetInt() * 60.0f );
 
 	// Recalculate our round times based on the new map time
 	GERoundCount_Callback( &ge_roundcount, ge_roundcount.GetString(), ge_roundcount.GetFloat() );
@@ -956,6 +985,11 @@ void CGEMPRules::HandleTimeLimitChange()
 
 void CGEMPRules::SetupChangeLevel( const char *next_level /*= NULL*/ )
 {
+#ifdef GES_TESTING
+	if ( IsTesting() )
+		return;
+#endif
+
 	if ( next_level != NULL )
 	{
 		// We explicitly set our next level
@@ -1060,8 +1094,18 @@ float CGEMPRules::GetSpeedMultiplier( CGEPlayer *pPlayer )
 		return ge_velocity.GetFloat();
 }
 
-void CGEMPRules::SetMatchTime( float new_time_sec )
+void CGEMPRules::StartMatchTimer( float time_sec /*=-1*/ )
 {
+	Assert( m_hMatchTimer.Get() != NULL );
+	if ( time_sec < 0 )
+		time_sec = mp_timelimit.GetInt() * 60;
+	m_hMatchTimer->Start( time_sec );
+}
+
+void CGEMPRules::ChangeMatchTimer( float new_time_sec )
+{
+	Assert( m_hMatchTimer.Get() != NULL );
+
 	// Check to make sure we will actually make a change
 	if ( new_time_sec != m_hMatchTimer->GetLength() )
 	{
@@ -1074,7 +1118,7 @@ void CGEMPRules::SetMatchTime( float new_time_sec )
 		else
 		{
 			// The round timer has been disabled
-			DisableMatchTimer();
+			StopMatchTimer();
 		}
 	}
 }
@@ -1085,14 +1129,24 @@ void CGEMPRules::SetMatchTimerPaused( bool state )
 	state ? m_hMatchTimer->Pause() : m_hMatchTimer->Resume();
 }
 
-void CGEMPRules::DisableMatchTimer()
+void CGEMPRules::StopMatchTimer()
 {
 	Assert( m_hMatchTimer.Get() != NULL );
 	m_hMatchTimer->Stop();
 }
 
-void CGEMPRules::SetRoundTime( float new_time_sec )
+void CGEMPRules::StartRoundTimer( float time_sec /*=-1*/ )
 {
+	Assert( m_hRoundTimer.Get() != NULL );
+	if ( time_sec < 0 )
+		time_sec = ge_roundtime.GetInt();
+	m_hRoundTimer->Start( time_sec );
+}
+
+void CGEMPRules::ChangeRoundTimer( float new_time_sec )
+{
+	Assert( m_hRoundTimer.Get() != NULL );
+
 	// Check to make sure we will actually make a change
 	if ( new_time_sec != m_hRoundTimer->GetLength() )
 	{
@@ -1118,7 +1172,7 @@ void CGEMPRules::SetRoundTime( float new_time_sec )
 		else
 		{
 			// The round timer has been disabled
-			DisableRoundTimer();
+			StopRoundTimer();
 		}
 	}
 }
@@ -1129,40 +1183,12 @@ void CGEMPRules::SetRoundTimerPaused( bool state )
 	state ? m_hRoundTimer->Pause() : m_hRoundTimer->Resume();
 }
 
-void CGEMPRules::DisableRoundTimer()
+void CGEMPRules::StopRoundTimer()
 {
 	Assert( m_hRoundTimer.Get() != NULL );
 	UTIL_ClientPrintAll( HUD_PRINTTALK, "#GES_RoundTime_Disabled" );
 	m_hRoundTimer->Stop();
 }
-
-/*
-void CGEMPRules::SetRoundTime( int time_secs )
-{
-	if ( time_secs > 0 )
-	{
-		if ( !IsRoundTimeEnabled() )
-		{
-			m_hRoundTimer->Start( time_secs );
-		}
-		else
-		{
-			int new_time = GEMPRules()->GetRoundTimeRemaining() + (time_secs - m_iRoundTime);
-			if ( new_time > 0 )
-				m_hRoundTimer->Start( new_time );
-			else
-				m_hRoundTimer->Start( 30 );
-		}
-
-		m_iRoundTime = time_secs;
-	}
-	else
-	{
-		m_hRoundTimer->Start( 0 );
-		m_iRoundTime = 0;
-	}
-}
-*/
 
 void CGEMPRules::SetTeamplay( bool state, bool force /*= false*/ )
 {
@@ -1512,49 +1538,45 @@ bool CGEMPRules::OnPlayerSay(CBasePlayer* player, const char* text)
 // Match Timer Functions
 bool CGEMPRules::IsMatchTimeEnabled()
 {
-	Assert( m_hMatchTimer.Get() != NULL );
-	return m_hMatchTimer->IsEnabled();
+	if ( m_hMatchTimer.Get() )
+		return m_hMatchTimer->IsEnabled();
+	return false;
 }
 
 bool CGEMPRules::IsMatchTimePaused()
 {
-	Assert( m_hMatchTimer.Get() != NULL );
-	return m_hMatchTimer->IsPaused();
+	if ( m_hMatchTimer.Get() )
+		return m_hMatchTimer->IsPaused();
+	return false;
 }
 
 float CGEMPRules::GetMatchTimeRemaining()
 {
-	Assert( m_hMatchTimer.Get() != NULL );
-	return m_hMatchTimer->GetTimeRemaining();
+	if ( m_hMatchTimer.Get() )
+		return m_hMatchTimer->GetTimeRemaining();
+	return 0;
 }
 
 // Round Timer Functions
 bool CGEMPRules::IsRoundTimeEnabled()
 {
-	Assert( m_hRoundTimer.Get() != NULL );
-	return m_hRoundTimer->IsEnabled();
+	if ( m_hRoundTimer.Get() )
+		return m_hRoundTimer->IsEnabled();
+	return false;
 }
 
 bool CGEMPRules::IsRoundTimePaused()
 {
-	Assert( m_hRoundTimer.Get() != NULL );
-	return m_hRoundTimer->IsPaused();
+	if ( m_hRoundTimer.Get() )
+		return m_hRoundTimer->IsPaused();
+	return false;
 }
 
 float CGEMPRules::GetRoundTimeRemaining()
-{
-	Assert( m_hRoundTimer.Get() != NULL );
-	
-	// We aren't playing rounds, return the match time
-	if ( !IsRoundTimeEnabled() )
-		return GetMatchTimeRemaining();
-
-	// If we are playing rounds, and match timing is enabled, return the min of the round time and the match time
-	if ( IsMatchTimeEnabled() )
-		return min( m_hRoundTimer->GetTimeRemaining(), m_hMatchTimer->GetTimeRemaining() );
-
-	// Otherwise, just return the round time
-	return m_hRoundTimer->GetTimeRemaining();
+{	
+	if ( m_hRoundTimer.Get() )
+		return m_hRoundTimer->GetTimeRemaining();
+	return 0;
 }
 
 bool CGEMPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )

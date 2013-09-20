@@ -194,8 +194,8 @@ private:
 
 	void CalculatePlayerScores();
 
-	bool CanEndRound();
-	bool CanEndMatch();
+	bool ShouldEndRound();
+	bool ShouldEndMatch();
 
 	void LoadScenarioCycle();
 	void ResetState();

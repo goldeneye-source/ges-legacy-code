@@ -149,7 +149,7 @@ public:
 	void EndMatch();
 
 	// Round state checks
-	bool IsInRound()		{ return m_iRoundState == RoundState::PLAYING; }
+	bool IsInRound();
 	int  GetRoundCount()	{ return m_iRoundCount; }
 
 	// Round locking [TODO: Move into Python Scenario]
@@ -157,9 +157,9 @@ public:
 	bool IsRoundLocked()				{ return m_bRoundLocked; }
 	
 	// Intermission checks
-	bool IsInIntermission()			{ return IsInRoundIntermission() || IsInFinalIntermission(); }
-	bool IsInRoundIntermission()	{ return m_iRoundState == RoundState::INTERMISSION; }
-	bool IsInFinalIntermission()	{ return m_iRoundState == RoundState::GAME_OVER; }
+	bool IsInIntermission();
+	bool IsInRoundIntermission();
+	bool IsInFinalIntermission();
 	bool IsGameOver()				{ return m_bGameOver; }
 	float GetRemainingIntermission();
 	
@@ -174,18 +174,10 @@ protected:
 	// Return the next scenario to load
 	const char *GetNextScenario();
 
+private:
 	// Gameplay cycle management
 	void InitScenario();
 	void ShutdownScenario();
-
-private:
-	enum RoundState {
-		NONE,  // No state yet, this is the null condition
-		PRE_START, // First round is ready to start
-		PLAYING,  // Round is being played (timer active)
-		INTERMISSION, // In an intermission (timer inactive)
-		GAME_OVER,  // The match is over, waiting to change map
-	};
 
 	void BroadcastMatchStart();
 	void BroadcastRoundStart();
@@ -200,6 +192,15 @@ private:
 	void LoadScenarioCycle();
 	void ResetState();
 	void ResetGameState();
+
+	// Round State enum for tracking
+	enum RoundState {
+		NONE,  // No state yet, this is the null condition
+		PRE_START, // First round is ready to start
+		PLAYING,  // Round is being played (timer active)
+		INTERMISSION, // In an intermission (timer inactive)
+		GAME_OVER,  // The match is over, waiting to change map
+	};
 
 	// Think Timer
 	float m_flNextThink;

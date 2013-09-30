@@ -9,15 +9,13 @@
 //   Created By: Mark Chandler <mailto:mark@moddb.com>
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef DESURA_GE_AI_H
-#define DESURA_GE_AI_H
-#ifdef _WIN32
-#pragma once
-#endif
+#ifndef GE_AI_H
+#define GE_AI_H
+
+#include "ai_npcstate.h"
 
 class CNPC_GEBase;
 struct Task_t;
-enum NPC_STATE;
 
 // --------------------
 // Creation, Shutdown, Reboot

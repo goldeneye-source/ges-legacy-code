@@ -24,11 +24,11 @@ endif
 
 # the directory the base binaries (tier0_i486.so, etc) are located
 # this should point to your orange box subfolder of where you have srcds installed.
-GAME_DIR=/home/jon/steam/games/orangebox
+GAME_DIR=/home/jon/.steam/steam/SteamApps/common/sdk2007
 
 # the path to your mods directory
 # set this so that 'make install' or 'make installrelease' will copy your binary over automatically.
-MOD_DIR=/home/jon/steam/gesource_release
+MOD_DIR=/home/jon/sourcemods/gesource_release
 
 # compiler options (gcc 3.4.1 or above is required - 4.1.2+ recommended)
 CPLUS=g++-4.7

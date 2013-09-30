@@ -373,12 +373,33 @@ void CGEBaseGameplayManager::ResetState()
 {
 	m_bGameOver = false;
 	m_bRoundLocked = false;
-	m_iRoundState = RoundState::NONE;
+	m_iRoundState = CGEBaseGameplayManager::NONE;
 	m_iRoundCount = 0;
 	m_flNextThink = 0;
 	m_flIntermissionEndTime = -1.0f;
 	m_flRoundStart = -1.0f;
 	m_flMatchStart = -1.0f;
+}
+
+// Various checks for round state
+bool CGEBaseGameplayManager::IsInRound()
+{
+	return m_iRoundState == PLAYING;
+}
+
+bool CGEBaseGameplayManager::IsInIntermission()
+{
+	return IsInRoundIntermission() || IsInFinalIntermission();
+}
+
+bool CGEBaseGameplayManager::IsInRoundIntermission()
+{
+	return m_iRoundState == INTERMISSION;
+}
+
+bool CGEBaseGameplayManager::IsInFinalIntermission()
+{
+	return m_iRoundState == GAME_OVER;
 }
 
 // Controls the lifecycle of the scenario to include
@@ -393,7 +414,7 @@ void CGEBaseGameplayManager::OnThink()
 	m_flNextThink = gpGlobals->curtime + 0.1f;
 
 	// Check for round pre start
-	if ( m_iRoundState == RoundState::PRE_START )
+	if ( m_iRoundState == PRE_START )
 	{
 		StartRound();
 		return;
@@ -440,7 +461,7 @@ void CGEBaseGameplayManager::StartMatch()
 
 	// Set us up to start the round on the next think cycle
 	m_bGameOver = false;
-	m_iRoundState = RoundState::PRE_START;
+	m_iRoundState = PRE_START;
 
 	// Let our listeners know we are starting a new match
 	GP_EVENT( MATCH_START );
@@ -468,7 +489,7 @@ void CGEBaseGameplayManager::StartRound()
 
 	// Officially start this round
 	m_iRoundCount++;
-	m_iRoundState = RoundState::PLAYING;
+	m_iRoundState = PLAYING;
 	m_flRoundStart = gpGlobals->curtime;
 
 	// Let everyone setup for the round
@@ -493,7 +514,7 @@ void CGEBaseGameplayManager::EndRound( bool showreport /*=true*/ )
 	CalculatePlayerScores();
 
 	// Set us in intermission
-	m_iRoundState = RoundState::INTERMISSION;
+	m_iRoundState = INTERMISSION;
 
 	if ( showreport )
 		// Delay enough so that the scores don't get reset before the round report is visible
@@ -532,7 +553,7 @@ void CGEBaseGameplayManager::EndMatch()
 	}
 
 	// Set our game over status
-	m_iRoundState = RoundState::GAME_OVER;
+	m_iRoundState = GAME_OVER;
 	m_flIntermissionEndTime = gpGlobals->curtime + mp_chattime.GetInt();
 
 	// Tell clients we finished the round

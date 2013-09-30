@@ -43,6 +43,9 @@
     <Library Include="..\lib\gtest\gtestd.lib">
       <Filter>Link Libraries</Filter>
     </Library>
+    <Library Include="..\lib\gtest\gtest.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tests\common_test.h">

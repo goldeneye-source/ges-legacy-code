@@ -569,6 +569,32 @@ void CGEMPRules::OnRoundEnd()
 {
 	// Stop the round timer
 	m_hRoundTimer->Stop();
+
+	// Add round score to the match score for teams and players
+
+	FOR_EACH_MPPLAYER( pPlayer )
+		// HACK HACK: Fake a kill so we can record their inning time and weapon held time
+		GEStats()->Event_PlayerKilled( pPlayer, CTakeDamageInfo() );
+
+		// Add the player's round scores to their match scores
+		pPlayer->AddMatchScore( pPlayer->GetRoundScore() );
+		pPlayer->AddMatchDeaths( pPlayer->DeathCount() );
+	END_OF_PLAYER_LOOP()
+
+	// Add the team round scores to the match scores
+	for ( int i = FIRST_GAME_TEAM; i < MAX_GE_TEAMS; i++ )
+	{
+		CTeam *team = GetGlobalTeam( i );
+		if ( team )
+			team->AddMatchScore( team->GetRoundScore() );
+	}
+
+	// Make sure we capture the latest scores and send them to the clients
+	if ( g_pPlayerResource )
+		g_pPlayerResource->UpdatePlayerData();
+
+	// Calculate the player's favorite weapons and set them
+	GEStats()->SetFavoriteWeapons();
 }
 
 // This is called prior to OnRoundStart from GEGameplay

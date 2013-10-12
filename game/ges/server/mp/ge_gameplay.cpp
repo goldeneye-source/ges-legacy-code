@@ -510,9 +510,6 @@ void CGEBaseGameplayManager::EndRound( bool showreport /*=true*/ )
 	// Call into python to do post round cleanup and score setting
 	GetScenario()->OnRoundEnd();
 
-	// Calculate the scores for the active players
-	CalculatePlayerScores();
-
 	// Set us in intermission
 	m_iRoundState = INTERMISSION;
 
@@ -523,10 +520,10 @@ void CGEBaseGameplayManager::EndRound( bool showreport /*=true*/ )
 		// Only give 3 second delay if we didn't count this round
 		m_flIntermissionEndTime = gpGlobals->curtime + 3.0f;
 
+	GP_EVENT( ROUND_END );
+
 	// Tell players we finished the round
 	BroadcastRoundEnd( showreport );
-
-	GP_EVENT( ROUND_END );
 }
 
 void CGEBaseGameplayManager::EndMatch()
@@ -537,6 +534,7 @@ void CGEBaseGameplayManager::EndMatch()
 	// If we are currently in our 2nd or higher round, end it first
 	if ( IsInRound() && m_iRoundCount > 1 )
 	{
+		// Do a full round ending
 		EndRound();
 		return;
 	}
@@ -548,45 +546,18 @@ void CGEBaseGameplayManager::EndMatch()
 		// Call into python to do post round cleanup and score setting
 		GetScenario()->OnRoundEnd();
 
-		// Calculate the scores for the active players
-		CalculatePlayerScores();
+		// Cleanup the round (does scores)
+		GP_EVENT( ROUND_END );
 	}
 
 	// Set our game over status
 	m_iRoundState = GAME_OVER;
 	m_flIntermissionEndTime = gpGlobals->curtime + mp_chattime.GetInt();
 
+	GP_EVENT( MATCH_END );
+
 	// Tell clients we finished the round
 	BroadcastMatchEnd();
-
-	GP_EVENT( MATCH_END );
-}
-
-void CGEBaseGameplayManager::CalculatePlayerScores()
-{
-	FOR_EACH_MPPLAYER( pPlayer )
-		// HACK HACK: Fake a kill so we can record their inning time and weapon held time
-		GEStats()->Event_PlayerKilled( pPlayer, CTakeDamageInfo() );
-
-		// Add the player's round scores to their match scores
-		pPlayer->AddMatchScore( pPlayer->GetRoundScore() );
-		pPlayer->AddMatchDeaths( pPlayer->DeathCount() );
-	END_OF_PLAYER_LOOP()
-
-	// Add the team round scores to the match scores
-	for ( int i = FIRST_GAME_TEAM; i < MAX_GE_TEAMS; i++ )
-	{
-		CTeam *team = GetGlobalTeam( i );
-		if ( team )
-			team->AddMatchScore( team->GetRoundScore() );
-	}
-
-	// Make sure we capture the latest scores and send them to the clients
-	if ( g_pPlayerResource )
-		g_pPlayerResource->UpdatePlayerData();
-
-	// Calculate the player's favorite weapons and set them
-	GEStats()->SetFavoriteWeapons();
 }
 
 float CGEBaseGameplayManager::GetRemainingIntermission()

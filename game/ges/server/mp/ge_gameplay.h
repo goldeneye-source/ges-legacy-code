@@ -184,8 +184,6 @@ private:
 	void BroadcastRoundEnd( bool showreport );
 	void BroadcastMatchEnd();
 
-	void CalculatePlayerScores();
-
 	bool ShouldEndRound();
 	bool ShouldEndMatch();
 

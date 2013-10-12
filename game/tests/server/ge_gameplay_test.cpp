@@ -4,6 +4,9 @@
 #include "ge_gameplay.h"
 #include "gemp_gamerules.h"
 
+#include "gemp_player.h"
+#include "ge_bot.h"
+
 int ge_gameplay_test = 1;
 
 class CGEScenarioTest : public CGEBaseScenario
@@ -449,6 +452,47 @@ TEST_F( GameplayTest, CheckRoundLock ) {
 
 	gameplay->SetRoundLocked( false );
 	EXPECT_FALSE( gameplay->IsRoundLocked() );
+}
+
+TEST_F( GameplayTest, RoundScoring ) {
+	// Start the round
+	AdvanceGameTime( 1.0f );
+	gameplay->OnThink();
+
+	// Spawn in a fake player
+	CGEMPPlayer *pPlayer = ToGEMPPlayer( BotPutInServer( false, 4 ) );
+	pPlayer->SetRoundScore( 4 );
+	pPlayer->SetDeaths( 4 );
+
+	// End the round
+	gameplay->EndRound();
+
+	// Check that our score is still 4
+	EXPECT_EQ( 4, pPlayer->GetRoundScore() );
+	EXPECT_EQ( 4, pPlayer->GetRoundDeaths() );
+
+	// Start round 2
+	AdvanceGameTime( gameplay->GetRemainingIntermission() + 1.0f );
+	gameplay->OnThink();
+
+	// Give us 2 & 2 this round
+	pPlayer->SetRoundScore( 2 );
+	pPlayer->SetDeaths( 2 );
+
+	// End the match
+	gameplay->EndMatch();
+
+	// Check our round score
+	EXPECT_EQ( 2, pPlayer->GetRoundScore() );
+	EXPECT_EQ( 2, pPlayer->GetRoundDeaths() );
+
+	// Move past round intermission
+	AdvanceGameTime( gameplay->GetRemainingIntermission() + 1.0f );
+	gameplay->OnThink();
+
+	// Check our match score
+	EXPECT_EQ( 6, pPlayer->GetMatchScore() );
+	EXPECT_EQ( 6, pPlayer->GetMatchDeaths() );
 }
 
 // TEST: Scenario loading (invalid identity, shutdown/init, etc)

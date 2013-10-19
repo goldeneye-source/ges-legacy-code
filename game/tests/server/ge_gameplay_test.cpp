@@ -171,11 +171,13 @@ protected:
 	void SetMatchTime( int minutes ) {
 		GEMPRules()->StopMatchTimer();
 		mp_timelimit.SetValue( minutes );
+		GEMPRules()->StartMatchTimer( minutes * 60.0f );
 	}
 
 	void SetRoundTime( int seconds ) {
 		GEMPRules()->StopRoundTimer();
 		ge_roundtime.SetValue( seconds );
+		GEMPRules()->StartRoundTimer( seconds );
 	}
 
 	void DisableRoundTime() {
@@ -460,7 +462,7 @@ TEST_F( GameplayTest, RoundScoring ) {
 	gameplay->OnThink();
 
 	// Spawn in a fake player
-	CGEMPPlayer *pPlayer = ToGEMPPlayer( BotPutInServer( false, 4 ) );
+	CGEMPPlayer *pPlayer = BotPutInServer( false, 4 );
 	pPlayer->SetRoundScore( 4 );
 	pPlayer->SetDeaths( 4 );
 

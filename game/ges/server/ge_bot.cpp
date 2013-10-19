@@ -69,7 +69,7 @@ static botdata_t g_BotData[ MAX_PLAYERS ];
 // Purpose: Create a new Bot and put it in the game.
 // Output : Pointer to the new Bot, or NULL if there's no free clients.
 //-----------------------------------------------------------------------------
-CBasePlayer *BotPutInServer( bool bFrozen, int iTeam )
+CGEMPPlayer* BotPutInServer( bool bFrozen, int iTeam )
 {
 	char botname[ 64 ];
 	Q_snprintf( botname, sizeof( botname ), "OldBot%02i", BotNumber+1 );

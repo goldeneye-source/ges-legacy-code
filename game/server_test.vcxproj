@@ -67,20 +67,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(ProjectDir)build\$(Configuration)\$(ProjectName)\</OutDir>
+    <OutDir>$(ProjectDir)..\lib\gtest</OutDir>
     <IntDir>.\build\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugTest|Win32'">
-    <OutDir>$(ProjectDir)build\$(Configuration)\$(ProjectName)\</OutDir>
+    <OutDir>$(ProjectDir)..\lib\gtest</OutDir>
     <IntDir>.\build\$(Configuration)\$(ProjectName)\</IntDir>
     <TargetName>$(ProjectName)d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(ProjectDir)build\$(Configuration)\$(ProjectName)\</OutDir>
+    <OutDir>$(ProjectDir)..\lib\gtest</OutDir>
     <IntDir>.\build\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|Win32'">
-    <OutDir>$(ProjectDir)build\$(Configuration)\$(ProjectName)\</OutDir>
+    <OutDir>$(ProjectDir)..\lib\gtest</OutDir>
     <IntDir>.\build\$(Configuration)\$(ProjectName)\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
@@ -176,7 +176,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>GES_TESTING;WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;GAME_DLL;VECTOR;PROTECTED_THINGS_ENABLE;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;HL2MP;HL2_DLL;VERSION_SAFE_STEAM_API_INTERFACES;GE_DLL;GE_USE_ROLLINGEXP;Py_NO_ENABLE_SHARED;BOOST_PYTHON_STATIC_LIB;BOOST_ALL_NO_LIB;BOOST_PYTHON_SOURCE;BOOST_PYTHON_NO_LIB;GE_AI;CURL_STATICLIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GES_TESTING;GES_ENABLE_OLD_BOTS;WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;GAME_DLL;VECTOR;PROTECTED_THINGS_ENABLE;sprintf=use_Q_snprintf_instead_of_sprintf;strncpy=use_Q_strncpy_instead;_snprintf=use_Q_snprintf_instead;HL2MP;HL2_DLL;VERSION_SAFE_STEAM_API_INTERFACES;GE_DLL;GE_USE_ROLLINGEXP;Py_NO_ENABLE_SHARED;BOOST_PYTHON_STATIC_LIB;BOOST_ALL_NO_LIB;BOOST_PYTHON_SOURCE;BOOST_PYTHON_NO_LIB;GE_AI;CURL_STATICLIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\common;..\public;..\public\tier0;..\public\tier1;..\utils\common;.\ges\shared;.\ges\shared\mp;.\ges\shared\sp;.\ges\server;.\ges\server\mp;.\ges\server\ai;.\ges\server\py;.\ges\server\sp;.\sdk\shared;.\sdk\shared\hl2;.\sdk\shared\hl2mp;.\sdk\server;.\sdk\server\hl2;.\sdk\server\hl2mp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>

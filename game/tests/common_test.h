@@ -9,6 +9,7 @@ protected:
 	CGECommonTest() {
 		// Capture the current time
 		_curtime = gpGlobals->curtime;
+		gpGlobals->curtime = 0;
 	}
 
 	virtual ~CGECommonTest() {

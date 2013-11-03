@@ -28,13 +28,18 @@ public:
 	// Get the length of the timer
 	float GetLength()	{ return m_flLength; }
 
-	// See if we are enabled
+	// Check if this timer is enabled for use
 	bool IsEnabled()	{ return m_bEnabled; }
 
-	// See if we are paused
+	// Check the state of the timer
+	bool IsStarted()	{ return m_bStarted; }
 	bool IsPaused()		{ return m_bPaused; }
 	
 #ifdef GAME_DLL
+	// Enable/Disable this timer
+	void Enable();
+	void Disable();
+
 	// Start and Stop the timer
 	void Start( float length_seconds );
 	void Stop();
@@ -52,6 +57,7 @@ public:
 
 private:
 	CNetworkVar( bool, m_bEnabled );
+	CNetworkVar( bool, m_bStarted );
 	CNetworkVar( bool, m_bPaused );
 	CNetworkVar( float, m_flPauseTimeRemaining );
 	CNetworkVar( float, m_flEndTime );

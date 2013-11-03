@@ -67,20 +67,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(ProjectDir)..\lib\gtest</OutDir>
+    <OutDir>$(ProjectDir)..\lib\gtest\</OutDir>
     <IntDir>.\build\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugTest|Win32'">
-    <OutDir>$(ProjectDir)..\lib\gtest</OutDir>
+    <OutDir>$(ProjectDir)..\lib\gtest\</OutDir>
     <IntDir>.\build\$(Configuration)\$(ProjectName)\</IntDir>
     <TargetName>$(ProjectName)d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(ProjectDir)..\lib\gtest</OutDir>
+    <OutDir>$(ProjectDir)..\lib\gtest\</OutDir>
     <IntDir>.\build\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|Win32'">
-    <OutDir>$(ProjectDir)..\lib\gtest</OutDir>
+    <OutDir>$(ProjectDir)..\lib\gtest\</OutDir>
     <IntDir>.\build\$(Configuration)\$(ProjectName)\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>

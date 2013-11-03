@@ -3373,11 +3373,13 @@ bool CHL2_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex 
 	// Recalculate proficiency!
 	SetCurrentWeaponProficiency( CalcWeaponProficiency( pWeapon ) );
 
+#ifndef GE_DLL
 	// Come out of suit zoom mode
 	if ( IsZooming() )
 	{
 		StopZooming();
 	}
+#endif
 
 	return BaseClass::Weapon_Switch( pWeapon, viewmodelindex );
 }

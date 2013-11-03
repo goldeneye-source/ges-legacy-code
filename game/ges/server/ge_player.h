@@ -188,7 +188,6 @@ protected:
 
 	// Networked zoom variables
 	CNetworkVar( bool, m_bInAimMode );
-	CNetworkVar( bool,	m_bResetZoom );
 
 	// Let's us know when we are officially in aim mode
 	int m_iAimModeState;

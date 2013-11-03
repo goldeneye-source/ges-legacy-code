@@ -24,7 +24,8 @@ protected:
 };
 
 TEST_F(TimerTest, InitialTimer) {
-	EXPECT_FALSE( timer->IsEnabled() );
+	EXPECT_TRUE( timer->IsEnabled() );
+	EXPECT_FALSE( timer->IsStarted() );
 	EXPECT_FALSE( timer->IsPaused() );
 	EXPECT_FLOAT_EQ( timer->GetTimeRemaining(), 0 );
 }
@@ -32,6 +33,7 @@ TEST_F(TimerTest, InitialTimer) {
 TEST_F(TimerTest, StartTimer) {
 	timer->Start( 100.0f );
 	EXPECT_TRUE( timer->IsEnabled() );
+	EXPECT_TRUE( timer->IsStarted() );
 	EXPECT_FALSE( timer->IsPaused() );
 	EXPECT_FLOAT_EQ( timer->GetTimeRemaining(), 100.0f );
 	// Advance time
@@ -39,11 +41,35 @@ TEST_F(TimerTest, StartTimer) {
 	EXPECT_FLOAT_EQ( timer->GetTimeRemaining(), 50.0f );
 }
 
+TEST_F(TimerTest, EnableDisableTimer) {
+	timer->Start( 100.0f );
+	EXPECT_TRUE( timer->IsEnabled() );
+	EXPECT_TRUE( timer->IsStarted() );
+	timer->Pause();
+	EXPECT_TRUE( timer->IsPaused() );
+
+	timer->Disable();
+	EXPECT_FALSE( timer->IsEnabled() );
+	EXPECT_FALSE( timer->IsStarted() );
+	EXPECT_FALSE( timer->IsPaused() );
+
+	timer->Start( 100.0f );
+	EXPECT_FALSE( timer->IsStarted() );
+
+	timer->Enable();
+	EXPECT_TRUE( timer->IsEnabled() );
+	EXPECT_FALSE( timer->IsStarted() );
+
+	timer->Start( 100.0f );
+	EXPECT_TRUE( timer->IsStarted() );
+}
+
 TEST_F(TimerTest, PauseTimer) {
 	// Start timer and immediately pause it
 	timer->Start( 100.0f );
 	timer->Pause();
 	EXPECT_TRUE( timer->IsPaused() );
+	EXPECT_TRUE( timer->IsStarted() );
 	EXPECT_TRUE( timer->IsEnabled() );
 	EXPECT_FLOAT_EQ( timer->GetTimeRemaining(), 100.0f );
 	// Advance time
@@ -62,6 +88,7 @@ TEST_F(TimerTest, ResumeTimer) {
 	timer->Resume();
 	EXPECT_FALSE( timer->IsPaused() );
 	EXPECT_TRUE( timer->IsEnabled() );
+	EXPECT_TRUE( timer->IsStarted() );
 	// Advance time
 	AdvanceGameTime( 50.0f );
 	// Check to see we have 50 seconds left
@@ -71,7 +98,8 @@ TEST_F(TimerTest, ResumeTimer) {
 TEST_F(TimerTest, StopTimer) {
 	timer->Start( 100.0f );
 	timer->Stop();
-	EXPECT_FALSE( timer->IsEnabled() );
+	EXPECT_TRUE( timer->IsEnabled() );
+	EXPECT_FALSE( timer->IsStarted() );
 	EXPECT_FALSE( timer->IsPaused() );
 	EXPECT_FLOAT_EQ( timer->GetTimeRemaining(), 0 );
 	// Advance time
@@ -82,7 +110,8 @@ TEST_F(TimerTest, StopTimer) {
 TEST_F(TimerTest, BadStartTimer) {
 	timer->Start( 100.0f );
 	timer->Start( -1 );
-	EXPECT_FALSE( timer->IsEnabled() );
+	EXPECT_TRUE( timer->IsEnabled() );
+	EXPECT_FALSE( timer->IsStarted() );
 	EXPECT_FALSE( timer->IsPaused() );
 	EXPECT_FLOAT_EQ( timer->GetTimeRemaining(), 0 );
 }
@@ -91,6 +120,7 @@ TEST_F(TimerTest, DualStartTimer) {
 	timer->Start( 100.0f );
 	timer->Start( 25.0f );
 	EXPECT_TRUE( timer->IsEnabled() );
+	EXPECT_TRUE( timer->IsStarted() );
 	EXPECT_FALSE( timer->IsPaused() );
 	EXPECT_FLOAT_EQ( timer->GetTimeRemaining(), 25.0f );
 	// Advance time
@@ -105,6 +135,7 @@ TEST_F(TimerTest, ChangeTimerLengthSame) {
 	// Change timer to same value as before
 	timer->ChangeLength( 100.0f );
 	EXPECT_TRUE( timer->IsEnabled() );
+	EXPECT_TRUE( timer->IsStarted() );
 	EXPECT_FALSE( timer->IsPaused() );
 	EXPECT_FLOAT_EQ( timer->GetTimeRemaining(), 50.0f );
 }
@@ -116,6 +147,7 @@ TEST_F(TimerTest, ChangeTimerLengthLess) {
 	// Change timer to a value less than it was
 	timer->ChangeLength( 25.0f );
 	EXPECT_TRUE( timer->IsEnabled() );
+	EXPECT_TRUE( timer->IsStarted() );
 	EXPECT_FALSE( timer->IsPaused() );
 	EXPECT_FLOAT_EQ( timer->GetTimeRemaining(), 0 );
 }
@@ -127,6 +159,7 @@ TEST_F(TimerTest, ChangeTimerLengthMore) {
 	// Change timer to a value more than it was
 	timer->ChangeLength( 150.0f );
 	EXPECT_TRUE( timer->IsEnabled() );
+	EXPECT_TRUE( timer->IsStarted() );
 	EXPECT_FALSE( timer->IsPaused() );
 	EXPECT_FLOAT_EQ( timer->GetTimeRemaining(), 100.0f );
 }
@@ -146,20 +179,26 @@ TEST_F(TimerTest, ChangeTimerLengthPaused) {
 	// Advance time
 	AdvanceGameTime( 25.0f );
 	EXPECT_TRUE( timer->IsEnabled() );
+	EXPECT_TRUE( timer->IsStarted() );
 	EXPECT_TRUE( timer->IsPaused() );
 	// The remaining time should be 75 + 50 = 125
 	EXPECT_FLOAT_EQ( timer->GetTimeRemaining(), 125.0f );
 }
 
-TEST_F(TimerTest, ChangeTimerLengthDisabled) {
+TEST_F(TimerTest, ChangeTimerLengthWhileStopped) {
 	timer->Start( 0 );
-	EXPECT_FALSE( timer->IsEnabled() );
+	EXPECT_TRUE( timer->IsEnabled() );
+	EXPECT_FALSE( timer->IsStarted() );
+
 	// Change length to more than it was
 	timer->ChangeLength( 100.0f );
+	EXPECT_TRUE( timer->IsStarted() );
+	EXPECT_FALSE( timer->IsPaused() );
+	EXPECT_FLOAT_EQ( 100.0f, timer->GetLength() );
+
 	// Advance time
 	AdvanceGameTime( 25.0f );
-	EXPECT_TRUE( timer->IsEnabled() );
-	EXPECT_FALSE( timer->IsPaused() );
-	// The remaining time should be 0 + 100 - 25 = 75
-	EXPECT_FLOAT_EQ( timer->GetTimeRemaining(), 75.0f );
+
+	// The remaining time should be 100 - 25 == 75
+	EXPECT_FLOAT_EQ( 75.0f, timer->GetTimeRemaining() );
 }

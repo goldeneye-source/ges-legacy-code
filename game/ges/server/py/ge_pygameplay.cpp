@@ -492,7 +492,7 @@ public:
 
 	virtual bool CanMatchEnd()
 	{
-        TRYFUNCRET( this->get_override("CanMatchEnd")(), true );
+		TRYFUNCRET( this->get_override("CanMatchEnd")(), true );
 	}
 
 	virtual int GetTeamPlay()

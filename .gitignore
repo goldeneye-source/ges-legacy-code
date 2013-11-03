@@ -26,3 +26,4 @@ linux_sdk/vcpm
 linux_sdk/server_i486.so
 mathlib/Release/
 python/
+lib/gtest/ServerTest*

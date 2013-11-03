@@ -275,7 +275,7 @@ bool CGEWeapon::Reload( void )
 		}
 	#endif
 		// Reset our aim mode
-		pPlayer->ResetAimMode();
+		pPlayer->ResetAimMode( true );
 
 		m_iShotsFired = 0;
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_RELOAD );
@@ -736,7 +736,6 @@ bool CGEWeapon::Holster( CBaseCombatWeapon *pSwitchingTo )
 		{
 			CGEPlayer *pPlayer = ToGEPlayer( pOwner );
 			pPlayer->DoAnimationEvent( PLAYERANIMEVENT_GES_HOLSTER );
-			pPlayer->ResetAimMode();
 		}
 
 		return true;

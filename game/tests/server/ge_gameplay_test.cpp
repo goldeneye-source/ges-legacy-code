@@ -239,7 +239,7 @@ TEST_F( GameplayTest, EndRound_ByTime ) {
 	EXPECT_FALSE( gameplay->IsInFinalIntermission() );
 }
 
-TEST_F( GameplayTest, EndMatch_ByCall_OneRound ) {
+TEST_F( GameplayTest, EndMatch_ByCall_SingleRound ) {
 	// Start round
 	AdvanceGameTime( 1.0f );
 	gameplay->OnThink();
@@ -283,7 +283,28 @@ TEST_F( GameplayTest, EndMatch_ByCall_MultiRound ) {
 	EXPECT_TRUE( gameplay->IsInFinalIntermission() );
 }
 
-TEST_F( GameplayTest, EndMatch_ByTime ) {
+TEST_F( GameplayTest, EndMatch_ByTime_SingleRound ) {
+	// Grab the length of the match
+	int match_time = GEMPRules()->GetMatchTimeRemaining();
+	
+	// Start round 1
+	AdvanceGameTime( 1.0f );
+	gameplay->OnThink();
+
+	// End round 1 and the match all at once
+	AdvanceGameTime( match_time );
+	EXPECT_EQ( 0, GEMPRules()->GetRoundTimeRemaining() );
+	EXPECT_EQ( 0, GEMPRules()->GetMatchTimeRemaining() );
+	gameplay->OnThink();
+
+	// NOTE: We intend to skip the round intermission since only one round was played
+	// Check for final intermission
+	EXPECT_FALSE( gameplay->IsInRound() );
+	EXPECT_FALSE( gameplay->IsInRoundIntermission() );
+	EXPECT_TRUE( gameplay->IsInFinalIntermission() );
+}
+
+TEST_F( GameplayTest, EndMatch_ByTime_MultiRound ) {
 	// Grab the length of the round
 	int round_time = GEMPRules()->GetRoundTimeRemaining();
 	// Grab the length of the match
@@ -350,7 +371,7 @@ TEST_F( GameplayTest, EndRound_Blocked_ByTimer ) {
 
 	// Check disabled
 	EXPECT_EQ( 0, GEMPRules()->GetRoundTimeRemaining() );
-	EXPECT_FALSE( GEMPRules()->IsRoundTimeEnabled() );
+	EXPECT_FALSE( GEMPRules()->IsRoundTimeRunning() );
 
 	// Grab the length of the match
 	int match_time = GEMPRules()->GetMatchTimeRemaining();
@@ -407,7 +428,7 @@ TEST_F( GameplayTest, EndMatch_Blocked_ByTimer ) {
 
 	// Check disabled
 	EXPECT_EQ( 0, GEMPRules()->GetMatchTimeRemaining() );
-	EXPECT_FALSE( GEMPRules()->IsMatchTimeEnabled() );
+	EXPECT_FALSE( GEMPRules()->IsMatchTimeRunning() );
 	
 	// Grab the length of the round
 	int round_time = GEMPRules()->GetRoundTimeRemaining();
@@ -495,6 +516,9 @@ TEST_F( GameplayTest, RoundScoring ) {
 	// Check our match score
 	EXPECT_EQ( 6, pPlayer->GetMatchScore() );
 	EXPECT_EQ( 6, pPlayer->GetMatchDeaths() );
+
+	// Kick the fake player
+	engine->ServerCommand( UTIL_VarArgs( "kick %s", pPlayer->GetPlayerName() ) );
 }
 
 // TEST: Scenario loading (invalid identity, shutdown/init, etc)

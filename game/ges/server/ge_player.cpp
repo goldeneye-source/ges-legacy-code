@@ -42,7 +42,6 @@ IMPLEMENT_SERVERCLASS_ST(CGEPlayer, DT_GE_Player)
 	SendPropInt( SENDINFO( m_iMaxHealth ) ),
 
 	SendPropBool( SENDINFO( m_bInAimMode) ),
-	SendPropBool( SENDINFO( m_bResetZoom ) ),
 
 	SendPropEHandle( SENDINFO( m_hHat ) ),
 	SendPropInt( SENDINFO( m_takedamage ) ),
@@ -61,7 +60,6 @@ END_DATADESC()
 CGEPlayer::CGEPlayer()
 {
 	m_iAimModeState = AIM_NONE;
-	m_bResetZoom = false;
 	m_bInSpawnInvul = false;
 
 	m_pHints = new CHintSystem;

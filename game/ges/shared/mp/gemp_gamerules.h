@@ -75,6 +75,7 @@ public:
 	void SetMatchTimerPaused( bool state );
 	void StopMatchTimer();
 
+	void SetRoundTimerEnabled( bool state );
 	void StartRoundTimer( float time_sec=-1 );
 	void ChangeRoundTimer( float new_time_sec );
 	void SetRoundTimerPaused( bool state );
@@ -135,12 +136,13 @@ public:
 	virtual bool ShouldCollide( int collisionGroup0, int collisionGroup1 );
 
 	// Match Timing
-	bool  IsMatchTimeEnabled();
+	bool  IsMatchTimeRunning();
 	bool  IsMatchTimePaused();
 	float GetMatchTimeRemaining();
 
 	// Round Timing
 	bool  IsRoundTimeEnabled();
+	bool  IsRoundTimeRunning();
 	bool  IsRoundTimePaused();
 	float GetRoundTimeRemaining();
 
@@ -173,9 +175,8 @@ public:
 	virtual bool OnPlayerSay(CBasePlayer* player, const char* text);
 	virtual void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );
 	
-	// Used to initialize and shutdown Python
+	// Used to initialize Python managers. They are shutdown when GameRules is destroyed
 	virtual void LevelInitPreEntity();
-	virtual void LevelShutdownPreEntity();
 
 	virtual void FrameUpdatePreEntityThink();
 	virtual void Think();

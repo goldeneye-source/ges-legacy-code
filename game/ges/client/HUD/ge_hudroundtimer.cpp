@@ -90,11 +90,11 @@ void CGEHudRoundTimer::Think()
 	float timeleft = 0;
 
 	// Extract a time to use, clamp to the minimum between the match and round timers
-	if ( GEMPRules()->IsRoundTimeEnabled() && GEMPRules()->IsMatchTimeEnabled() )
+	if ( GEMPRules()->IsRoundTimeRunning() && GEMPRules()->IsMatchTimeRunning() )
 		timeleft = min( GEMPRules()->GetRoundTimeRemaining(), GEMPRules()->GetMatchTimeRemaining() );
-	else if ( GEMPRules()->IsRoundTimeEnabled() )
+	else if ( GEMPRules()->IsRoundTimeRunning() )
 		timeleft = GEMPRules()->GetRoundTimeRemaining();
-	else if ( cl_ge_show_matchtime.GetBool() && GEMPRules()->IsMatchTimeEnabled() )
+	else if ( cl_ge_show_matchtime.GetBool() && GEMPRules()->IsMatchTimeRunning() )
 		timeleft = GEMPRules()->GetMatchTimeRemaining();
 
 	// Check if we have time to display

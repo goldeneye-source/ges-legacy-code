@@ -102,7 +102,7 @@ ConVar ge_bot_strict_openslot	( "ge_bot_strict_openslot", "0", FCVAR_REPLICATED,
 
 ConVar ge_roundtime	( "ge_roundtime", "240", FCVAR_REPLICATED, "Round time in seconds that can be played.", true, 0, true, 3000, GERoundTime_Callback );
 ConVar ge_rounddelay( "ge_rounddelay", "15", FCVAR_GAMEDLL, "Delay, in seconds, between rounds.", true, 3, true, 40 );
-ConVar ge_roundcount( "ge_roundcount", "0", FCVAR_REPLICATED, "Number of rounds that should be held in the given match time (calculates ge_roundtime), use -1 to disable", GERoundCount_Callback );
+ConVar ge_roundcount( "ge_roundcount", "0", FCVAR_REPLICATED, "Number of rounds that should be held in the given match time (calculates ge_roundtime), use 0 to disable", GERoundCount_Callback );
 ConVar ge_teamplay	( "ge_teamplay", "0", FCVAR_REPLICATED, "Turns on team play if the current scenario supports it.", GETeamplay_Callback );
 ConVar ge_velocity	( "ge_velocity", "1.0", FCVAR_REPLICATED|FCVAR_NOTIFY, "Player movement velocity multiplier, applies in multiples of 0.25 [0.7 to 2.0]", true, 0.7, true, 2.0, GEVelocity_Callback );
 
@@ -118,7 +118,7 @@ void GERoundTime_Callback( IConVar *var, const char *pOldString, float flOldValu
 	ConVar *cVar = static_cast<ConVar*>(var);
 	int round_time = cVar->GetInt();
 
-#ifndef _DEBUG
+#if !defined(_DEBUG) && !defined(GES_TESTING)
 	if ( round_time > 0 && round_time < 60 )
 	{
 		round_time = 60;
@@ -139,20 +139,18 @@ void GERoundCount_Callback( IConVar *var, const char *pOldString, float flOldVal
 	int num_rounds = cVar->GetInt();
 
 	// If we have less than 0 ignore this functionality (ie, use ge_roundtime exclusively)
-	if ( num_rounds < 0 )
+	if ( num_rounds <= 0 ) {
 		return;
-
-	if ( num_rounds <= 1 )
-	{
-		// Disable rounds if we only want 1 or 0
-		ge_roundtime.SetValue( 0 );
-	}
-	else
-	{
+	} else if ( num_rounds == 1 ) {
+		// Set our round time to the match time since we only want 1 round
+		ge_roundtime.SetValue( mp_timelimit.GetInt() * 60 );
+	} else {
+		// Figure out the amount of inter-match round delay to account for it
 		int match_time = mp_timelimit.GetInt() * 60;
-		int total_round_delay = max( ge_rounddelay.GetInt(), 3 ) * (num_rounds - 1) + mp_chattime.GetInt();
+		int total_round_delay = max( ge_rounddelay.GetInt(), 3 ) * (num_rounds - 1);
 		int round_time = ge_roundtime.GetInt();
 
+		// If our match time exceeds the total round delay, divide the diff by the number of desired rounds
 		if ( match_time > total_round_delay )
 			round_time = (match_time - total_round_delay) / num_rounds;
 		else
@@ -160,7 +158,7 @@ void GERoundCount_Callback( IConVar *var, const char *pOldString, float flOldVal
 
 		// Set the round time based on our calcs, ge_roundtime ensures at least 30 second rounds
 		ge_roundtime.SetValue( round_time );
-	}	
+	}
 }
 
 void GETeamplay_Callback( IConVar *var, const char *pOldString, float flOldValue )
@@ -259,32 +257,6 @@ CON_COMMAND( ge_bot_remove, "Removes the number of specified bots, if no number 
 		}
 	END_OF_PLAYER_LOOP()
 }
-
-#ifdef _DEBUG
-CON_COMMAND( ge_toggle_timer, "" )
-{
-	if ( args.ArgC() < 3 )
-		return;
-
-	if ( atoi( args.Arg(1) ) == 0 )
-	{
-		if ( atoi( args.Arg(2) ) == 1 )
-			GEMPRules()->StartRoundTimer();
-		else
-			GEMPRules()->StopRoundTimer();
-	}
-	else if ( atoi( args.Arg(1) ) == 1 )
-	{
-		// Round Timer
-		GEMPRules()->SetRoundTimerPaused( atoi( args.Arg(2) ) != 1 );
-	}
-	else
-	{
-		// Match Timer
-		GEMPRules()->SetMatchTimerPaused( atoi( args.Arg(2) ) != 1 );
-	}
-}
-#endif
 
 #endif // GAME_DLL
 
@@ -463,6 +435,10 @@ CGEMPRules::~CGEMPRules()
 	// These are deleted with the rest of the entities
 	g_pPlayerResource = NULL;
 	g_pRadarResource = NULL;
+
+	// Shutdown the Python Managers
+	ShutdownAiManager();
+	ShutdownGameplayManager();
 #endif
 }
 
@@ -499,6 +475,10 @@ void CGEMPRules::OnScenarioInit()
 	SetWeaponSpawnState( true );
 	SetArmorSpawnState( true );
 	SetTeamSpawn( true );
+
+	// Make sure the round timer is enabled
+	// NOTE: The match timer can not be disabled
+	SetRoundTimerEnabled( true );
 
 	// Reset the radar
 	g_pRadarResource->SetForceRadar( false );
@@ -906,16 +886,14 @@ void CGEMPRules::LevelInitPreEntity()
 	// Create the Gameplay Manager if not existing already
 	if ( !GEGameplay() )
 		CreateGameplayManager();
+	else
+		Warning( "[GERules] Gameplay manager already existed!\n" );
 
 	// Create the AI Manager if not existing already
 	if ( !GEAi() )
 		CreateAiManager();
-}
-
-void CGEMPRules::LevelShutdownPreEntity()
-{
-	ShutdownAiManager();
-	ShutdownGameplayManager();
+	else
+		Warning( "[GERules] Ai manager already existed!\n" );
 }
 
 void CGEMPRules::FrameUpdatePreEntityThink()
@@ -1161,6 +1139,17 @@ void CGEMPRules::StopMatchTimer()
 	m_hMatchTimer->Stop();
 }
 
+void CGEMPRules::SetRoundTimerEnabled( bool state )
+{
+	Assert( m_hRoundTimer.Get() != NULL );
+	if ( state ) {
+		m_hRoundTimer->Enable();
+		StartRoundTimer( ge_roundtime.GetFloat() );
+	} else {
+		m_hRoundTimer->Disable();
+	}
+}
+
 void CGEMPRules::StartRoundTimer( float time_sec /*=-1*/ )
 {
 	Assert( m_hRoundTimer.Get() != NULL );
@@ -1396,7 +1385,7 @@ void CGEMPRules::BalanceTeams()
 		return;
 
 	// Don't do switches if we have less than a minute left in the round/match!
-	if ( (IsRoundTimeEnabled() && GetRoundTimeRemaining() < 45.0f) || (IsMatchTimeEnabled() && GetMatchTimeRemaining() < 45.0f) )
+	if ( (IsRoundTimeRunning() && GetRoundTimeRemaining() < 45.0f) || (IsMatchTimeRunning() && GetMatchTimeRemaining() < 45.0f) )
 		return;
 
 	// Is it even time to check yet?
@@ -1562,17 +1551,17 @@ bool CGEMPRules::OnPlayerSay(CBasePlayer* player, const char* text)
 #endif // GAME_DLL
 
 // Match Timer Functions
-bool CGEMPRules::IsMatchTimeEnabled()
+bool CGEMPRules::IsMatchTimeRunning()
 {
 	if ( m_hMatchTimer.Get() )
-		return m_hMatchTimer->IsEnabled();
+		return m_hMatchTimer->IsStarted() && !m_hMatchTimer->IsPaused();
 	return false;
 }
 
 bool CGEMPRules::IsMatchTimePaused()
 {
 	if ( m_hMatchTimer.Get() )
-		return m_hMatchTimer->IsPaused();
+		return m_hMatchTimer->IsStarted() && m_hMatchTimer->IsPaused();
 	return false;
 }
 
@@ -1588,6 +1577,13 @@ bool CGEMPRules::IsRoundTimeEnabled()
 {
 	if ( m_hRoundTimer.Get() )
 		return m_hRoundTimer->IsEnabled();
+	return false;
+}
+
+bool CGEMPRules::IsRoundTimeRunning()
+{
+	if ( m_hRoundTimer.Get() )
+		return m_hRoundTimer->IsStarted() && !m_hRoundTimer->IsPaused();
 	return false;
 }
 

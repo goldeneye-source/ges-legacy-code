@@ -90,7 +90,7 @@ static const char *EHANDLE_str( CHandle<CBaseEntity> &h )
 	if ( h.Get() )
 		return h->GetClassname();
 	else
-		return "Invalid Handle";
+		return "Invalid Entity Handle";
 }
 
 // Compares CBaseEntity, EHANDLE to CBaseEntity, EHANDLE, and UID (int)
@@ -158,7 +158,7 @@ BOOST_PYTHON_MODULE(GEEntity)
 
 	def("GetEntitiesInBox", pyGetEntitiesInBox);
 
-	class_< EHANDLE >("EHANDLE", init<CBaseEntity*>())
+	class_< EHANDLE >("EntityHandle", init<CBaseEntity*>())
 		.def("__str__", EHANDLE_str)
 		.def("__eq__", CBaseEntity_eq)
 		.def("__ne__", CBaseEntity_ne)

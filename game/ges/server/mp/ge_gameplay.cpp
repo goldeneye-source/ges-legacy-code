@@ -271,18 +271,28 @@ bool CGEBaseGameplayManager::LoadScenario()
 
 bool CGEBaseGameplayManager::LoadScenario( const char *ident )
 {
+	char prev_ident[32] = "DeathMatch";
+
 	// Shutdown any current scenario
-	if ( IsValidScenario() )
+	if ( IsValidScenario() ) {
+		Q_strncpy( prev_ident, GetScenario()->GetIdent(), 32 );
 		ShutdownScenario();
+	}
 
 	Msg( "Attempting to load scenario: %s\n", ident );
 
 	// Call up to load the new scenario
 	// If this fails, we will continue with the previously loaded scenario
-	if ( !DoLoadScenario( ident ) )
-		Warning( "Scenario load failed! Reverting to the previous scenario!\n" );
-	else
-		Msg( "Successfully loaded scenario!\n", ident );
+	if ( !DoLoadScenario( ident ) ) {
+		Warning( "Scenario load failed for %s! Reverting back to %s.\n", ident, prev_ident );
+		
+		if ( !DoLoadScenario( prev_ident ) )
+			Warning( "A catastrophic error occurred while reverting back to %s! Exit and restart the game!\n", prev_ident );
+		else
+			Msg( "Successfully reverted back to %s\n", prev_ident );
+	} else {
+		Msg( "Successfully loaded scenario %s!\n", ident );
+	}
 
 	// Set up the world and notify Python
 	InitScenario();
@@ -361,12 +371,15 @@ void CGEBaseGameplayManager::ShutdownScenario()
 	FOR_EACH_PLAYER( pPlayer )		
 		GetScenario()->ClientDisconnect( pPlayer );	
 	END_OF_PLAYER_LOOP()
-	
-	// Official call to shutdown
-	GetScenario()->Shutdown();
 
-	// Call out listeners after Python shutdown
+	// Unload the configuration variables
+	GetScenario()->UnloadConfig();
+
+	// Tell everyone we are shutting down the scenario
 	GP_EVENT( SCENARIO_SHUTDOWN );
+	
+	// Final shutdown with Python
+	GetScenario()->Shutdown();
 }
 
 void CGEBaseGameplayManager::ResetState()
@@ -442,12 +455,12 @@ void CGEBaseGameplayManager::OnThink()
 	// Check if we are in a round
 	if ( IsInRound() )
 	{
-		// Check if we need to end this round
-		if ( ShouldEndRound() )		
-			EndRound();
-		// Otherwise, check if we need to end the match
-		else if ( ShouldEndMatch() )
+		// Check if we need to end the match (ends round first)
+		if ( ShouldEndMatch() )
 			EndMatch();
+		// Otherwise, check if we need to end the round
+		else if ( ShouldEndRound() )		
+			EndRound();
 		// Otherwise, let the scenario think
 		else		
 			GetScenario()->OnThink();
@@ -507,6 +520,10 @@ void CGEBaseGameplayManager::StartRound()
 
 void CGEBaseGameplayManager::EndRound( bool showreport /*=true*/ )
 {
+	// Ignore this call if we are not playing a round
+	if ( !IsInRound() )
+		return;
+
 	// Call into python to do post round cleanup and score setting
 	GetScenario()->OnRoundEnd();
 
@@ -531,23 +548,26 @@ void CGEBaseGameplayManager::EndMatch()
 	// Set this upfront
 	m_bGameOver = true;
 
-	// If we are currently in our 2nd or higher round, end it first
-	if ( IsInRound() && m_iRoundCount > 1 )
+	// If we are currently in a round, we need to end it first
+	if ( IsInRound() )
 	{
-		// Do a full round ending
-		EndRound();
-		return;
-	}
-	else if ( m_iRoundCount <= 1 )
-	{
-		// If we only played one round, perform a score calculation
-		// We'll then only show the match report to players
+		if ( m_iRoundCount > 1 )
+		{
+			// Do a full round ending since we played more than 1 round
+			EndRound();
+			return;
+		}
+		else
+		{
+			// Only perform a score calculation since we haven't played more than 1 round
+			// We'll only show the match report to players
 
-		// Call into python to do post round cleanup and score setting
-		GetScenario()->OnRoundEnd();
+			// Call into python to do post round cleanup and score setting
+			GetScenario()->OnRoundEnd();
 
-		// Cleanup the round (does scores)
-		GP_EVENT( ROUND_END );
+			// Cleanup the round (does scores)
+			GP_EVENT( ROUND_END );
+		}
 	}
 
 	// Set our game over status
@@ -568,7 +588,7 @@ float CGEBaseGameplayManager::GetRemainingIntermission()
 bool CGEBaseGameplayManager::ShouldEndRound()
 {
 	// Check time constraints
-	if ( GEMPRules()->IsRoundTimeEnabled() && GEMPRules()->GetRoundTimeRemaining() <= 0 )
+	if ( GEMPRules()->IsRoundTimeRunning() && GEMPRules()->GetRoundTimeRemaining() <= 0 )
 	{
 		// We ran out of time and our scenario says we can end
 		if ( GetScenario()->CanRoundEnd() )
@@ -581,15 +601,15 @@ bool CGEBaseGameplayManager::ShouldEndRound()
 bool CGEBaseGameplayManager::ShouldEndMatch()
 {
 	// We are already over!
-	if ( m_bGameOver )
+	if ( IsGameOver() )
 		return true;
 
 	// We must be able to end our round to end the match
-	if ( IsInRound() && GEMPRules()->IsRoundTimeEnabled() && !ShouldEndRound() )
+	if ( IsInRound() && GEMPRules()->IsRoundTimeRunning() && !ShouldEndRound() )
 		return false;
 
 	// Check time constraints
-	if ( GEMPRules()->IsMatchTimeEnabled() && (GEMPRules()->GetMatchTimeRemaining() <= 0 
+	if ( GEMPRules()->IsMatchTimeRunning() && (GEMPRules()->GetMatchTimeRemaining() <= 0 
 		|| (IsInRoundIntermission() && GEMPRules()->GetMatchTimeRemaining() <= 30.0f)) )
 	{
 		// We ran out of time and our scenario says we can end
@@ -864,8 +884,8 @@ CON_COMMAND(ge_endround, "End the current round, use `ge_endround 0` to skip sco
 		return;
 	}
 
-	// Ignore if we are in an intermission
-	if ( GEGameplay()->IsInRoundIntermission() )
+	// Ignore if we are not in a round
+	if ( !GEGameplay()->IsInRound() )
 		return;
 
 	bool showreport = true;
@@ -889,8 +909,8 @@ CON_COMMAND(ge_endround_keepweapons, "End the current round but keep the same we
 		return;
 	}
 
-	// Ignore if we are in an intermission
-	if ( GEGameplay()->IsInIntermission() )
+	// Ignore if we are not in a round
+	if ( !GEGameplay()->IsInRound() )
 		return;
 
 	// This is where the magic happens
@@ -911,8 +931,17 @@ CON_COMMAND_F_COMPLETION(ge_endmatch, "Ends the match loading the next map or on
 		return;
 	}
 
-	if ( args.ArgC() > 1 && engine->IsMapValid( args[1] ) )
-		nextlevel.SetValue( args[1] );
+	// Don't do anything if we are already game over
+	if ( GEGameplay()->IsGameOver() )
+		return;
+
+	// Set the next level if given
+	if ( args.ArgC() > 1 ) {
+		if ( engine->IsMapValid( args[1] ) )
+			nextlevel.SetValue( args[1] );
+		else
+			Warning( "Invalid map provided to ge_endmatch, ignoring.\n" );
+	}
 
 	GEGameplay()->EndMatch();
 }

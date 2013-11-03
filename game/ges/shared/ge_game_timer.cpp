@@ -19,12 +19,14 @@ IMPLEMENT_NETWORKCLASS_ALIASED( GEGameTimer, DT_GEGameTimer )
 BEGIN_NETWORK_TABLE_NOBASE( CGEGameTimer, DT_GEGameTimer )
 #ifdef CLIENT_DLL
 	RecvPropBool( RECVINFO( m_bEnabled ) ),
+	RecvPropBool( RECVINFO( m_bStarted ) ),
 	RecvPropBool( RECVINFO( m_bPaused ) ),
 	RecvPropTime( RECVINFO( m_flPauseTimeRemaining ) ),
 	RecvPropTime( RECVINFO( m_flLength ) ),
 	RecvPropTime( RECVINFO( m_flEndTime ) ),
 #else
 	SendPropBool( SENDINFO( m_bEnabled ) ),
+	SendPropBool( SENDINFO( m_bStarted ) ),
 	SendPropBool( SENDINFO( m_bPaused ) ),
 	SendPropTime( SENDINFO( m_flPauseTimeRemaining ) ),
 	SendPropTime( SENDINFO( m_flLength ) ),
@@ -38,7 +40,8 @@ END_NETWORK_TABLE()
 CGEGameTimer::CGEGameTimer()
 {
 #ifdef GAME_DLL
-	// Reset our variables
+	// Reset the timer to the default state (enabled and stopped)
+	Enable();
 	Stop();
 #endif
 }
@@ -49,12 +52,12 @@ CGEGameTimer::CGEGameTimer()
 float CGEGameTimer::GetTimeRemaining()
 {
 	// If we are not started return 0
-	if ( !m_bEnabled )
+	if ( !IsStarted() )
 		return 0;
 
 	float seconds_remaining;
 	
-	if ( m_bPaused )
+	if ( IsPaused() )
 		seconds_remaining = m_flPauseTimeRemaining;
 	else
 		seconds_remaining = m_flEndTime - gpGlobals->curtime;
@@ -63,29 +66,46 @@ float CGEGameTimer::GetTimeRemaining()
 }
 
 #ifdef GAME_DLL
+// Enable the timer, you have to call Start() yourself
+void CGEGameTimer::Enable()
+{
+	m_bEnabled = true;
+}
+
+// Disable the timer, this also stops the timer
+void CGEGameTimer::Disable()
+{
+	m_bEnabled = false;
+	Stop();
+}
+
 // Starts the timer if length_seconds is greater than 0, otherwise stops the timer
 // If the timer is already started, this will adjust the end time accordingly
 void CGEGameTimer::Start( float length_seconds )
 {
-	if ( length_seconds <= 0 ) {
-		// Stop the timer if called with Start(0)
-		Stop();
-	} else {
-		// Start the timer
-		m_bEnabled = true;
-		m_flLength = length_seconds;
-		m_flEndTime = gpGlobals->curtime + m_flLength;
+	// Only start if we are enabled
+	if ( IsEnabled() )
+	{
+		if ( length_seconds <= 0 ) {
+			// Stop the timer if called with no length
+			Stop();
+		} else {
+			// Start the timer
+			m_bStarted = true;
+			m_flLength = length_seconds;
+			m_flEndTime = gpGlobals->curtime + m_flLength;
 
-		// Reset any pause state
-		m_bPaused = false;
-		m_flPauseTimeRemaining = 0;
+			// Reset any pause state
+			m_bPaused = false;
+			m_flPauseTimeRemaining = 0;
+		}
 	}
 }
 
 void CGEGameTimer::Stop()
 {
 	// Stop the timer
-	m_bEnabled = false;
+	m_bStarted = false;
 	m_flLength = 0;
 	m_flEndTime = 0;
 
@@ -96,14 +116,18 @@ void CGEGameTimer::Stop()
 
 void CGEGameTimer::ChangeLength( float length_seconds )
 {
-	// Stop the timer if we change to 0 length
+	// Don't do anything we are are not enabled
+	if ( !IsEnabled() )
+		return;
+
+	// Stop the timer if we change to no length
 	if ( length_seconds <= 0 ) {
 		Stop();
 		return;
 	}
 
-	// Start the timer if we were not started before
-	if ( !IsEnabled() ) {
+	// Simply start the timer if not running already
+	if ( !IsStarted() ) {
 		Start( length_seconds );
 		return;
 	}
@@ -127,7 +151,7 @@ void CGEGameTimer::ChangeLength( float length_seconds )
 //-----------------------------------------------------------------------------
 void CGEGameTimer::Pause()
 {
-	if ( !m_bPaused )
+	if ( IsStarted() && !IsPaused() )
 	{
 		// Store our pause time remaining to our currently remaining time
 		m_flPauseTimeRemaining = GetTimeRemaining();
@@ -140,7 +164,7 @@ void CGEGameTimer::Pause()
 //-----------------------------------------------------------------------------
 void CGEGameTimer::Resume()
 {
-	if ( m_bPaused )
+	if ( IsStarted() && IsPaused() )
 	{
 		// Set our new end time to our Resume Time plus our Remaining Time
 		m_flEndTime = gpGlobals->curtime + GetTimeRemaining();

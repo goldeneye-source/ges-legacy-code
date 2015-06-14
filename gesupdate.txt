@@ -1,0 +1,11 @@
+"update"
+{
+	"version"	"4.1.0"
+	"changelist"	"http://wiki.goldeneyesource.net/index.php/Beta_4_Changelist"
+	"mirrors"
+	{
+		"mirror"  "http://www.moddb.com/mods/goldeneye-source/downloads"
+		"mirror"  "http://gesource.org/Beta_4.0.2_Server_Hotfix.zip"
+		"mirror"  "http://www.moddb.com/mods/goldeneye-source/downloads/goldeneye-source-beta-402-server-fix"
+	}
+}

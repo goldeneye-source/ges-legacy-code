@@ -1,0 +1,1 @@
+"%sourcesdk%\bin\orangebox\bin\vice3.exe" -x .txt -k Gr3naDes gphashes.txt

@@ -1,0 +1,3656 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="GES">
+      <UniqueIdentifier>{42dab339-ca8f-4a62-be8a-f6eef7f72b92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES\VGUI">
+      <UniqueIdentifier>{3fa72fe2-7036-4560-a144-f333b04db2e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES\VGUI\Controls">
+      <UniqueIdentifier>{600de356-87f6-4955-a636-3847e51fea31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES\VGUI\Menu">
+      <UniqueIdentifier>{b737b803-109f-482a-b036-8acdd38bb517}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES\VGUI\InGame">
+      <UniqueIdentifier>{146ed0c3-08d1-44b1-beaa-a6f44241f97c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES\HUD">
+      <UniqueIdentifier>{fef3bd6a-a6b4-4589-8626-21adee7cd716}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES\Entities">
+      <UniqueIdentifier>{9edb7645-2b45-4cc5-8f35-f03a55c5d2ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES\Shared">
+      <UniqueIdentifier>{e1398fa3-bcd7-4d1e-b495-743dcbeae643}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Precompiled Header">
+      <UniqueIdentifier>{0712adac-8e83-4a43-be2f-2021af8b9072}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{3664c781-41a3-49b6-8966-f38a62de481d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Source Files">
+      <UniqueIdentifier>{d326849f-e534-400d-99ab-cec5c196d152}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Source Files\Precompiled Header">
+      <UniqueIdentifier>{9fc427b6-7e09-4198-81f3-3e899dee1a17}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Source Files\Temporary Entities">
+      <UniqueIdentifier>{b48e53dd-3bcc-404c-b230-79ab13f14432}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Source Files\game_controls">
+      <UniqueIdentifier>{9f8f3c87-8b96-4e8d-97d6-344a5d12779e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Source Files\HL2 DLL">
+      <UniqueIdentifier>{fd18d7a4-be4c-4e14-be46-56af78a09a8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Source Files\HL2MP">
+      <UniqueIdentifier>{267fd69b-08e3-4472-bd1c-53a8ea17fd68}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Source Files\HL2MP\UI">
+      <UniqueIdentifier>{9fa09f54-4ce7-4143-ba18-2c3caee19a22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Tool Framework">
+      <UniqueIdentifier>{30c2e1d7-d4b8-4240-9811-d6596caa6bcc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Public Header Files">
+      <UniqueIdentifier>{3647692b-a652-4c00-ae58-1089fe38c3c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Game Shared Header Files">
+      <UniqueIdentifier>{31241857-6839-4946-9d5a-a639ac251b38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\game_controls Header Files">
+      <UniqueIdentifier>{96474bae-f262-45a0-90bb-c3d296e9a4e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\MP3">
+      <UniqueIdentifier>{d2efe6ae-0c44-4c4c-aef2-00073e045289}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Header Files">
+      <UniqueIdentifier>{f38395b6-9717-44da-8a96-56206a21407b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Link Libraries">
+      <UniqueIdentifier>{225e5775-af6c-4f9a-bd64-5fd013c429a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES\Player">
+      <UniqueIdentifier>{0a51de65-98cf-4236-a484-1013c4f87223}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\ShaderEditor">
+      <UniqueIdentifier>{7aa9756a-a029-450b-bc13-ab7ef5603b29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES\Weapons">
+      <UniqueIdentifier>{5ec9be4f-d1d6-4251-8ac9-34e4045b1384}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES\Weapons\Shotguns">
+      <UniqueIdentifier>{0a8e7e5f-5675-43a3-9287-817b45878cd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES\Weapons\Explosives">
+      <UniqueIdentifier>{c8ba962e-b813-457d-9683-31563e600759}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES\Weapons\Melee">
+      <UniqueIdentifier>{1469af3e-40d0-4ba8-be5f-c062ccf94e39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES\Weapons\Automatics">
+      <UniqueIdentifier>{6d8bc8aa-35dd-4fff-b752-33db8c1b6d59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES\Weapons\Semi-autos">
+      <UniqueIdentifier>{199570e2-e35d-4747-8138-206320044ef6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES\Achievements">
+      <UniqueIdentifier>{9f8807ef-a2dd-452c-86b1-dd7be6590e78}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES\Gamerules">
+      <UniqueIdentifier>{ec263c55-c06f-4871-93cc-8ab7b8d37cf0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ges\client\clientmode_ge.cpp">
+      <Filter>GES</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\ge_materialproxies.cpp">
+      <Filter>GES</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\ge_screeneffects.cpp">
+      <Filter>GES</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\ge_vieweffects.cpp">
+      <Filter>GES</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_panelhelper.cpp">
+      <Filter>GES\VGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_awardpanel.cpp">
+      <Filter>GES\VGUI\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_charPanel.cpp">
+      <Filter>GES\VGUI\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_CreditsText.cpp">
+      <Filter>GES\VGUI\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_HorzListPanel.cpp">
+      <Filter>GES\VGUI\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_ImageButton.cpp">
+      <Filter>GES\VGUI\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_VertListPanel.cpp">
+      <Filter>GES\VGUI\Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_creditsvgui.cpp">
+      <Filter>GES\VGUI\Menu</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_introvideo.cpp">
+      <Filter>GES\VGUI\Menu</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_updatechecker.cpp">
+      <Filter>GES\VGUI\Menu</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_achievementnotification.cpp">
+      <Filter>GES\VGUI\InGame</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_charselectgui.cpp">
+      <Filter>GES\VGUI\InGame</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_roundreport.cpp">
+      <Filter>GES\VGUI\InGame</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_scoreboard.cpp">
+      <Filter>GES\VGUI\InGame</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_spectatorgui.cpp">
+      <Filter>GES\VGUI\InGame</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_teammenu.cpp">
+      <Filter>GES\VGUI\InGame</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\HUD\ge_hudammo.cpp">
+      <Filter>GES\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\HUD\ge_hudbloodscreen.cpp">
+      <Filter>GES\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\HUD\ge_hudchat.cpp">
+      <Filter>GES\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\HUD\ge_hudcrosshair.cpp">
+      <Filter>GES\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\HUD\ge_huddeathnotice.cpp">
+      <Filter>GES\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\HUD\ge_hudgameplay.cpp">
+      <Filter>GES\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\HUD\ge_hudlifebars.cpp">
+      <Filter>GES\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\HUD\ge_hudprogressbars.cpp">
+      <Filter>GES\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\HUD\ge_hudradar.cpp">
+      <Filter>GES\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\HUD\ge_hudroundtimer.cpp">
+      <Filter>GES\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\HUD\ge_hudtargetid.cpp">
+      <Filter>GES\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\HUD\ge_hudteamscores.cpp">
+      <Filter>GES\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\HUD\ge_hudweaponselection.cpp">
+      <Filter>GES\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\mp\c_ge_playerresource.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\mp\c_ge_radarresource.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\ge_bloodscreenvm.cpp">
+      <Filter>GES\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\ge_character_data.cpp">
+      <Filter>GES\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\ge_generictoken.cpp">
+      <Filter>GES\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\ge_weapon.cpp">
+      <Filter>GES\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\ge_weapon_parse.cpp">
+      <Filter>GES\Weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_autoshotgun.cpp">
+      <Filter>GES\Weapons\Shotguns</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_shotgun.cpp">
+      <Filter>GES\Weapons\Shotguns</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_grenade.cpp">
+      <Filter>GES\Weapons\Explosives</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_grenade_launcher.cpp">
+      <Filter>GES\Weapons\Explosives</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_mines.cpp">
+      <Filter>GES\Weapons\Explosives</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_rocket_launcher.cpp">
+      <Filter>GES\Weapons\Explosives</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\ge_weaponmelee.cpp">
+      <Filter>GES\Weapons\Melee</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_knife.cpp">
+      <Filter>GES\Weapons\Melee</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_knife_throwing.cpp">
+      <Filter>GES\Weapons\Melee</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_slappers.cpp">
+      <Filter>GES\Weapons\Melee</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\ge_weaponautomatic.cpp">
+      <Filter>GES\Weapons\Automatics</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_ar33.cpp">
+      <Filter>GES\Weapons\Automatics</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_kf7.cpp">
+      <Filter>GES\Weapons\Automatics</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_phantom.cpp">
+      <Filter>GES\Weapons\Automatics</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_rcp90.cpp">
+      <Filter>GES\Weapons\Automatics</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\ge_weaponpistol.cpp">
+      <Filter>GES\Weapons\Semi-autos</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_cmag.cpp">
+      <Filter>GES\Weapons\Semi-autos</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_dd44.cpp">
+      <Filter>GES\Weapons\Semi-autos</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_goldengun.cpp">
+      <Filter>GES\Weapons\Semi-autos</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_moonraker.cpp">
+      <Filter>GES\Weapons\Semi-autos</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_pp7.cpp">
+      <Filter>GES\Weapons\Semi-autos</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_pp7_silenced.cpp">
+      <Filter>GES\Weapons\Semi-autos</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\stdafx.cpp">
+      <Filter>Precompiled Header</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\achievement_notification_panel.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\achievement_saverestore.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\achievementmgr.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\achievements_hlx.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\activitylist.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\alphamaterialproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\ammodef.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\animatedentitytextureproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\animatedoffsettextureproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\animatedtextureproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\AnimateSpecificTextureProxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\animation.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\base_playeranimstate.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\baseachievement.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\baseanimatedtextureproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\baseclientrendertargets.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\basecombatcharacter_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\basecombatweapon_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\baseentity_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\basegrenade_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\baseparticleentity.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\baseplayer_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\basepresence.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\baseviewmodel_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\beam_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\beamdraw.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\bone_accessor.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\bone_merge_cache.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\bone_setup.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_ai_basehumanoid.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_ai_basenpc.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_baseanimating.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_baseanimatingoverlay.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_basecombatcharacter.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_basecombatweapon.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_basedoor.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_baseentity.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_baseflex.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_baseplayer.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_baseviewmodel.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_breakableprop.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_colorcorrection.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_colorcorrectionvolume.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_dynamiclight.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_entitydissolve.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_entityparticletrail.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_env_fog_controller.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_env_particlescript.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_env_projectedtexture.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_env_screenoverlay.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_env_tonemap_controller.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_fire_smoke.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_fish.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_func_areaportalwindow.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_func_breakablesurf.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_func_conveyor.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_func_dust.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_func_lod.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\C_Func_Monitor.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_func_occluder.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_func_reflective_glass.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_func_rotating.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_func_smokevolume.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_func_tracktrain.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_gib.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_hairball.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_info_overlay_accessor.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_lightglow.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\C_MaterialModifyControl.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_particle_system.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_physbox.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_physicsprop.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_physmagnet.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_pixel_visibility.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_plasma.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_playerresource.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_point_camera.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_point_commentary_node.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_props.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_ragdoll_manager.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_rope.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_rumble.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_sceneentity.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_shadowcontrol.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_slideshow_display.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_soundscape.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_spotlight_end.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_sprite.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_sprite_perfmonitor.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_sun.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_team.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_team_objectiveresource.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_tesla.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_test_proxytoggle.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_user_message_register.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_vehicle_choreo_generic.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_vehicle_jeep.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_vguiscreen.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\c_waterbullet.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\C_WaterLODControl.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_world.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\camomaterialproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\cdll_bounded_cvars.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\cdll_client_int.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\cdll_util.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\cl_mat_stub.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\classmap.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\client_class.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\client_factorylist.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\client_thinklist.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\clienteffectprecachesystem.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\cliententitylist.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\clientleafsystem.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\clientmode_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\clientshadowmgr.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\clientsideeffects.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\clientsideeffects_test.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\collisionproperty.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\collisionutils.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\colorcorrectionmgr.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\commentary_modelviewer.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\compiledcaptionswap.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\crtmemdebug.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\death_pose.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\debugoverlay_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\decals.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\detailobjectsystem.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\dt_recv.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\dt_utlvector_common.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\dt_utlvector_recv.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\dummyproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\effect_dispatch_data.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\EffectsClient.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\ehandle.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\entitylist_base.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\entityoriginmaterialproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\EntityParticleTrail_Shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\env_detail_controller.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\env_wind_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\eventlist.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\filesystem_helpers.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\flashlighteffect.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\func_ladder.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\functionproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx_blood.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx_cube.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx_explosion.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx_fleck.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx_impact.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx_interpvalue.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx_quad.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx_shelleject.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx_staticline.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx_tracer.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx_trail.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx_water.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\gamemovement.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\gamerules.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\gamerules_register.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\GameStats.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\gamestringpool.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\gametrace_client.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\gamevars_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\geiger.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\glow_overlay.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\hintmessage.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\hintsystem.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\history_resource.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hltvcamera.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_animationinfo.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hud_autoaim.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_basechat.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_basetimer.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_bitmapnumericdisplay.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_closecaption.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_crosshair.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_element_helper.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hud_filmdemo.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hud_hdrdemo.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_hintdisplay.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_lcd.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_msg.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_numericdisplay.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_pdump.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_redraw.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_vehicle.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_weapon.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\igamesystem.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\in_camera.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\in_joystick.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\in_main.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\in_mouse.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\initializer.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\interpolatedvar.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\interpolatortypes.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\interval.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\IsNPCProxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\jigglebones.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\lampbeamproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\lamphaloproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\mapentities_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\mathproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\matrixproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\tier0\memoverride.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\menu.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\message.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\movehelper_client.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\movevars_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\mp_shareddefs.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\multiplay_gamerules.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\Multiplayer\multiplayer_animstate.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\networkvar.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\obstacle_pushaway.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\panelmetaclassmgr.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\particle_collision.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\particle_litsmokeemitter.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\particle_parse.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\particle_property.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\particle_proxies.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\particle_simple3d.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\particlemgr.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\particles_attractor.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\particles_ez.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\particles_localspace.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\particles_new.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\particles_simple.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\particlesystemquery.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\perfvisualbenchmark.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\physics.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\physics_main_client.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\physics_main_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\physics_saverestore.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\physics_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\physpropclientside.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\playerandobjectenumerator.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\point_bonusmaps_accessor.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\point_posecontroller.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\posedebugger.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\precache_register.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\predictableid.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\predicted_viewmodel.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\prediction.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\predictioncopy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\props_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\proxyentity.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\ProxyHealth.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\proxyplayer.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\proxypupil.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\ragdoll.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\ragdoll_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\common\randoverride.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\recvproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\rendertexture.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\rope_helpers.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\rope_physics.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\saverestore.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\sceneentity_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\scratchpad3d.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\ScratchPadUtils.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\ScreenSpaceEffects.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\sentence.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\sequence_Transitioner.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\sheetsimulator.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\simple_keys.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\simple_physics.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\simtimer.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\singleplay_gamerules.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\SoundEmitterSystem.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\soundenvelope.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\SoundParametersInternal.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\splinepatch.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\Sprite.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\spritemodel.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\SpriteTrail.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\stringregistry.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\studio.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\studio_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\takedamageinfo.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\teamplay_gamerules.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\teamplayroundbased_gamerules.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\test_ehandle.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\text_message.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\texturescrollmaterialproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\timematerialproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\toggletextureproxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\train.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\usercmd.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\usermessages.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\util_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\vallocator.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\vehicle_viewblend_shared.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_avatarimage.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_basepanel.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_bitmapbutton.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_bitmapimage.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_bitmappanel.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_centerstringpanel.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_consolepanel.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\vgui_controls\vgui_controls.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_debugoverlaypanel.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_fpspanel.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_game_viewport.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_grid.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_int.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_loadingdiscpanel.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_messagechars.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_netgraphpanel.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_slideshow_display_screen.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\vgui_video.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\view.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\view_beams.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\view_effects.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\view_scene.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\viewangleanim.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\ViewConeImage.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\viewdebug.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\viewpostprocess.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\viewrender.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\voice_banmgr.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\voice_status.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\warp_overlay.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\WaterLODMaterialProxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\weapon_parse.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\weapon_parse_default.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\weapon_selection.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\weapons_resource.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\WorldDimsProxy.cpp">
+      <Filter>SDK\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_basetempentity.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_effects.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_impact_effects.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_movie_explosion.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_particle_fire.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_particle_smokegrenade.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_prop_vehicle.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_recipientfilter.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_smoke_trail.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_smokestack.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_steamjet.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_stickybolt.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_armorricochet.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_basebeam.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_beamentpoint.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_beaments.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_beamfollow.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_beamlaser.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_beampoints.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_beamring.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_beamringpoint.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_beamspline.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_bloodsprite.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_bloodstream.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_breakmodel.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_bspdecal.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_bubbles.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_bubbletrail.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_clientprojectile.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_decal.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_dynamiclight.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_effect_dispatch.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_energysplash.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_explosion.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_fizz.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_footprint.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_glassshatter.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_glowsprite.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_impact.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_killplayerattachments.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_largefunnel.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_legacytempents.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_muzzleflash.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_particlesystem.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_physicsprop.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_playerdecal.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_projecteddecal.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_showline.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_smoke.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_sparks.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_sprite.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_spritespray.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_te_worlddecal.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_testtraceline.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\c_tracer.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx_discreetline.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx_envelope.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx_line.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\fx_sparks.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\particlesphererenderer.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\smoke_fog_overlay.cpp">
+      <Filter>SDK\Source Files\Temporary Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\game_controls\basemodelpanel.cpp">
+      <Filter>SDK\Source Files\game_controls</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\game_controls\baseviewport.cpp">
+      <Filter>SDK\Source Files\game_controls</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\game_controls\ClientScoreBoardDialog.cpp">
+      <Filter>SDK\Source Files\game_controls</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\game_controls\commandmenu.cpp">
+      <Filter>SDK\Source Files\game_controls</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\game_controls\IconPanel.cpp">
+      <Filter>SDK\Source Files\game_controls</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\game_controls\NavProgress.cpp">
+      <Filter>SDK\Source Files\game_controls</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\game_controls\SpectatorGUI.cpp">
+      <Filter>SDK\Source Files\game_controls</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\game_controls\vguitextwindow.cpp">
+      <Filter>SDK\Source Files\game_controls</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\hl2\achievements_hl2.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\hl2\basehlcombatweapon_shared.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\c_basehelicopter.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\c_basehlcombatweapon.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\c_basehlplayer.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\c_corpse.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\c_env_starfield.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\c_hl2_playerlocaldata.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\c_plasma_beam_node.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\c_rotorwash.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\c_script_intro.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\c_te_concussiveexplosion.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\c_te_flare.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\c_weapon__stubs_hl2.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\fx_hl2_impacts.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\fx_hl2_tracers.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hl2_clientmode.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\hl2\hl2_gamerules.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\hl2\hl2_usermessages.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\hl2\hl_gamemovement.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hl_in_main.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hl_prediction.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hud_ammo.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hud_battery.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hud_blood.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hud_credits.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hud_damageindicator.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hud_flashlight.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hud_health.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hud_poisondamageindicator.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_posture.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hud_quickinfo.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_squadstatus.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hud_suitpower.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hud_voicestatus.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\hud_zoom.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\script_intro_shared.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\shieldproxy.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2\vgui_rootpanel_hl2.cpp">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2mp\c_hl2mp_player.cpp">
+      <Filter>SDK\Source Files\HL2MP</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\hl2mp\hl2mp_player_shared.cpp">
+      <Filter>SDK\Source Files\HL2MP</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\hl2mp\hl2mp_playeranimstate.cpp">
+      <Filter>SDK\Source Files\HL2MP</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\hl2mp\hl2mp_weapon_parse.cpp">
+      <Filter>SDK\Source Files\HL2MP</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2mp\hud_deathnotice.cpp">
+      <Filter>SDK\Source Files\HL2MP</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2mp\ui\backgroundpanel.cpp">
+      <Filter>SDK\Source Files\HL2MP\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\hl2mp\ui\hl2mptextwindow.cpp">
+      <Filter>SDK\Source Files\HL2MP\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\public\tools\bonelist.cpp">
+      <Filter>SDK\Tool Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\entity_client_tools.cpp">
+      <Filter>SDK\Tool Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\toolframework_client.cpp">
+      <Filter>SDK\Tool Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\mp3player.cpp">
+      <Filter>SDK\MP3</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\c_ge_player.cpp">
+      <Filter>GES\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\mp\c_gemp_player.cpp">
+      <Filter>GES\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\mp\c_ge_gameplayresource.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\ShaderEditor\SEdit_ModelRender.cpp">
+      <Filter>SDK\ShaderEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\client\ShaderEditor\ShaderEditorSystem.cpp">
+      <Filter>SDK\ShaderEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\ge_musicmanager.cpp">
+      <Filter>GES</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\HUD\ge_huddebugscreen.cpp">
+      <Filter>GES\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\mp\c_gebot_player.cpp">
+      <Filter>GES\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\ge_webrequest.cpp">
+      <Filter>GES\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_loadingscreen.cpp">
+      <Filter>GES\VGUI\Menu</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_createserver.cpp">
+      <Filter>GES\VGUI\Menu</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\HUD\ge_hudobjectives.cpp">
+      <Filter>GES\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\hl2mp\weapon_hl2mpbase.cpp">
+      <Filter>SDK\Source Files\HL2MP</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.cpp">
+      <Filter>SDK\Source Files\HL2MP</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\HUD\ge_hudpopupmsg.cpp">
+      <Filter>GES\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_scenariohelp.cpp">
+      <Filter>GES\VGUI\InGame</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\c_npc_gebase.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_d5k.cpp">
+      <Filter>GES\Weapons\Automatics</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_klobb.cpp">
+      <Filter>GES\Weapons\Automatics</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_zmg.cpp">
+      <Filter>GES\Weapons\Automatics</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\weapon_sniperrifle.cpp">
+      <Filter>GES\Weapons\Semi-autos</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\c_ge_capturearea.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\ge_achievement.cpp">
+      <Filter>GES\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\ge_utils.cpp">
+      <Filter>GES\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\script_parser.cpp">
+      <Filter>GES\Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\b314_achievements.cpp">
+      <Filter>GES\Achievements</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\b3_achievements.cpp">
+      <Filter>GES\Achievements</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\b4_achievements.cpp">
+      <Filter>GES\Achievements</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\mp\gemp_gamerules.cpp">
+      <Filter>GES\Gamerules</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\ge_gamerules.cpp">
+      <Filter>GES\Gamerules</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\mp\gemp_player_shared.cpp">
+      <Filter>GES\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\ge_player_shared.cpp">
+      <Filter>GES\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\shared\ge_round_timer.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ges\client\clientmode_ge.h">
+      <Filter>GES</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\ge_screeneffects.h">
+      <Filter>GES</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\ge_vieweffects.h">
+      <Filter>GES</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_panelhelper.h">
+      <Filter>GES\VGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_awardpanel.h">
+      <Filter>GES\VGUI\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_charPanel.h">
+      <Filter>GES\VGUI\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_CreditsText.h">
+      <Filter>GES\VGUI\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_HorzListPanel.h">
+      <Filter>GES\VGUI\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_ImageButton.h">
+      <Filter>GES\VGUI\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_VertListPanel.h">
+      <Filter>GES\VGUI\Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_creditsvgui.h">
+      <Filter>GES\VGUI\Menu</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_introvideo.h">
+      <Filter>GES\VGUI\Menu</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_updatechecker.h">
+      <Filter>GES\VGUI\Menu</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_achievementnotification.h">
+      <Filter>GES\VGUI\InGame</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_charselectgui.h">
+      <Filter>GES\VGUI\InGame</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_roundreport.h">
+      <Filter>GES\VGUI\InGame</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_scoreboard.h">
+      <Filter>GES\VGUI\InGame</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_spectatorgui.h">
+      <Filter>GES\VGUI\InGame</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_teammenu.h">
+      <Filter>GES\VGUI\InGame</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\HUD\ge_hudammo.h">
+      <Filter>GES\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\HUD\ge_hudchat.h">
+      <Filter>GES\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\HUD\ge_hudcrosshair.h">
+      <Filter>GES\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\HUD\ge_hudgameplay.h">
+      <Filter>GES\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\HUD\ge_hudlifebars.h">
+      <Filter>GES\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\HUD\ge_hudprogressbars.h">
+      <Filter>GES\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\HUD\ge_hudteamscores.h">
+      <Filter>GES\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\mp\c_ge_playerresource.h">
+      <Filter>GES\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\mp\c_ge_radarresource.h">
+      <Filter>GES\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_bloodscreenvm.h">
+      <Filter>GES\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_character_data.h">
+      <Filter>GES\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_shareddefs.h">
+      <Filter>GES\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_generictoken.h">
+      <Filter>GES\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_weapon.h">
+      <Filter>GES\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_weapon_parse.h">
+      <Filter>GES\Weapons</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\weapon_mines.h">
+      <Filter>GES\Weapons\Explosives</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_weaponmelee.h">
+      <Filter>GES\Weapons\Melee</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_weaponautomatic.h">
+      <Filter>GES\Weapons\Automatics</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_weaponpistol.h">
+      <Filter>GES\Weapons\Semi-autos</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\achievement_notification_panel.h">
+      <Filter>SDK\Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\achievement_saverestore.h">
+      <Filter>SDK\Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\achievementmgr.h">
+      <Filter>SDK\Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\baseachievement.h">
+      <Filter>SDK\Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_props.h">
+      <Filter>SDK\Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_slideshow_display.h">
+      <Filter>SDK\Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_team_objectiveresource.h">
+      <Filter>SDK\Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\cdll_bounded_cvars.h">
+      <Filter>SDK\Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\Multiplayer\multiplayer_animstate.h">
+      <Filter>SDK\Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\particle_parse.h">
+      <Filter>SDK\Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\particle_property.h">
+      <Filter>SDK\Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\point_bonusmaps_accessor.h">
+      <Filter>SDK\Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\vgui_avatarimage.h">
+      <Filter>SDK\Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\view_effects.h">
+      <Filter>SDK\Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\viewdebug.h">
+      <Filter>SDK\Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\viewpostprocess.h">
+      <Filter>SDK\Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hl2\c_basehelicopter.h">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hl2\c_basehlcombatweapon.h">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hl2\c_basehlplayer.h">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hl2\c_corpse.h">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hl2\c_hl2_playerlocaldata.h">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\hl2\hl2_gamerules.h">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\hl2\hl2_shareddefs.h">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\hl2\hl_gamemovement.h">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hl2\hud_suitpower.h">
+      <Filter>SDK\Source Files\HL2 DLL</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hl2mp\c_hl2mp_player.h">
+      <Filter>SDK\Source Files\HL2MP</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\hl2mp\hl2mp_player_shared.h">
+      <Filter>SDK\Source Files\HL2MP</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\hl2mp\hl2mp_playeranimstate.h">
+      <Filter>SDK\Source Files\HL2MP</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\hl2mp\hl2mp_weapon_parse.h">
+      <Filter>SDK\Source Files\HL2MP</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hl2mp\ui\backgroundpanel.h">
+      <Filter>SDK\Source Files\HL2MP\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hl2mp\ui\hl2mptextwindow.h">
+      <Filter>SDK\Source Files\HL2MP\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tools\bonelist.h">
+      <Filter>SDK\Tool Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\toolframework_client.h">
+      <Filter>SDK\Tool Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\mathlib\amd3dx.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\AnimationController.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\basehandle.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\bitbuf.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\bitvec.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\bone_accessor.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\bone_setup.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\bspfile.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\bspflags.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\bsptreedata.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\mathlib\bumpvects.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\Button.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\cdll_int.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\characterset.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\checksum_md5.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\client_class.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\client_render_handle.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\client_textmessage.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\clientstats.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\cmodel.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vphysics\collision_set.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\collisionutils.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\Color.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\ComboBox.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\mathlib\compressed_light_cube.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\mathlib\compressed_vector.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\con_nprint.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\const.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vphysics\constraints.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\Controls.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\convar.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\coordsize.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\crtmemdebug.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui\Cursor.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui\Dar.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\datamap.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier0\dbg.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\dlight.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\dt_common.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\dt_recv.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\dt_send.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\dt_utlvector_common.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\dt_utlvector_recv.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\edict.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\EditablePanel.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier0\fasttimer.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\filesystem.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\filesystem_helpers.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\fmtstr.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\FocusNavGroup.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vphysics\friction.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\gamebspfile.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\gametrace.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\globalvars_base.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\HTML.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\iachievementmgr.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\appframework\IAppSystem.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\icliententity.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\icliententitylist.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\engine\IClientLeafSystem.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\iclientnetworkable.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui\IClientPanel.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\iclientrenderable.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\game\client\iclientrendertargets.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\iclientthinkable.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\iclientunknown.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\engine\ICollideable.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\icvar.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\iefx.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\engine\IEngineSound.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\engine\IEngineTrace.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\ienginevgui.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\igameevents.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\igameresources.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\IGameUIFuncs.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\ihandleentity.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui\IHTML.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui\IImage.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui\IInput.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui\IInputInternal.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vstdlib\IKeyValuesSystem.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui\ILocalize.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\Image.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\ImageList.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\ImagePanel.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\imapoverview.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\materialsystem\imaterial.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\materialsystem\imaterialproxy.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\materialsystem\imaterialsystem.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\materialsystem\imaterialsystemhardwareconfig.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\materialsystem\imaterialsystemstub.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\materialsystem\imaterialvar.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\VGuiMatSurface\IMatSystemSurface.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\materialsystem\imesh.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\inetchannelinfo.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\interface.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\interpolatortypes.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui\IPanel.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\iprediction.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\irecipientfilter.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\isaverestore.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui\IScheme.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\iscratchpad3d.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\iserverentity.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\iservernetworkable.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\iserverunknown.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\engine\ishadowmgr.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\SoundEmitterSystem\isoundemittersystembase.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\ispatialpartition.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\engine\IStaticPropMgr.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\istudiorender.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui\ISurface.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui\ISystem.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\materialsystem\itexture.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\engine\ivdebugoverlay.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui\IVGui.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\ivguicenterprint.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\game\client\iviewport.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\engine\ivmodelinfo.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\engine\ivmodelrender.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\ivrenderview.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\jigglebones.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui\KeyCode.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\KeyValues.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier0\l2cache.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\Label.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\ListPanel.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\mathlib\mathlib.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier0\mem.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier0\memalloc.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier0\memdbgoff.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier0\memdbgon.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\mempool.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\Menu.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\MenuItem.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\model_types.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui\MouseCode.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\mouthinfo.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\networkstringtabledefs.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\networkvar.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vphysics\object_hash.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\overlaytext.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\Panel.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\PanelAnimationVar.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\PanelListPanel.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\PHandle.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\pixelwriter.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier0\platform.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\PlayerState.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\mathlib\polyhedron.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\processor_detect.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\r_efx.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vstdlib\random.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\rangecheckedvar.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\RichText.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\rope_physics.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\rope_shared.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\saverestoretypes.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\scratchpad3d.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\ScratchPadUtils.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\ScrollBar.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\SectionedListPanel.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\sentence.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\server_class.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\shake.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\shattersurfacetypes.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\simple_physics.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\smartptr.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\soundchars.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\soundflags.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\soundinfo.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\string_t.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\stringpool.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\stringregistry.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\strtools.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\studio.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\surfinfo.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\TextEntry.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\TextImage.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\texture_group_names.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\TreeView.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\utlbidirectionalset.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\utlbuffer.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\utldict.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\utlfixedmemory.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\utlhash.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\utllinkedlist.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\utlmap.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\utlmemory.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\utlmultilist.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\utlpriorityqueue.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\utlqueue.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\utlrbtree.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\utlstack.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\utlsymbol.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier1\utlvector.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vallocator.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vcollide.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vcollide_parse.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\mathlib\vector.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\mathlib\vector2d.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\mathlib\vector4d.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui\VGUI.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\view_shared.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\mathlib\vmatrix.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vphysics_interface.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\mathlib\vplane.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\tier0\vprof.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vstdlib\vstdlib.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vtf\vtf.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\WizardPanel.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\vgui_controls\WizardSubPanel.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\worldsize.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\zip_uncompressed.h">
+      <Filter>SDK\Public Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\activitylist.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\ai_activity.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\ai_debug_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\ammodef.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\animation.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\apparent_velocity_helper.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\base_playeranimstate.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\baseentity_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\basegrenade_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\hl2\basehlcombatweapon_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\baseparticleentity.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\baseplayer_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\baseviewmodel_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\beam_flags.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\beam_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\choreoactor.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\choreochannel.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\choreoevent.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\choreoscene.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\collisionproperty.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\death_pose.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\decals.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\effect_color_tables.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\effect_dispatch_data.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\ehandle.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\entitydatainstantiator.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\entitylist_base.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\entityparticletrail_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\env_detail_controller.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\env_wind_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\eventlist.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\func_dust_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\func_ladder.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\gameeventdefs.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\gamemovement.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\gamerules.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\gamerules_register.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\gamestringpool.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\gamevars_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\groundlink.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\hl2\hl2_player_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\hl2\hl_movedata.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\ichoreoeventcallback.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\IEffects.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\igamemovement.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\igamesystem.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\imovehelper.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\in_buttons.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\interval.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\iplayeranimstate.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\ipredictionsystem.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\itempents.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\IVehicle.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\mapdata_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\mapentities_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\movevars_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\mp_shareddefs.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\multiplay_gamerules.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\npcevent.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\obstacle_pushaway.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\physics_saverestore.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\physics_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\playernet_vars.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\point_posecontroller.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\positionwatcher.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\precache_register.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\precipitation_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\predictable_entity.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\predictableid.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\predictioncopy.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\ragdoll_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\rope_helpers.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\saverestore.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\saverestore_bitstring.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\saverestore_utlclass.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\saverestore_utlsymbol.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\saverestore_utlvector.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\sceneentity_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\scriptevent.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\sequence_Transitioner.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\shared_classnames.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\shareddefs.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\sharedInterface.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\sheetsimulator.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\shot_manipulator.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\simtimer.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\singleplay_gamerules.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\solidsetdefaults.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\soundenvelope.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\Sprite.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\SpriteTrail.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\sun_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\takedamageinfo.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\teamplay_gamerules.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\teamplayroundbased_gamerules.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\tempentity.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\touchlink.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\usercmd.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\usermessages.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\util_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\vehicle_choreo_generic_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\vehicle_viewblend_shared.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\vgui_defaultinputsignal.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\viewport_panel_names.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\voice_banmgr.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\voice_common.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\voice_gamemgr.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\voice_status.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\vphysics_sound.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\weapon_parse.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\weapon_proficiency.h">
+      <Filter>SDK\Game Shared Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\game_controls\baseviewport.h">
+      <Filter>SDK\game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\game_controls\clientscoreboarddialog.h">
+      <Filter>SDK\game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\game_controls\commandmenu.h">
+      <Filter>SDK\game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\game_controls\IconPanel.h">
+      <Filter>SDK\game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\game_controls\imagemouseoverbutton.h">
+      <Filter>SDK\game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\game_controls\intromenu.h">
+      <Filter>SDK\game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\game_controls\mapoverview.h">
+      <Filter>SDK\game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\game_controls\mouseoverhtmlbutton.h">
+      <Filter>SDK\game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\game_controls\mouseoverpanelbutton.h">
+      <Filter>SDK\game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\game_controls\spectatorgui.h">
+      <Filter>SDK\game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\game_controls\teammenu.h">
+      <Filter>SDK\game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\game_controls\vguitextwindow.h">
+      <Filter>SDK\game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\mp3player.h">
+      <Filter>SDK\MP3</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\animationlayer.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\baseanimatedtextureproxy.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\baseclientrendertargets.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\basepresence.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\beamdraw.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\bone_merge_cache.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_ai_basenpc.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_baseanimating.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_baseanimatingoverlay.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_basecombatcharacter.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_basecombatweapon.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_basedoor.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_baseentity.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_baseflex.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_baseplayer.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_basetempentity.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_baseviewmodel.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_breakableprop.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_effects.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_entitydissolve.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_env_fog_controller.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_fire_smoke.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_func_dust.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_func_reflective_glass.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_gib.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_impact_effects.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_physbox.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_physicsprop.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_pixel_visibility.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_playerlocaldata.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_playerresource.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_point_camera.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_prop_vehicle.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_recipientfilter.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_rope.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_rumble.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_sceneentity.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_smoke_trail.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_soundscape.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_sprite.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_sun.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_te_basebeam.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_te_effect_dispatch.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_te_legacytempents.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_te_particlesystem.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_team.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_tesla.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_tracer.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_user_message_register.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_vehicle_jeep.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_vguiscreen.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_weapon__stubs.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\c_world.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\cbase.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\cdll_client_int.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\cdll_util.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\cl_animevent.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\cl_mat_stub.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\client_factorylist.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\client_thinklist.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\clienteffectprecachesystem.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\cliententitylist.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\clientleafsystem.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\clientmode.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\clientmode_shared.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\clientsideeffects.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\colorcorrectionmgr.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\detailobjectsystem.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\enginesprite.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\flashlighteffect.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\fontabc.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\functionproxy.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\fx.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\fx_blood.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\fx_discreetline.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\fx_envelope.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\fx_explosion.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\fx_fleck.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\fx_impact.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\fx_interpvalue.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\fx_line.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\fx_quad.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\fx_sparks.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\fx_staticline.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\fx_trail.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\fx_water.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\GameEventListener.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\glow_overlay.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\hintmessage.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\hintsystem.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\history_resource.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hltvcamera.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hud.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hud_basechat.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hud_basetimer.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hud_bitmapnumericdisplay.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hud_chat.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hud_closecaption.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hud_crosshair.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hud_element_helper.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hud_lcd.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hud_macros.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hud_numericdisplay.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hud_pdump.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hud_vehicle.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hudelement.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\hudtexturehandle.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\iclassmap.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\icliententityinternal.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\iclientmode.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\iclientshadowmgr.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\iclientvehicle.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\iconsole.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\idebugoverlaypanel.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\ifpspanel.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\ihudlcd.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\iinput.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\iloadingdisc.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\imessagechars.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\in_main.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\inetgraphpanel.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\initializer.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\input.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\interpolatedvar.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\ipresence.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\iprofiling.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\itextmessage.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\ivieweffects.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\iviewrender.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\iviewrender_beams.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\ivmodemanager.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\kbutton.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\lerp_functions.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\menu.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\movehelper_client.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\networkstringtable_clientdll.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\panelmetaclassmgr.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\particle_collision.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\particle_iterators.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\particle_litsmokeemitter.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\particle_prototype.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\particle_simple3d.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\particle_util.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\particledraw.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\particlemgr.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\particles_attractor.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\particles_ez.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\particles_localspace.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\particles_simple.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\particlesphererenderer.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\perfvisualbenchmark.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\physics.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\physpropclientside.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\playerandobjectenumerator.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\playerenumerator.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\prediction.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\prediction_private.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\proxyentity.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\ragdoll.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\ragdollexplosionenumerator.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\recvproxy.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\rendertexture.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\ScreenSpaceEffects.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\simple_keys.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\smoke_fog_overlay.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\splinepatch.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\TeamBitmapImage.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\tempent.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\text_message.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\timedevent.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\toggletextureproxy.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\vgui_basepanel.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\vgui_bitmapbutton.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\vgui_bitmapimage.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\vgui_bitmappanel.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\vgui_entityimagepanel.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\vgui_entitypanel.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\vgui_grid.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\vgui_helpers.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\vgui_imagehealthpanel.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\vgui_int.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\vgui_video.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\vguicenterprint.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\view.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\view_scene.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\viewangleanim.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\ViewConeImage.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\viewrender.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\weapon_selection.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\weapons_resource.h">
+      <Filter>SDK\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\c_ge_player.h">
+      <Filter>GES\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\mp\c_gemp_player.h">
+      <Filter>GES\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\mp\c_ge_gameplayresource.h">
+      <Filter>GES\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\ShaderEditor\ISEdit_ModelRender.h">
+      <Filter>SDK\ShaderEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\ShaderEditor\IVShaderEditor.h">
+      <Filter>SDK\ShaderEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\ShaderEditor\SEdit_ModelRender.h">
+      <Filter>SDK\ShaderEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\client\ShaderEditor\ShaderEditorSystem.h">
+      <Filter>SDK\ShaderEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\HUD\ge_hudtargetid.h">
+      <Filter>GES\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\ge_musicmanager.h">
+      <Filter>GES</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\mp\c_gebot_player.h">
+      <Filter>GES\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_webrequest.h">
+      <Filter>GES\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_loadingscreen.h">
+      <Filter>GES\VGUI\Menu</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\hl2mp\weapon_hl2mpbase.h">
+      <Filter>SDK\Source Files\HL2MP</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\shared\hl2mp\weapon_hl2mpbasehlmpcombatweapon.h">
+      <Filter>SDK\Source Files\HL2MP</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_scenariohelp.h">
+      <Filter>GES\VGUI\InGame</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\c_npc_gebase.h">
+      <Filter>GES\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_achievement_defs.h">
+      <Filter>GES\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_achievement.h">
+      <Filter>GES\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_utils.h">
+      <Filter>GES\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\script_parser.h">
+      <Filter>GES\Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\mp\gemp_gamerules.h">
+      <Filter>GES\Gamerules</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_gamerules.h">
+      <Filter>GES\Gamerules</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_player_shared.h">
+      <Filter>GES\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\ge_round_timer.h">
+      <Filter>GES\Entities</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\lib\public\bitmap.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\lib\public\choreoobjects.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\lib\public\dmxloader.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\lib\public\mathlib.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\lib\public\matsys_controls.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\lib\public\particles.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\lib\public\steam_api.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\lib\public\tier0.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\lib\public\tier1.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\lib\public\tier2.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\lib\public\tier3.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\lib\public\vgui_controls.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\lib\public\vstdlib.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+  </ItemGroup>
+</Project>

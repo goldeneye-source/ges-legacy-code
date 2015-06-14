@@ -1,0 +1,12 @@
+"Hashes"
+{
+	"hash"	"ea440bc006db3f986016a6c2aafcf2c9"	 // CTK
+	"hash"	"bf3705fb8964c314182ebf984d72f23b"	 // DM
+	"hash"	"b1f0e14c7beae65be83174b398db2c7f"	 // Gungame
+	"hash"	"8d3eed9259ef46e587f87d5633e341db"	 // LALD
+	"hash"	"91e5f62806710c9530a6e78f8e182601"	 // LD
+	"hash"	"c8e5046113580386fb274aeb1dafaae2"	 // LTK
+	"hash"	"f93c8db7eccad4668bee94416c6dc34b"	 // MWGG
+	"hash"	"ad8674b7ddaa0991f05b7d7915bcce23"	 // TournamentDM
+	"hash"	"beb128ca38605ece3f2f7c3de289a488"	 // YOLT
+}

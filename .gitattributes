@@ -1,0 +1,24 @@
+*.txt text
+*.c text
+*.h text
+*.H text
+*.hpp text
+*.cc text
+*.cpp text
+*.py text
+*.inc text
+*.fxc text
+*.vsh text
+*.lst text
+*.res text
+*.rc text
+*.def text
+*.inl text
+*.asm text
+
+.gitignore text
+
+*.exe binary
+*.lib binary
+*.a binary
+*.so binary

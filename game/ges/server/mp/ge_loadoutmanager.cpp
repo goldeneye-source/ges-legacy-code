@@ -381,7 +381,7 @@ void CGELoadoutManager::RemoveWeapons( const char *weap /*= NULL*/ )
 		Q_strncpy( search, weap, LOADOUT_WEAP_LEN );
 
 	// If we didn't specify a certain weapon strip everything from the players
-	FOR_EACH_MPPLAYER(i, pPlayer)
+	FOR_EACH_MPPLAYER( pPlayer )
 		if ( !weap )
 		{
 			pPlayer->RemoveAllItems(false);

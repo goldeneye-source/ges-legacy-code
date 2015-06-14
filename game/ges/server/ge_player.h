@@ -24,10 +24,6 @@ class CGEWeapon;
 #include "utldict.h"
 #include "shareddefs.h"
 
-#ifdef _DEBUG
-extern ConVar ge_singleplayer;
-#endif
-
 //=============================================================================
 // >> CGEPlayer
 //=============================================================================
@@ -64,7 +60,7 @@ public:
 	// -------------------------------------------------
 
 	//This will return true if the player is 'fully' in AimMode
-	void ResetAimMode();
+	void ResetAimMode( bool forced=false );
 	bool IsInAimMode();
 	bool AddArmor( int amount );
 
@@ -192,7 +188,6 @@ protected:
 
 	// Networked zoom variables
 	CNetworkVar( bool, m_bInAimMode );
-	CNetworkVar( bool,	m_bResetZoom );
 
 	// Let's us know when we are officially in aim mode
 	int m_iAimModeState;
@@ -207,15 +202,10 @@ CGEPlayer *ToGEPlayer( CBaseEntity *pEntity );
 /*
 * Just a quick macro to not recode this a lot...
 */
-#define FOR_EACH_PLAYER(iterVar,playerVar) \
-	for( int iterVar=1; iterVar<=gpGlobals->maxClients; ++iterVar ) \
-	{ \
-		CGEPlayer *playerVar = ToGEPlayer( UTIL_PlayerByIndex( iterVar ) ); \
-		if (playerVar == NULL) \
-			continue; \
-		if (FNullEnt( playerVar->edict() )) \
-			continue; \
-		if (!playerVar->IsPlayer()) \
+#define FOR_EACH_PLAYER( var ) \
+	for( int _iter=1; _iter <= gpGlobals->maxClients; ++_iter ) { \
+		CGEPlayer *var = ToGEPlayer( UTIL_PlayerByIndex( _iter ) ); \
+		if ( var == NULL || FNullEnt( var->edict() ) || !var->IsPlayer() ) \
 			continue;
 
 #define END_OF_PLAYER_LOOP() }

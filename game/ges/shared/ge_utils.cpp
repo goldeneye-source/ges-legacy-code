@@ -11,6 +11,7 @@
 	#include <vgui/ISurface.h>
 	#include "vgui_controls/controls.h"
 	#include "c_ge_gameplayresource.h"
+	#include "view.h"
 	#include <string>
 	#include <sstream>
 #endif
@@ -214,6 +215,67 @@ int Q_ExtractData( const char *in, CUtlVector<char*> &out )
 }
 
 #ifdef CLIENT_DLL
+
+void GEUTIL_DrawSprite3D( IMaterial *pMaterial, Vector offset, float width, float height )
+{
+	// Make sure we are allowed to access our orientation
+	Assert( IsCurrentViewAccessAllowed() );
+
+	// Vectors for drawing
+	Vector vForward = CurrentViewForward();
+	Vector vUp = CurrentViewUp();
+	Vector vRight = CurrentViewRight();
+
+	vRight.z = 0;
+	VectorNormalize( vRight );
+
+	// Move the camera origin out the desired offset
+	Vector vOrigin = CurrentViewOrigin();
+
+	VectorMA( vOrigin, offset.x, vForward, vOrigin );
+	VectorMA( vOrigin, offset.y, vRight, vOrigin );
+	VectorMA( vOrigin, offset.z, vUp, vOrigin );
+
+	// Cut width/height in half
+	width = width / 2.0f;
+	height = height / 2.0f;
+
+	// Figure out our bounds
+	Vector left = vRight * -width;
+	Vector right = vRight * width;
+	Vector top = vUp * height;
+	Vector bottom = vUp * -height;
+
+	CMatRenderContextPtr pRenderContext( materials );
+	pRenderContext->Bind( pMaterial );
+
+	IMesh *pMesh = pRenderContext->GetDynamicMesh();
+	CMeshBuilder meshBuilder;
+	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+	meshBuilder.Color4ub( 255, 255, 255, 255 );
+	meshBuilder.TexCoord2f( 0,0,0 );
+	meshBuilder.Position3fv( (vOrigin + left + top).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4ub( 255, 255, 255, 255 );
+	meshBuilder.TexCoord2f( 0,1,0 );
+	meshBuilder.Position3fv( (vOrigin + right + top).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4ub( 255, 255, 255, 255 );
+	meshBuilder.TexCoord2f( 0,1,1 );
+	meshBuilder.Position3fv( (vOrigin + right + bottom).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4ub( 255, 255, 255, 255 );
+	meshBuilder.TexCoord2f( 0,0,1 );
+	meshBuilder.Position3fv( (vOrigin + left + bottom).Base() );
+	meshBuilder.AdvanceVertex();
+	meshBuilder.End();
+	pMesh->Draw();
+}
+
 void GEUTIL_ReplaceKeyBindings( const wchar_t *in, wchar_t *out, int size )
 {
 	if ( !in || !out )
@@ -465,7 +527,7 @@ wchar_t *GEUTIL_GetGameplayName( wchar_t *out, int byte_size )
 #endif
 
 // Valid hints are 0->9, a->z, |
-bool IsValidColorHint( int ch )
+bool GEUTIL_IsValidColorHint( int ch )
 {
 	if ( (ch >= 48 && ch <= 57) || (ch >= 97 && ch <= 122) || ch == 124 )
 		return true;
@@ -482,7 +544,7 @@ char *GEUTIL_RemoveColorHints( char *str )
 	{
 		if (*in == '^')
 		{
-			if ( IsValidColorHint(*(in+1)) )
+			if ( GEUTIL_IsValidColorHint(*(in+1)) )
 				in = in+2;	// Skip ^X
 		}
 
@@ -503,7 +565,7 @@ wchar_t *GEUTIL_RemoveColorHints( wchar_t *str )
 	{
 		if (*in == L'^')
 		{
-			if ( IsValidColorHint(*(in+1)) )
+			if ( GEUTIL_IsValidColorHint(*(in+1)) )
 				in = in+2;	// Skip ^X
 		}
 
@@ -651,39 +713,10 @@ void UpdateStatusLists( const char *data )
 }
 #endif
 
-const unsigned char *GetHash( void )
+const unsigned char *GEUTIL_GetSecretHash( void )
 {
-	char a=101;
-	char b=114;
-	char c=68;
-	char d=115;
-
-	char e=110;
-	char f=71;
-	char g=97;
-	char h=51;
-
-	char key_a[5]; 
-	key_a[0] = f; 
-	key_a[1] = b;
-	key_a[2] = h; 
-	key_a[3] = e; 
-
-	key_a[4] = '\0';
-
-	char key_b[5];
-
-	key_b[0]=g;
-	key_b[1]=c;
-	key_b[2]=a;
-	key_b[3]=d;
-
-	key_b[4] = '\0';
-	 
-	static char key_temp[9];
-	Q_strcpy(key_temp, key_a);
-	strcat(key_temp, key_b); 
-	return (const unsigned char*)( key_temp );
+	// It's not really a secret...
+	return (unsigned char*) "Gr3naDes";
 }
 
 // Functions used to access awards information from the shared defs

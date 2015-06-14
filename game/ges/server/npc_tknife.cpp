@@ -8,17 +8,21 @@
 // Created By: Killermonkey 
 /////////////////////////////////////////////////////////////////////////////
 #include "cbase.h"
-#include "ge_player.h"
-#include "npc_gebase.h"
-#include "engine/IEngineSound.h"
-#include "soundent.h"
-#include "IEffects.h"
-#include "te_effect_dispatch.h"
-#include "iservervehicle.h"
-#include "ge_gamerules.h"
-#include "npc_tknife.h"
+
 #include "physics_collisionevent.h"
 #include "particle_parse.h"
+#include "engine/IEngineSound.h"
+#include "te_effect_dispatch.h"
+#include "iservervehicle.h"
+#include "soundent.h"
+#include "IEffects.h"
+#include "ammodef.h"
+
+#include "npc_gebase.h"
+#include "ge_player.h"
+#include "ge_gamerules.h"
+
+#include "npc_tknife.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

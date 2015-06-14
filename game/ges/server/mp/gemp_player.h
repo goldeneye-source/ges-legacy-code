@@ -1,23 +1,17 @@
-///////////// Copyright © 2008 LodleNet. All rights reserved. /////////////
+///////////// Copyright © 2008 GoldenEye: Source. All rights reserved. /////////////
 //
 //   Project     : Server (GES)
 //   File        : gemp_player.h
-//   Description :
-//      [TODO: Write the purpose of gemp_player.h.]
 //
-//   Created On: 2/20/2009 1:38:25 PM
-//   Created By: Mark Chandler <mailto:admin@lodle.net>
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef MC_GEMP_PLAYER_H
 #define MC_GEMP_PLAYER_H
-#ifdef _WIN32
-#pragma once
-#endif
 
 #include "ge_player.h"
+#include "ge_gameplay.h"
 
-class CGEMPPlayer : public CGEPlayer
+class CGEMPPlayer : public CGEPlayer, public CGEGameplayEventListener
 {
 public:
 	DECLARE_CLASS( CGEMPPlayer, CGEPlayer );
@@ -93,7 +87,7 @@ public:
 	virtual bool IsPreSpawn()					{ return m_bPreSpawn; }
 	// NOTE: Used by Python ONLY
 	virtual bool IsInitialSpawn()				{ return m_bFirstSpawn; }
-	virtual void SetInitialSpawn( bool state )	{ m_bFirstSpawn = state; };
+	virtual void SetInitialSpawn()				{ m_bFirstSpawn = true; }
 
 	// Death functions
 	virtual void Event_Killed( const CTakeDamageInfo &info );
@@ -103,13 +97,16 @@ public:
 	virtual void UpdateCampingTime();
 	virtual int  GetCampingPercent();
 
-	virtual unsigned int GetSteamHash()			{ return m_iSteamIDHash; };
-	virtual int			 GetDevStatus()			{ return m_iDevStatus; };
+	virtual unsigned int GetSteamHash()			{ return m_iSteamIDHash; }
+	virtual int			 GetDevStatus()			{ return m_iDevStatus; }
 
 	virtual void		 SetPlayerName( const char *name );
-	virtual const char  *GetCleanPlayerName()	{ return m_szCleanName; };
+	virtual const char  *GetCleanPlayerName()	{ return m_szCleanName; }
 
 	virtual void  ShowScenarioHelp();
+
+	// Gameplay Events
+	void OnGameplayEvent( GPEvent event );
 
 	// Called when the player disconnects so that we don't have unassigned objects we had control over
 	virtual void  AddThrownObject( CBaseEntity *pObj );
@@ -134,7 +131,7 @@ public:
 
 	virtual void  FinishClientPutInServer();
 
-	enum SPAWN_STATE {
+	enum SpawnState {
 		SS_INITIAL = 1,
 		SS_ACTIVE,
 		SS_BLOCKED_NO_SPOT,
@@ -143,9 +140,9 @@ public:
 
 protected:
 	// Spawn state management
-	void SetSpawnState( SPAWN_STATE state );
-	SPAWN_STATE GetSpawnState() { return m_iSpawnState; }
-	bool IsSpawnState( SPAWN_STATE state ) { return state == m_iSpawnState; }
+	void SetSpawnState( SpawnState state );
+	SpawnState GetSpawnState() { return m_iSpawnState; }
+	bool IsSpawnState( SpawnState state ) { return state == m_iSpawnState; }
 
 	// Used during team swaps
 	float m_flTeamJoinTime;
@@ -185,7 +182,7 @@ protected:
 	float	m_flNextTeamChangeTime;
 
 	// Used to indicate the status of the player
-	SPAWN_STATE m_iSpawnState;
+	SpawnState m_iSpawnState;
 	float	m_flNextSpawnTry;
 	float	m_flNextSpawnWaitNotice;
 	bool	m_bFirstSpawn;
@@ -195,15 +192,10 @@ protected:
 
 CGEMPPlayer *ToGEMPPlayer( CBaseEntity *pEntity );
 
-#define FOR_EACH_MPPLAYER(iterVar,playerVar) \
-	for( int iterVar=1; iterVar<=gpGlobals->maxClients; ++iterVar ) \
-	{ \
-		CGEMPPlayer *playerVar = ToGEMPPlayer( UTIL_PlayerByIndex( iterVar ) ); \
-		if (playerVar == NULL) \
-			continue; \
-		if (FNullEnt( playerVar->edict() )) \
-			continue; \
-		if (!playerVar->IsPlayer()) \
+#define FOR_EACH_MPPLAYER( var ) \
+	for( int _iter=1; _iter <= gpGlobals->maxClients; ++_iter ) { \
+		CGEMPPlayer *var = ToGEMPPlayer( UTIL_PlayerByIndex( _iter ) ); \
+		if ( var == NULL || FNullEnt( var->edict() ) || !var->IsPlayer() ) \
 			continue;
 
 #define END_OF_PLAYER_LOOP() }

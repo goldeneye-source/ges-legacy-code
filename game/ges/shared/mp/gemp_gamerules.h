@@ -10,17 +10,21 @@
 
 #ifndef GEMP_GAMERULES_H
 #define GEMP_GAMERULES_H
-#ifdef _WIN32
-#pragma once
-#endif
 
 #include "ge_gamerules.h"
-#include "ge_round_timer.h"
 
-#ifdef GAME_DLL
-	#include "ge_tokenmanager.h"
-	#include "ge_loadoutmanager.h"
+#ifdef CLIENT_DLL
+	#define CGEMPRules			C_GEMPRules
+	#define CGEMPGameRulesProxy C_GEMPGameRulesProxy
+#else
+	#include "ge_gameplay.h"
+
+	class CGETokenManager;
+	class CGELoadoutManager;
 #endif
+
+class CGEGameTimer;
+class CGEMPGameRulesProxy;
 
 // Teamplay desirability
 enum GES_TEAMPLAY
@@ -29,13 +33,6 @@ enum GES_TEAMPLAY
 	TEAMPLAY_ONLY,
 	TEAMPLAY_TOGGLE
 };
-
-#ifdef CLIENT_DLL
-	#define CGEMPRules			C_GEMPRules
-	#define CGEMPGameRulesProxy C_GEMPGameRulesProxy
-#endif
-
-class CGEMPGameRulesProxy;
 
 class CGEMPRules : public CGERules, public CGEGameplayEventListener
 {
@@ -51,21 +48,39 @@ public:
 	DECLARE_SERVERCLASS_NOBASE(); // This makes datatables able to access our private vars.
 #endif
 
-	// ---------------
-	// GES Functions
+	// ------------------------------
+	// Server Only -- GES Functions
 #ifdef GAME_DLL
-	// ---------------
-	// CGEGameplayEventListener
-	virtual void OnMatchStarted();
-	virtual void OnRoundRestart();
-	virtual void OnRoundStarted();
+	// Gameplay event listener
+	virtual void OnGameplayEvent( GPEvent event );
 
+	// Round Setup Interface
+	void SetupRound();
+
+protected:
+	// Gameplay event handlers
+	void OnScenarioInit();
+	void OnMatchStart();
+	void OnRoundStart();
+	void OnRoundEnd();
+
+public:
 	// This is used to call functions right before the client spawns into the server
 	virtual void ClientActive( CBasePlayer *pPlayer );
 	virtual void CalculateCustomDamage( CBasePlayer *pPlayer, CTakeDamageInfo &info, float &health, float &armor );
+	
+	// Timer control
+	void StartMatchTimer( float time_sec=-1 );
+	void ChangeMatchTimer( float new_time_sec );
+	void SetMatchTimerPaused( bool state );
+	void StopMatchTimer();
 
-	bool InRoundRestart();
-
+	void SetRoundTimerEnabled( bool state );
+	void StartRoundTimer( float time_sec=-1 );
+	void ChangeRoundTimer( float new_time_sec );
+	void SetRoundTimerPaused( bool state );
+	void StopRoundTimer();
+	
 	float FlArmorRespawnTime( CItem *pItem );
 
 	bool AmmoShouldRespawn();
@@ -76,7 +91,7 @@ public:
 	CGELoadoutManager *GetLoadoutManager()  { return m_pLoadoutManager; }
 	CGETokenManager   *GetTokenManager()	{ return m_pTokenManager;	}
 
-	int GetSpawnPointType( CGEPlayer *pPlayer );
+	int	  GetSpawnPointType( CGEPlayer *pPlayer );
 	float GetSpeedMultiplier( CGEPlayer *pPlayer );
 
 	int GetNumActivePlayers();
@@ -99,14 +114,6 @@ public:
 	void SetWeaponSpawnState( bool state )	{ m_bEnableWeaponSpawns = state; }
 	void SetAmmoSpawnState( bool state )	{ m_bEnableAmmoSpawns = state; }
 	void SetArmorSpawnState( bool state )	{ m_bEnableArmorSpawns = state; }
-	void SetIntermission( bool state )		{ m_bInIntermission = state; }
-
-	int  GetRoundTime()				{ return m_iRoundTime; }
-	void SetRoundTime( int time_secs );
-
-	void PauseRoundTimer()			{ m_hRoundTimer->PauseTimer(); }
-	void ResumeRoundTimer()			{ m_hRoundTimer->ResumeTimer(); }
-	void ResetRoundTimer()			{ m_hRoundTimer->SetTimeRemaining( m_iRoundTime ); }
 
 	// These accessors control the use of team spawns (if available and team play enabled)
 	bool IsTeamSpawn()				{ return m_bUseTeamSpawns; }
@@ -123,23 +130,30 @@ public:
 	static bool RemoveBot( const char *name );
 #endif
 
-	// -------------------
+	// ------------------------------
 	// Client-Server Shared
 public:
 	virtual bool ShouldCollide( int collisionGroup0, int collisionGroup1 );
 
-	float GetMapTimeLeft();
-	float GetRoundTimeLeft();
+	// Match Timing
+	bool  IsMatchTimeRunning();
+	bool  IsMatchTimePaused();
+	float GetMatchTimeRemaining();
+
+	// Round Timing
+	bool  IsRoundTimeEnabled();
+	bool  IsRoundTimeRunning();
 	bool  IsRoundTimePaused();
-	bool  IsPlayingRounds();
+	float GetRoundTimeRemaining();
+
 	int   GetTeamplayMode() { return m_iTeamplayMode; }
 
 	bool IsMultiplayer() { return true; }
 	bool IsTeamplay();
 	bool IsIntermission();
 
-	// -------------------
-	// Server Only
+	// ------------------------------
+	// Server Only -- Inherited Functions
 #ifdef GAME_DLL
 	virtual void ClientDisconnected( edict_t *pClient );
 	virtual void CreateStandardEntities();
@@ -155,16 +169,14 @@ public:
 
 	virtual void HandleTimeLimitChange( void );
 
-	virtual void ChangeLevel();
-	virtual void SetupChangeLevel( const char *levelname );
-	virtual void GoToIntermission( bool forcematchend = false );
+	virtual void SetupChangeLevel( const char *next_level = NULL );
+	virtual void GoToIntermission();
 
 	virtual bool OnPlayerSay(CBasePlayer* player, const char* text);
 	virtual void PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info );
 	
-	// Used to initialize and shutdown Python
+	// Used to initialize Python managers. They are shutdown when GameRules is destroyed
 	virtual void LevelInitPreEntity();
-	virtual void LevelShutdownPreEntity();
 
 	virtual void FrameUpdatePreEntityThink();
 	virtual void Think();
@@ -180,6 +192,8 @@ public:
 private:
 
 #ifdef GAME_DLL
+	virtual void ChangeLevel();
+
 	CGELoadoutManager	*m_pLoadoutManager;
 	CGETokenManager		*m_pTokenManager;
 
@@ -216,11 +230,10 @@ private:
 #endif
 
 	CNetworkVar( bool,	m_bTeamPlayDesired );
-	CNetworkVar( int,	m_iRoundTime );
 	CNetworkVar( int,	m_iTeamplayMode );
-	CNetworkVar( bool,	m_bInIntermission );
 
-	CNetworkHandle( CGERoundTimer, m_hRoundTimer );
+	CNetworkHandle( CGEGameTimer, m_hMatchTimer );
+	CNetworkHandle( CGEGameTimer, m_hRoundTimer );
 };
 
 

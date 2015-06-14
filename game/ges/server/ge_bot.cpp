@@ -69,7 +69,7 @@ static botdata_t g_BotData[ MAX_PLAYERS ];
 // Purpose: Create a new Bot and put it in the game.
 // Output : Pointer to the new Bot, or NULL if there's no free clients.
 //-----------------------------------------------------------------------------
-CBasePlayer *BotPutInServer( bool bFrozen, int iTeam )
+CGEMPPlayer* BotPutInServer( bool bFrozen, int iTeam )
 {
 	char botname[ 64 ];
 	Q_snprintf( botname, sizeof( botname ), "OldBot%02i", BotNumber+1 );
@@ -137,15 +137,17 @@ void Bot_RunAll( void )
 	// Don't even look for bots if there are none
 	if ( BotNumber == 0 )
 		return;
+	
+	// Don't run during intermission times
+	if ( GEGameplay()->IsInIntermission() )
+		return;
 
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CGEPlayer *pPlayer = ToGEPlayer( UTIL_PlayerByIndex( i ) );
 
 		if ( pPlayer && pPlayer->IsBot() && !pPlayer->IsBotPlayer() )
-		{
 			Bot_Think( pPlayer );
-		}
 	}
 }
 

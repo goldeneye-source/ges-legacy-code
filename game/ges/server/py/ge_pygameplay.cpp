@@ -10,17 +10,17 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "ge_pyprecom.h"
-#include "ge_pymanager.h"
 
+#include "networkstringtable_gamedll.h"
 #include "filesystem.h"
-#include "ge_md5util.h"
-#include "ge_utils.h"
+#include "utlbuffer.h"
 
+#include "ge_utils.h"
 #include "gemp_gamerules.h"
 #include "ge_gameplay.h"
-#include "networkstringtable_gamedll.h"
+#include "ge_tokenmanager.h"
 
-#include <memory>
+#include "ge_pymanager.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -269,14 +269,27 @@ public:
 
 	bp::object self;
 
-	virtual void Cleanup()
+protected:
+	virtual void Init()
 	{
-		CGEBaseScenario::Cleanup();
+		TRYFUNC( this->get_override("OnLoadGamePlay")() );
 
-		TRYFUNC( this->get_override("Cleanup")() );
+		// Load scenario help from python
+		TRYFUNC( this->get_override("GetScenarioHelp")(bp::ptr(&m_ScenarioHelp)) );
+	}
+
+	virtual void Shutdown()
+	{
+		TRYFUNC( this->get_override("OnUnloadGamePlay")() );
+
+		// Clear us out in case we get reloaded
+		m_ScenarioHelp.ClearHelp();
+
+		// Remove our instance
 		self = bp::object();
 	}
 
+public:
 	const char* GetIdent()
 	{
 		try {
@@ -318,22 +331,6 @@ public:
 	virtual void ShowScenarioHelp( CGEPlayer *pPlayer, bp::object id_or_key )
 	{
 		m_ScenarioHelp.ShowHelp( pPlayer, id_or_key );
-	}
-
-	virtual void OnLoadGamePlay()
-	{
-		TRYFUNC( this->get_override("OnLoadGamePlay")() );
-
-		// Load scenario help from python
-		TRYFUNC( this->get_override("GetScenarioHelp")(bp::ptr(&m_ScenarioHelp)) );
-	}
-
-	virtual void OnUnloadGamePlay()
-	{
-		TRYFUNC( this->get_override("OnUnloadGamePlay")() );
-
-		// Clear us out in case we get reloaded
-		m_ScenarioHelp.ClearHelp();
 	}
 
 	virtual void ClientConnect( CGEPlayer *pPlayer )
@@ -495,7 +492,7 @@ public:
 
 	virtual bool CanMatchEnd()
 	{
-        TRYFUNCRET( this->get_override("CanMatchEnd")(), true );
+		TRYFUNCRET( this->get_override("CanMatchEnd")(), true );
 	}
 
 	virtual int GetTeamPlay()
@@ -510,21 +507,19 @@ private:
 	CGEPyScenarioHelp m_ScenarioHelp;
 };
 
-// Stores MD5's loaded from gphashes.txt
-CUtlVector<char*> vGameplayMD5;
-CGEPyScenario gBlankScenario;
 
 class CGEGameplayManager : public CGEBaseGameplayManager, public IPythonListener, public bp::wrapper<CGEGameplayManager>
 {
 public:
 	CGEGameplayManager()
 	{
-		LoadGameplayMD5File();
-		LoadGamePlayList("scripts\\python\\GamePlay\\*.py");
+		m_BlankScenario = new CGEPyScenario();
+		LoadScenarioMD5File();
 	}
 	
 	~CGEGameplayManager()
 	{
+		delete m_BlankScenario;
 		m_Scenario = bp::object();
 	}
 
@@ -544,8 +539,7 @@ public:
 			try
 			{
 				// Try to load the deathmatch scenario (default)
-				SetFirstLoad( true );
-				SetGamePlay( "deathmatch" );
+				LoadScenario( "deathmatch" );
 			}
 			catch (bp::error_already_set const &)
 			{
@@ -556,9 +550,9 @@ public:
 		}
 	}
 
-	CGEBaseScenario* GetScenario( void )
+	virtual CGEBaseScenario* GetScenario()
 	{
-		if ( !m_Scenario.is_none() )
+		if ( IsValidScenario() )
 		{
 			try {
 				return bp::extract<CGEPyScenario*>( m_Scenario );
@@ -567,94 +561,82 @@ public:
 			}
 		}
 
-		return &gBlankScenario;
+#ifdef _DEBUG
+		AssertMsg( false, "Using the default scenario!" );
+#endif
+
+		return m_BlankScenario;
 	}
 
-	virtual bool SetGamePlay( const char* szIdent )
+	virtual bool IsValidScenario()
+	{
+		return m_Scenario.is_none() == false;
+	}
+
+	virtual bool DoLoadScenario( const char* ident )
 	{
 		CGEPyScenario *pScenario = NULL;
 		bp::object scenario;
 
-		// Load the gameplay from Python
 		try
 		{
-			scenario = bp::call<bp::object>( this->get_override("SetGamePlay").ptr(), szIdent );
+			// Load the scenario from Python Gameplay Manager
+			scenario = bp::call<bp::object>( this->get_override("LoadScenario").ptr(), ident );
 			
 			// Check for load failure
 			if ( scenario.is_none() )
-			{
-				Warning( "Scenario loading failed for scenario %s\n", szIdent );
 				return false;
-			}
 
+			// Extract the C++ instance
 			pScenario = bp::extract<CGEPyScenario*>( scenario );
 		}
 		catch (bp::error_already_set const &)
 		{
 			HandlePythonException();
-			Warning( "Scenario loading failed for scenario %s\n", szIdent );
 			return false;
 		}
-
-		// Unload the current scenario and cleanup
-		if ( !m_Scenario.is_none() )
-			OnUnloadGamePlay();
-
+		
 		// Officially set the new scenario
 		m_Scenario = scenario;
 		pScenario->self = scenario;
 
 		// Realign our ident
-		szIdent = pScenario->GetIdent();
+		ident = pScenario->GetIdent();
 
-		char pyFile[128];
-		Q_snprintf( pyFile, 128, "%s\\GamePlay\\%s.py", GEPy()->GetRootPath(), szIdent );
-
+		// Check to see if this scenario is "official"
 		CUtlBuffer buf;
 		char md5hash[33] = "nogood";
+		bool is_official = false;
+
+		char pyFile[128];
+		Q_snprintf( pyFile, 128, "%s\\GamePlay\\%s.py", GEPy()->GetRootPath(), ident );
+
+		// Calculate the MD5 sum of the Python file
 		if ( filesystem->ReadFile( pyFile, "MOD", buf ) )
-			md5( (char*)buf.Base(), md5hash, 33 );
+			GEUTIL_MD5( (char*)buf.Base(), md5hash, 33 );
 
-		GetScenario()->SetIsOfficial( CheckGameplayIsOfficial( md5hash ) );
-
-		DevMsg( "Gameplay MD5: %s (%s)\n", md5hash, GetScenario()->IsOfficial() ? "OFFICIAL" : "MODDED" );
-
-		// Call the gameplay manager's OnLoadGamePlay which sets up the world and calls into python
-		OnLoadGamePlay();
-		Msg("Loaded gamemode %s\n", szIdent);
-
-		if ( !g_bInGameplayReload && m_bFirstLoad )
+		// Compare the MD5 hash to our known hash list
+		for( int i=0; i < bp::len( m_md5Hashes ); i++ )
 		{
-			// This prevents a "round delay" when you first start a server / map
-			SetState( GAMESTATE_RESTART );
-		}
-		else
-		{
-			// Initiate round restart immediately
-			SetState( GAMESTATE_DELAY, true );
+			if ( Q_stricmp( bp::extract<const char*>(m_md5Hashes[i]), md5hash ) == 0 )
+			{
+				is_official = true;
+				break;
+			}
 		}
 
-		m_bFirstLoad = false;
+		DevMsg( "Scenario MD5 Sum: %s (%s)\n", md5hash, is_official ? "OFFICIAL" : "MODDED" );
+
+		// Internally mark the scenario as official or not
+		GetScenario()->SetIsOfficial( is_official );
 
 		return true;
 	}
 
-	bool CheckGameplayIsOfficial( const char *md5 )
+	void LoadScenarioMD5File( void )
 	{
-		for( int i=0; i < vGameplayMD5.Count(); i++ )
-		{
-			if ( Q_strcmp( vGameplayMD5[i], md5 ) == 0 )
-				return true;
-		}
-
-		return false;
-	}
-
-	void LoadGameplayMD5File( void )
-	{
-		// Check if we already loaded us
-		if ( vGameplayMD5.Count() )
-			return;
+		// Clear out the MD5 list
+		m_md5Hashes = bp::list();
 
 		KeyValues *pKV = new KeyValues("Hashes" );
 		char *szFilename = "scripts/python/gphashes.txt";
@@ -669,23 +651,22 @@ public:
 		KeyValues *pKey = pKV->GetFirstSubKey();
 		if ( pKey )
 		{
-			char *szHash = NULL;
 			while ( pKey )
 			{
 				if ( !Q_strcasecmp( pKey->GetName(), "hash" ) )
-				{
-					szHash = new char[33];
-					Q_strncpy( szHash, pKey->GetString(), 33 );
-					vGameplayMD5.AddToTail( szHash );
-				}
-
+					m_md5Hashes.append( pKey->GetString() );
 				pKey = pKey->GetNextKey();
 			}
 		}
 	}
 
 private:
+	// Storing the python instance of the loaded scenario
 	bp::object m_Scenario;
+	// A "blank" scenario to prevent null pointers
+	CGEPyScenario *m_BlankScenario;
+	// The scenario MD5 list
+	bp::list m_md5Hashes;
 };
 
 CGEPyScenario *pyGetScenario( void )
@@ -712,7 +693,7 @@ BOOST_PYTHON_MODULE(GEGamePlay)
 	bp::class_<CGEGameplayManager>("CGamePlayManager");
 }
 
-extern CGEBaseGameplayManager *g_GamePlay;
+CGEBaseGameplayManager *g_GamePlay = NULL;
 
 void CreateGameplayManager()
 {
@@ -787,7 +768,6 @@ CON_COMMAND(ge_gameplayreload, "Reloads the current gameplay (FOR DEVELOPERS!)")
 		if ( GEGameplay()->IsValidGamePlay( gameplay ) )
 		{
 			// A valid gameplay was specified, so load this after our reboot
-			GEGameplay()->SetFirstLoad( true );
 			ge_gameplay.SetValue( gameplay );
 		}
 	}

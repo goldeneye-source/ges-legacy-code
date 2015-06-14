@@ -13,6 +13,7 @@
 #pragma once
 #endif
 
+#include "c_ge_player.h"
 #include "view_effects.h"
 
 #define NUM_ATTRACTORS 3
@@ -28,17 +29,29 @@ class CGEViewEffects : public CViewEffects
 {
 public:
 	CGEViewEffects();
+	~CGEViewEffects();
 
-	virtual void	LevelInit( void );
-	virtual void	ApplyBreath( void );
-	virtual void	BreathMouseMove( float *x, float *y );
+	virtual void VidInit();
+	virtual void LevelInit();
 
-	virtual void	ResetBreath( void );
+	// Breath Effect Functions
+	void ResetBreath();
+	void ApplyBreath();
+	void BreathMouseMove( float *x, float *y );
+
+	// Crosshair Functions
+	void DrawCrosshair();
+
+	// Objective Functions -- Future!
+
+	// Teamplay Functions -- Future!
 
 protected:
-	void	GenerateRandomAttractor( attractor_t &attr );
+	void GenerateRandomAttractor( attractor_t &attr );
+	bool ShouldDrawCrosshair( C_GEPlayer *pPlayer );
 
 private:
+	// Breath effect variables
 	int			m_iNextAttractor;
 	float		m_flAttractorTimeout;
 	attractor_t	m_vAttractors[NUM_ATTRACTORS];
@@ -46,6 +59,9 @@ private:
 	Vector		m_vBO;
 
 	float		m_flPixelScale;
+
+	// Crosshair variables
+	IMaterial		*m_MatCrosshair;
 };
 
 inline CGEViewEffects *GEViewEffects( void ) {

@@ -42,14 +42,13 @@ IMPLEMENT_CLIENTCLASS_DT(C_GEPlayer, DT_GE_Player, CGEPlayer)
 	RecvPropInt( RECVINFO( m_iMaxHealth ) ),
 
 	RecvPropBool( RECVINFO( m_bInAimMode ) ),
-	RecvPropBool( RECVINFO( m_bResetZoom ) ),
 
 	RecvPropEHandle( RECVINFO( m_hHat ) ),
 	RecvPropInt( RECVINFO( m_takedamage ) ),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_GEPlayer )
-// TODO: Define m_iAimModeState here?
+	DEFINE_PRED_FIELD( m_bInAimMode, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
 extern ConVar v_viewmodel_fov;
@@ -66,6 +65,8 @@ C_GEPlayer::C_GEPlayer()
 	m_flEndSpecialMusic = 0.0f;
 	m_iMaxArmor = MAX_ARMOR;
 	m_iMaxHealth = MAX_HEALTH;
+
+	m_iAimModeState = AIM_NONE;
 
 	// Load our voice overhead icons if not done yet
 	if ( m_pDM_VoiceHeadMaterial == NULL )
@@ -123,9 +124,10 @@ float C_GEPlayer::GetHeadOffset( void )
 	return hat_offset;
 }
 
-void C_GEPlayer::SetZoom( int zoom )
+void C_GEPlayer::SetZoom( int zoom, bool forced /*=false*/ )
 {
-	Zoom( zoom, (float) abs(zoom - GetZoom()) / WEAPON_ZOOM_RATE );
+	float zoom_time = forced ? 0 : abs(zoom - GetZoom()) / WEAPON_ZOOM_RATE;
+	Zoom( zoom, zoom_time );
 }
 
 int C_GEPlayer::GetZoomEnd()
@@ -328,6 +330,14 @@ void C_GEPlayer::PostDataUpdate( DataUpdateType_t updateType )
 			return;
 
 		pAchievementMgr->SendAchievementProgress();
+	}
+
+	// Check if we changed weapons to reset zoom
+	// This catches cases when WeaponSwitch is only called on the server
+	if ( GetActiveWeapon() != m_hActiveWeaponCache )
+	{
+		m_hActiveWeaponCache = GetActiveWeapon();
+		ResetAimMode();
 	}
 }
 

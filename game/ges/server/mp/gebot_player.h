@@ -26,7 +26,7 @@ public:
 	DECLARE_CLASS( CGEBotPlayer, CGEMPPlayer );
 
 	CGEBotPlayer();
-	~CGEBotPlayer( void );
+	~CGEBotPlayer();
 
 	virtual bool IsBot() const		  { return true;  }
 	virtual bool IsBotPlayer() const  { return true;  }
@@ -39,6 +39,7 @@ public:
 	CNPC_GEBase *GetNPC() { return m_pNPC; }
 
 	bool LoadBrain();
+
 	virtual void InitialSpawn();
 	virtual void Spawn();
 	virtual void ForceRespawn();
@@ -88,15 +89,10 @@ private:
 
 CGEBotPlayer *ToGEBotPlayer( CBaseEntity *pEntity );
 
-#define FOR_EACH_BOTPLAYER(iterVar,playerVar) \
-	for( int iterVar=1; iterVar<=gpGlobals->maxClients; ++iterVar ) \
-	{ \
-		CGEBotPlayer *playerVar = ToGEBotPlayer( UTIL_PlayerByIndex( iterVar ) ); \
-		if (playerVar == NULL) \
-			continue; \
-		if (FNullEnt( playerVar->edict() )) \
-			continue; \
-		if (!playerVar->IsPlayer()) \
+#define FOR_EACH_BOTPLAYER( var ) \
+	for( int _iter=1; _iter <= gpGlobals->maxClients; ++_iter ) { \
+		CGEBotPlayer *var = ToGEBotPlayer( UTIL_PlayerByIndex( _iter ) ); \
+		if ( var == NULL || FNullEnt( var->edict() ) || !var->IsPlayer() ) \
 			continue;
 
 #define END_OF_PLAYER_LOOP() }

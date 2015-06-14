@@ -59,7 +59,7 @@ CUtlMap<wchar_t, Color> g_mColorList(2,26, colLessThan);
 
 //
 // IF YOU ADD COLORS HERE, REMEMBER TO UPDATE THE RANGES
-// FOR IsValidColorHint() OR ELSE THEY WON'T BE APPLIEDm!
+// FOR GEUTIL_IsValidColorHint() OR ELSE THEY WON'T BE APPLIED!
 //
 void insertDefaultColors()
 {
@@ -1479,7 +1479,7 @@ void CBaseHudChatLine::ReplaceInvalidColors()
 				m_text[++y] = m_text[y] = (wchar_t)0x02;
 				x++;
 			}
-			else if ( !IsValidColorHint(m_text[y+1]) )
+			else if ( !GEUTIL_IsValidColorHint(m_text[y+1]) )
 				m_text[y] = (wchar_t)0x02;
 		}
 
@@ -1551,7 +1551,7 @@ void CBaseHudChatLine::InsertAndColorizeText( wchar_t *buf, int clientIndex )
 		{
 			// Only update our color if it's valid
 			wchar_t *start = tokStr - 1;
-			if ( IsValidColorHint(colChar) )
+			if ( GEUTIL_IsValidColorHint(colChar) )
 			{
 				lastCol = pChat->GetTextColorForClient( colChar, clientIndex );
 				start = tokStr + startOffset;

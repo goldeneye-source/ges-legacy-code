@@ -9,12 +9,11 @@
 /////////////////////////////////////////////////////////////////////////////
 #ifndef GE_BOT_H
 #define GE_BOT_H
-#ifdef _WIN32
-#pragma once
-#endif
 
-// If iTeam or iClass is -1, then a team or class is randomly chosen.
-CBasePlayer *BotPutInServer( bool bFrozen, int iTeam );
+#if  GES_ENABLE_OLD_BOTS
+class CGEMPPlayer;
+CGEMPPlayer* BotPutInServer( bool bFrozen, int iTeam );
+#endif
 
 #endif // GE_BOT_H
 

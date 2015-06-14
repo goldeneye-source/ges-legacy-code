@@ -40,7 +40,6 @@ extern INetworkStringTable *g_pStringTableInfoPanel;  // for MOTD
 #define OPT_INT		2
 #define OPT_STRING	3
 
-extern ConVar mp_timelimit;
 extern ConVar ge_allowradar;
 extern ConVar ge_allowjump;
 extern ConVar ge_startarmed;
@@ -71,7 +70,6 @@ CGETeamMenu::CGETeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 	m_pHTMLMessage = new HTML(this, "MOTD");
 
 	LoadControlSettings("resource/ui/TeamMenu.res");
-
 	InvalidateLayout();
 
 	// Used to load the fonts
@@ -96,18 +94,9 @@ CGETeamMenu::CGETeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 	m_szGameMode[0] = '\0';
 	m_szWeaponSet[0] = '\0';
 	m_szMapName[0] = '\0';
-	m_bTeamButtonsUpdated = false;
 
 	m_bTeamplay = false;
-	m_flNextThink = gpGlobals->curtime;
 	m_flNextUpdateTime = 0;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Destructor
-//-----------------------------------------------------------------------------
-CGETeamMenu::~CGETeamMenu()
-{
 }
 
 void CGETeamMenu::OnGameplayDataUpdate( void )
@@ -120,14 +109,14 @@ void CGETeamMenu::OnGameplayDataUpdate( void )
 	// Update Weapon information
 	Q_strncpy( m_szWeaponSet, GEGameplayRes()->GetLoadoutName(), sizeof(m_szWeaponSet) );
 
-	// Update the display
-	Update();
+	// Update the display immediately
+	if ( IsVisible() )
+		Update();
 }
 
 void CGETeamMenu::FireGameEvent( IGameEvent *pEvent )
 {
 	SetMapName( pEvent->GetString("mapname") );
-	Update();
 }
 
 //-----------------------------------------------------------------------------
@@ -151,9 +140,6 @@ void CGETeamMenu::ShowPanel(bool bShow)
 
 		SetMouseInputEnabled( true );
 
-		// Make sure we make the appropriate team buttons
-		m_bTeamButtonsUpdated = false;
-		m_flNextThink = gpGlobals->curtime;
 		m_bTeamplay = GEMPRules()->IsTeamplay();
 
 		// Logically make our team buttons
@@ -183,33 +169,23 @@ void CGETeamMenu::ShowPanel(bool bShow)
 	m_pViewPort->ShowBackGround( bShow );
 }
 
-void CGETeamMenu::OnThink( void )
+bool CGETeamMenu::NeedsUpdate()
 {
-	if (gpGlobals->curtime < m_flNextThink)
-		return;
+	return gpGlobals->curtime > m_flNextUpdateTime;
+}
 
-	if ( GameResources() && !m_bTeamButtonsUpdated )
-		MakeTeamButtons();
-	
-	if ( GEMPRules()->IsTeamplay() != m_bTeamplay ) {
+//-------------------------------------------
+// Purpose: updates the UI when visible
+//-------------------------------------------
+void CGETeamMenu::Update()
+{
+	if ( GEMPRules() && GEMPRules()->IsTeamplay() != m_bTeamplay )
+	{
 		m_bTeamplay = GEMPRules()->IsTeamplay();
 		MakeTeamButtons();
 	}
 
-	if ( gpGlobals->curtime > m_flNextUpdateTime )
-		Update();
-
-	m_flNextThink = gpGlobals->curtime + 0.1;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: updates the UI with a new map name
-//-----------------------------------------------------------------------------
-void CGETeamMenu::Update()
-{
-	// TODO: Need to "update" the team buttons, but also detect
-	// when we need to recreate them (for no-team -> team change)
-	//MakeTeamButtons();
+	// Update the server option text
 	CreateServerOptText();
 
 	// Update the board every 1 second
@@ -230,12 +206,12 @@ void CGETeamMenu::OnCommand( const char *command )
 //-----------------------------------------------------------------------------
 void CGETeamMenu::MakeTeamButtons(void)
 {
-	// First we clear out the list
-	m_pTeamButtonList->DeleteAllItems();
-	
 	// We can't make the team buttons until we have game resources!
 	if ( !GameResources() || !GetNumberOfTeams() )
 		return;
+
+	// First we clear out the list
+	m_pTeamButtonList->DeleteAllItems();
 
 	char szLabel[32];
 
@@ -257,8 +233,6 @@ void CGETeamMenu::MakeTeamButtons(void)
 	wchar_t specs[64];
 	GEUTIL_ParseLocalization( specs, 64, VarArgs( "#TM_Spectator\r%i", GetGlobalTeam(TEAM_SPECTATOR)->Get_Number_Players() ) );
 	AddButton( specs, TEAM_SPECTATOR );
-
-	m_bTeamButtonsUpdated = true;
 }
 
 vgui::Button *CGETeamMenu::AddButton( const char* label, int iTeam )
@@ -415,7 +389,7 @@ void CGETeamMenu::GetMapTimeLeft( char* szTime )
 	if ( !GEMPRules() )
 		return;
 
-	float timeleft = GEMPRules()->GetMapTimeLeft();
+	float timeleft = GEMPRules()->GetMatchTimeRemaining();
 	int mins = timeleft / 60;
 	int secs = timeleft - (mins*60);
 

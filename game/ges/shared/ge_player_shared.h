@@ -35,7 +35,7 @@ enum {
 	AIM_ZOOM_OUT
 };
 
-#define WEAPON_ZOOM_RATE 180
+#define WEAPON_ZOOM_RATE 180.0f
 
 #endif //GE_PLAYER_SHARED_h
 

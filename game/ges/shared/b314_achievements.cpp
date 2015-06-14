@@ -203,28 +203,21 @@ protected:
 		SetGoal( 1500 );
 		VarInit();
 	}
-	virtual void VarInit() {
-		m_bIsLTK = false;
+
+	virtual void VarInit()
+	{
 		m_iKillInterp = 0;
 	}
+
 	virtual void ListenForEvents()
 	{
-		ListenForGameEvent( "gamemode_change" );
 		VarInit();
-	}
-	
-	virtual void FireGameEvent_Internal( IGameEvent *event )
-	{
-		if ( !Q_stricmp(event->GetString("ident"), "ltk") && event->GetBool("official") )
-			m_bIsLTK = true;
-		else
-			m_bIsLTK = false;
 	}
 	
 	virtual void Event_EntityKilled( CBaseEntity *pVictim, CBaseEntity *pAttacker, CBaseEntity *pInflictor, IGameEvent *event )
 	{
 		m_iKillInterp++;
-		if ( m_bIsLTK && m_iKillInterp % 3 )
+		if ( IsScenario( "ltk", false ) && m_iKillInterp % 3 )
 			return;
 
 		IncrementCount();
@@ -232,7 +225,6 @@ protected:
 
 private:
 	int m_iKillInterp;
-	bool m_bIsLTK;
 };
 DECLARE_GE_DEPENDENT_ACHIEVEMENT( CAchSecretAgentMan, ACHIEVEMENT_GES_SECRET_AGENT_MAN, "GES_SECRET_AGENT_MAN", 25, ACHIEVEMENT_GES_LICENSE_TO_KILL );
 
@@ -248,28 +240,21 @@ protected:
 		SetGoal( 3000 );
 		VarInit();
 	}
-	virtual void VarInit() {
-		m_bIsLTK = false;
+
+	virtual void VarInit()
+	{
 		m_iKillInterp = 0;
 	}
+
 	virtual void ListenForEvents()
 	{
-		ListenForGameEvent( "gamemode_change" );
 		VarInit();
-	}
-	
-	virtual void FireGameEvent_Internal( IGameEvent *event )
-	{
-		if ( !Q_stricmp(event->GetString("ident"), "ltk") && event->GetBool("official") )
-			m_bIsLTK = true;
-		else
-			m_bIsLTK = false;
 	}
 
 	virtual void Event_EntityKilled( CBaseEntity *pVictim, CBaseEntity *pAttacker, CBaseEntity *pInflictor, IGameEvent *event )
 	{
 		m_iKillInterp++;
-		if ( m_bIsLTK && m_iKillInterp % 3 )
+		if ( IsScenario( "ltk", false ) && m_iKillInterp % 3 )
 			return;
 
 		IncrementCount();
@@ -277,7 +262,6 @@ protected:
 
 private:
 	int m_iKillInterp;
-	bool m_bIsLTK;
 };
 DECLARE_GE_DEPENDENT_ACHIEVEMENT( CAchGoldeneyeMaster, ACHIEVEMENT_GES_GOLDENEYE_MASTER, "GES_GOLDENEYE_MASTER", 50, ACHIEVEMENT_GES_SECRET_AGENT_MAN );
 

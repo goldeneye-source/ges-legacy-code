@@ -173,13 +173,11 @@ void CGECreateServer::OnCommand( const char *command )
 			try {
 				if ( !Q_stricmp(kv->GetString("type"), "CHOICE") )
 				{
-					char text[64];
 					ComboBox *panel = dynamic_cast<ComboBox*>( FindChildByName(kv->GetName()) );
-					panel->GetItemText( panel->GetActiveItem(), text, 64 );
-
-					kv_value->SetStringValue( text );
 
 					const char *cmd_value = panel->GetActiveItemUserData()->GetName();
+					kv_value->SetStringValue( cmd_value );
+
 					if ( !Q_stricmp(cmd_value, RANDOM_VALUE) )
 					{
 						int idx = GERandom<int>( panel->GetItemCount()-1 ) + 1;
@@ -192,17 +190,17 @@ void CGECreateServer::OnCommand( const char *command )
 				}
 				else if ( !Q_stricmp(kv->GetString("type"), "TEXT") )
 				{
-					char text[64];
+					char cmd_value[64];
 					TextEntry *panel = dynamic_cast<TextEntry*>( FindChildByName(kv->GetName()) );
-					panel->GetText( text, 64 );
+					panel->GetText( cmd_value, 64 );
 
 					// We don't allow blank values... use default instead
-					if ( !text[0] )
-						Q_strncpy( text, kv->GetString("default",""), 64 );
+					if ( !cmd_value[0] )
+						Q_strncpy( cmd_value, kv->GetString("default",""), 64 );
 
-					kv_value->SetStringValue( text );
+					kv_value->SetStringValue( cmd_value );
 
-					Q_snprintf( cmd, 128, "%s \"%s\"", kv->GetString("cmd"), text );
+					Q_snprintf( cmd, 128, "%s \"%s\"", kv->GetString("cmd"), cmd_value );
 					commands.AddToTail( cmd );
 				}
 				else if ( !Q_stricmp(kv->GetString("type"), "BOOL") )
@@ -305,7 +303,7 @@ void CGECreateServer::PopulateControls( void )
 		}
 
 		weaponlist->SetEditable( false );
-		weaponlist->SetNumberOfEditLines( 10 );
+		weaponlist->SetNumberOfEditLines( 15 );
 		weaponlist->GetMenu()->ForceCalculateWidth();
 		weaponlist->ActivateItemByRow( 0 );
 	}
@@ -363,9 +361,9 @@ void CGECreateServer::PopulateControls( void )
 	if ( turbolist && turbolist->GetItemCount() == 0 )
 	{
 		// Hard coded items (sorry!)
-		turbolist->AddItem( "#TURBO_MODE_NORM", new KeyValues("1.0") );
-		turbolist->AddItem( "#TURBO_MODE_FAST", new KeyValues("1.5") );
-		turbolist->AddItem( "#TURBO_MODE_LIGHT", new KeyValues("1.85") );
+		turbolist->AddItem( "#TURBO_MODE_NORM", new KeyValues("1.000000") );
+		turbolist->AddItem( "#TURBO_MODE_FAST", new KeyValues("1.500000") );
+		turbolist->AddItem( "#TURBO_MODE_LIGHT", new KeyValues("1.850000") );
 		
 		// Admin
 		turbolist->SetEditable( false );
@@ -384,7 +382,6 @@ void CGECreateServer::PopulateControls( void )
 
 		if ( !Q_stricmp(kv->GetString("type"), "CHOICE") )
 		{
-			char text[64];
 			ComboBox *panel = dynamic_cast<ComboBox*>( FindChildByName(kv->GetName()) );
 			if ( !panel )
 				continue;
@@ -393,9 +390,9 @@ void CGECreateServer::PopulateControls( void )
 			for ( int i=0; i < panel->GetItemCount(); i++ )
 			{
 				int id = panel->GetItemIDFromRow( i );
-				panel->GetItemText( id, text, 64 );
-
-				if ( !Q_stricmp(value, text) )
+				KeyValues* userdata = panel->GetItemUserData( id );
+				
+				if ( userdata && !Q_stricmp(value, userdata->GetName()) )
 				{
 					panel->ActivateItem( id );
 					break;

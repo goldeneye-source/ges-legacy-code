@@ -285,7 +285,9 @@ bool CMultiplayRules::Init()
 
 #else 
 
+#ifndef GE_DLL
 	extern bool			g_fGameOver;
+#endif
 
 	#define ITEM_RESPAWN_TIME	30
 	#define WEAPON_RESPAWN_TIME	20
@@ -314,10 +316,13 @@ bool CMultiplayRules::Init()
 	//=========================================================
 	void CMultiplayRules::Think ( void )
 	{
+#ifdef GE_DLL
+		// We should never get here in GES!!
+		Assert( 0 );
+#else
 		BaseClass::Think();
 		
 		///// Check game rules /////
-
 		if ( g_fGameOver )   // someone else quit the game already
 		{
 			// Tony; wait for intermission to end
@@ -349,6 +354,7 @@ bool CMultiplayRules::Init()
 				}
 			}
 		}
+#endif // GE_DLL
 	}
 
 
@@ -562,6 +568,8 @@ bool CMultiplayRules::Init()
 	//=========================================================
 	void CMultiplayRules::PlayerThink( CBasePlayer *pPlayer )
 	{
+#ifndef GE_DLL
+// GE_DLL: Removing g_fGameOver
 		if ( g_fGameOver )
 		{
 			// clear attack/use commands from player
@@ -569,6 +577,7 @@ bool CMultiplayRules::Init()
 			pPlayer->m_nButtons = 0;
 			pPlayer->m_afButtonReleased = 0;
 		}
+#endif
 	}
 
 	//=========================================================
@@ -1032,6 +1041,11 @@ bool CMultiplayRules::Init()
 
 	void CMultiplayRules::GoToIntermission( void )
 	{
+#ifdef GE_DLL
+		// We should never be here!
+		Assert( 0 );
+#else
+// GE_DLL: Removing g_fGameOver
 		if ( g_fGameOver )
 			return;
 
@@ -1055,6 +1069,7 @@ bool CMultiplayRules::Init()
 
 			pPlayer->ShowViewPortPanel( PANEL_SCOREBOARD );
 		}
+#endif
 	}
 
 	void StripChar(char *szBuffer, const char cWhiteSpace )
@@ -1173,6 +1188,10 @@ bool CMultiplayRules::Init()
 
 	void CMultiplayRules::ChangeLevel( void )
 	{
+#ifdef GE_DLL
+		// We should never get here!
+		Assert( 0 );
+#else
 		char szNextMap[32];
 
 		if ( nextlevel.GetString() && *nextlevel.GetString() && engine->IsMapValid( nextlevel.GetString() ) )
@@ -1182,17 +1201,17 @@ bool CMultiplayRules::Init()
 		else
 		{
 			GetNextLevelName( szNextMap, sizeof(szNextMap) );
-#ifndef GE_DLL
 			IncrementMapCycleIndex();
-#endif
 		}
+
 
 		g_fGameOver = true;
 		Msg( "CHANGE LEVEL: %s\n", szNextMap );
 		engine->ChangeLevel( szNextMap, NULL );
+#endif
 	}
 
-#endif		
+#endif // GAME_DLL
 
 
 	//-----------------------------------------------------------------------------

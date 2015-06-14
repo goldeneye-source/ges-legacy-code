@@ -8,17 +8,19 @@
 //   Created On: 01/01/2012
 //   Created By: Killermonkey <killermonkey01@gmail.com>
 ////////////////////////////////////////////////////////////////////////////
-
 #include "ge_pyprecom.h"
-#include "soundent.h"
 
-#include "ge_pymanager.h"
-#include "npc_gebase.h"
+#include "soundent.h"
+#include "ammodef.h"
+
 #include "ai_senses.h"
 #include "ai_task.h"
 #include "ai_hint.h"
 #include "ai_behavior.h"
 #include "ai_npcstate.h"
+
+#include "ge_pymanager.h"
+#include "npc_gebase.h"
 #include "ge_ai.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -756,7 +758,7 @@ CON_COMMAND( ge_ai_debugcmd, "Send a command to the named NPC's OnDebugCommand f
 	}
 
 	bool cmdSent = false;
-	FOR_EACH_BOTPLAYER( i, pBot )
+	FOR_EACH_BOTPLAYER( pBot )
 		// If we only supplied a command just send it to the first bot
 		if ( pBot->GetNPC() && args.ArgC() < 3 )
 		{

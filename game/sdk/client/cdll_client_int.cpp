@@ -98,6 +98,7 @@
 	#include "ge_panelhelper.h"
 	#include "ge_musicmanager.h"
 	#include "ge_loadingscreen.h"
+	#include "ge_vieweffects.h"
 #if 0
 	// HACKHACK: this is dumb, and unsafe. Things that should be uninitialized at the
 	// engine-level can kiss their deconstructors goodbye. See Shutdown for an
@@ -974,6 +975,10 @@ int CHLClient::HudVidInit( void )
 
 	GetClientVoiceMgr()->VidInit();
 
+#ifdef GE_DLL
+	GEViewEffects()->VidInit();
+#endif
+
 	return 1;
 }
 
@@ -1413,11 +1418,13 @@ void CHLClient::LevelShutdown( void )
 //-----------------------------------------------------------------------------
 void CHLClient::SetCrosshairAngle( const QAngle& angle )
 {
+#ifndef GE_DLL
 	CHudCrosshair *crosshair = GET_HUDELEMENT( CHudCrosshair );
 	if ( crosshair )
 	{
 		crosshair->SetCrosshairAngle( angle );
 	}
+#endif
 }
 
 //-----------------------------------------------------------------------------

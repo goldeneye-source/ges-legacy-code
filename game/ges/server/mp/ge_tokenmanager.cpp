@@ -10,10 +10,15 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include "cbase.h"
-#include "ge_tokenmanager.h"
+
+#include "ammodef.h"
+
+#include "ge_utils.h"
 #include "gemp_gamerules.h"
 #include "ge_generictoken.h"
-#include "ge_utils.h"
+#include "ge_loadoutmanager.h"
+
+#include "ge_tokenmanager.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -99,6 +104,7 @@ CGETokenDef* CGETokenManager::GetTokenDefForEdit( const char *szClassName )
 		Q_strncpy( pDef->szClassName, szClassName, MAX_ENTITY_NAME );
 		m_vTokenTypes.Insert( szClassName, pDef );
 
+		// TODO: This should be handled by an interface
 		// Notify our loadout manager in case we need to adjust the weapon set
 		GEMPRules()->GetLoadoutManager()->OnTokenAdded( szClassName );
 	}
@@ -387,7 +393,7 @@ void CGETokenManager::OnCaptureAreaRemoved( CGECaptureArea *pArea )
 
 void CGETokenManager::SpawnTokens( const char *name /*=NULL*/ )
 {
-	if ( !GEGameplay()->IsRoundStarted() )
+	if ( !GEGameplay()->IsInRound() )
 		return;
 
 	FOR_EACH_DICT( m_vTokenTypes, idx )
@@ -546,7 +552,7 @@ void CGETokenManager::RemoveTokenEnt( CGEWeapon *pToken, bool bAdjustLimit /*=tr
 
 void CGETokenManager::SpawnCaptureAreas( const char *name /*=NULL*/ )
 {
-	if ( !GEGameplay()->IsRoundStarted() )
+	if ( !GEGameplay()->IsInRound() )
 		return;
 
 	FOR_EACH_DICT( m_vCaptureAreas, idx )
@@ -877,7 +883,7 @@ int CGETokenManager::FilterSpawnersForCapArea( CGECaptureAreaDef *ca, int spawne
 
 void CGETokenManager::EnforceTokens( void )
 {
-	if ( gpGlobals->curtime < m_flNextEnforcement || !GEGameplay()->IsRoundStarted() )
+	if ( gpGlobals->curtime < m_flNextEnforcement || !GEGameplay()->IsInRound() )
 		return;
 
 	FOR_EACH_DICT( m_vTokenTypes, idx )

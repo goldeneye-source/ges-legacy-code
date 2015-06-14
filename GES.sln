@@ -1,9 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GoldenEye Source", "GoldenEye Source", "{4305E60F-8E21-4342-9995-8244000A2C77}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{33C1A500-F232-4D04-BAEB-D6DD4E99C56A}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Client", "game\client_ges-2010.vcxproj", "{02817029-DA00-4BD4-B140-EE1646F1447E}"
 	ProjectSection(ProjectDependencies) = postProject
 		{BF3EDBF5-ED65-4567-B348-504C1310A1BB} = {BF3EDBF5-ED65-4567-B348-504C1310A1BB}
@@ -13,31 +9,49 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Server", "game\server_ges-2
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vgui_controls", "vgui2\vgui_controls\vgui_controls-2005.vcxproj", "{BF3EDBF5-ED65-4567-B348-504C1310A1BB}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServerTest", "game\server_test.vcxproj", "{CC60E593-0A10-4D9C-8867-AB00FBE694FD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
+		DebugTest|Win32 = DebugTest|Win32
 		Release|Win32 = Release|Win32
+		ReleaseTest|Win32 = ReleaseTest|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{02817029-DA00-4BD4-B140-EE1646F1447E}.Debug|Win32.ActiveCfg = Debug|Win32
 		{02817029-DA00-4BD4-B140-EE1646F1447E}.Debug|Win32.Build.0 = Debug|Win32
+		{02817029-DA00-4BD4-B140-EE1646F1447E}.Debug|Win32.Deploy.0 = Debug|Win32
+		{02817029-DA00-4BD4-B140-EE1646F1447E}.DebugTest|Win32.ActiveCfg = DebugTest|Win32
+		{02817029-DA00-4BD4-B140-EE1646F1447E}.DebugTest|Win32.Build.0 = DebugTest|Win32
 		{02817029-DA00-4BD4-B140-EE1646F1447E}.Release|Win32.ActiveCfg = Release|Win32
 		{02817029-DA00-4BD4-B140-EE1646F1447E}.Release|Win32.Build.0 = Release|Win32
+		{02817029-DA00-4BD4-B140-EE1646F1447E}.ReleaseTest|Win32.ActiveCfg = ReleaseTest|Win32
+		{02817029-DA00-4BD4-B140-EE1646F1447E}.ReleaseTest|Win32.Build.0 = ReleaseTest|Win32
 		{4998DCA8-9606-46C7-8B28-6506E34992DC}.Debug|Win32.ActiveCfg = Debug|Win32
 		{4998DCA8-9606-46C7-8B28-6506E34992DC}.Debug|Win32.Build.0 = Debug|Win32
+		{4998DCA8-9606-46C7-8B28-6506E34992DC}.DebugTest|Win32.ActiveCfg = DebugTest|Win32
+		{4998DCA8-9606-46C7-8B28-6506E34992DC}.DebugTest|Win32.Build.0 = DebugTest|Win32
 		{4998DCA8-9606-46C7-8B28-6506E34992DC}.Release|Win32.ActiveCfg = Release|Win32
 		{4998DCA8-9606-46C7-8B28-6506E34992DC}.Release|Win32.Build.0 = Release|Win32
+		{4998DCA8-9606-46C7-8B28-6506E34992DC}.ReleaseTest|Win32.ActiveCfg = ReleaseTest|Win32
+		{4998DCA8-9606-46C7-8B28-6506E34992DC}.ReleaseTest|Win32.Build.0 = ReleaseTest|Win32
 		{BF3EDBF5-ED65-4567-B348-504C1310A1BB}.Debug|Win32.ActiveCfg = Debug|Win32
 		{BF3EDBF5-ED65-4567-B348-504C1310A1BB}.Debug|Win32.Build.0 = Debug|Win32
+		{BF3EDBF5-ED65-4567-B348-504C1310A1BB}.DebugTest|Win32.ActiveCfg = DebugTest|Win32
+		{BF3EDBF5-ED65-4567-B348-504C1310A1BB}.DebugTest|Win32.Build.0 = DebugTest|Win32
 		{BF3EDBF5-ED65-4567-B348-504C1310A1BB}.Release|Win32.ActiveCfg = Release|Win32
 		{BF3EDBF5-ED65-4567-B348-504C1310A1BB}.Release|Win32.Build.0 = Release|Win32
+		{BF3EDBF5-ED65-4567-B348-504C1310A1BB}.ReleaseTest|Win32.ActiveCfg = ReleaseTest|Win32
+		{BF3EDBF5-ED65-4567-B348-504C1310A1BB}.ReleaseTest|Win32.Build.0 = ReleaseTest|Win32
+		{CC60E593-0A10-4D9C-8867-AB00FBE694FD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CC60E593-0A10-4D9C-8867-AB00FBE694FD}.DebugTest|Win32.ActiveCfg = DebugTest|Win32
+		{CC60E593-0A10-4D9C-8867-AB00FBE694FD}.DebugTest|Win32.Build.0 = DebugTest|Win32
+		{CC60E593-0A10-4D9C-8867-AB00FBE694FD}.Release|Win32.ActiveCfg = Release|Win32
+		{CC60E593-0A10-4D9C-8867-AB00FBE694FD}.ReleaseTest|Win32.ActiveCfg = ReleaseTest|Win32
+		{CC60E593-0A10-4D9C-8867-AB00FBE694FD}.ReleaseTest|Win32.Build.0 = ReleaseTest|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{02817029-DA00-4BD4-B140-EE1646F1447E} = {4305E60F-8E21-4342-9995-8244000A2C77}
-		{4998DCA8-9606-46C7-8B28-6506E34992DC} = {4305E60F-8E21-4342-9995-8244000A2C77}
-		{BF3EDBF5-ED65-4567-B348-504C1310A1BB} = {33C1A500-F232-4D04-BAEB-D6DD4E99C56A}
 	EndGlobalSection
 EndGlobal

@@ -24,6 +24,11 @@
 #define GES_AUTH_URL		"http://update.geshl2.com/gesauth.txt"
 #define GES_VERSION_URL		"http://update.geshl2.com/gesupdate.txt"
 
+// Deal with testing
+#ifdef GES_TESTING
+extern bool IsTesting();
+#endif
+
 //--------------------------------------------------------------
 // Take care of some incompatible sharing
 //
@@ -509,7 +514,7 @@ unsigned int RSHash(const char *str);
 
 // Random number generator that returns [0, limit) in whatever format you want
 template <class T>
-inline T GERandom(const T limit = T(1.0))
+T GERandom(const T limit = T(1.0))
 {
    static bool seeded = false;
    static const double rand_max_reciprocal = double(1.0) / (double(RAND_MAX) + 1.0);

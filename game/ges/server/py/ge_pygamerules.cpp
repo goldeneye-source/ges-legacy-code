@@ -15,6 +15,8 @@
 #include "ge_shareddefs.h"
 #include "ge_radarresource.h"
 #include "ge_generictoken.h"
+#include "ge_loadoutmanager.h"
+#include "ge_tokenmanager.h"
 #include "ge_spawner.h"
 #include "gemp_gamerules.h"
 #include "gemp_player.h"
@@ -26,14 +28,14 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-float pyGetMapTimeLeft()
+float pyGetMatchTimeLeft()
 {
-	return GEMPRules()->GetMapTimeLeft();
+	return GEMPRules()->GetMatchTimeRemaining();
 }
 
 float pyGetRoundTimeLeft()
 {
-	return GEMPRules()->GetRoundTimeLeft();
+	return GEMPRules()->GetRoundTimeRemaining();
 }
 
 bool pyIsIntermission()
@@ -43,7 +45,7 @@ bool pyIsIntermission()
 
 bool pyIsGameOver()
 {
-	return g_fGameOver;
+	return GEGameplay()->IsInFinalIntermission();
 }
 
 bool pyIsTeamplay()
@@ -53,22 +55,22 @@ bool pyIsTeamplay()
 
 void pyEndMatch()
 {
-	// NOTE: This ignores CanMatchEnd!
-	GEMPRules()->GoToIntermission( true );
+	// NOTE: This ignores Scenario.CanMatchEnd()!
+	if ( GEGameplay() && !GEGameplay()->IsGameOver() )
+		GEGameplay()->EndMatch();
 }
 
 void pyEndRound( bool bScoreRound = true, bool bChangeWeapons = true )
 {
-	if ( !GEGameplay() )
+	// Don't end if we are not in a round
+	if ( !GEGameplay() || !GEGameplay()->IsInRound() )
 		return;
 
-	// NOTE: This ignores CanRoundEnd!
-	if ( !bScoreRound )
-		GEGameplay()->DisableRoundScoring();
 	if ( !bChangeWeapons )
 		GEMPRules()->GetLoadoutManager()->KeepLoadoutOnNextChange();
 
-	GEGameplay()->SetState( GAMESTATE_DELAY );
+	// NOTE: This ignores Scenario.CanRoundEnd()!
+	GEGameplay()->EndRound( bScoreRound );
 }
 
 
@@ -91,10 +93,7 @@ bool pyIsRoundLocked()
 
 void pyToggleRoundTimer( bool state )
 {
-	if ( !state )
-		GEMPRules()->PauseRoundTimer();
-	else
-		GEMPRules()->ResumeRoundTimer();
+	GEMPRules()->SetRoundTimerEnabled( state );
 }
 
 
@@ -172,25 +171,30 @@ bp::list pyGetWeaponLoadout( const char *szName = NULL )
 
 	if ( !loadout )
 		return weapList;
-	
+
 	for ( int i=0; i < MAX_WEAPON_SPAWN_SLOTS; i++ )
 		weapList.append( loadout->GetWeapon(i) );
 
 	return weapList;
 }
 
-void pySetTeamWinner(CTeam *team)
+void pySetTeamWinner( bp::object team )
 {
-	if (!team)
-		return;
+	bp::extract<CTeam*> to_team( team );
+	int team_id = TEAM_INVALID;
 
-	GEMPRules()->SetRoundTeamWinner( team->GetTeamNumber() );
+	if ( to_team.check() )
+		team_id = to_team()->GetTeamNumber();
+	else
+		team_id = bp::extract<int>( team );
+
+	GEMPRules()->SetRoundTeamWinner( team_id );
 }
 
 void pyResetAllPlayerDeaths()
 {
 	// Reset all the player's deaths
-	FOR_EACH_MPPLAYER(i, pPlayer)
+	FOR_EACH_MPPLAYER( pPlayer )
 		pPlayer->ResetDeathCount();
 	END_OF_PLAYER_LOOP()
 }
@@ -235,7 +239,6 @@ int pyGetNumInRoundPlayers()
 
 int pyGetNumActiveTeamPlayers( bp::object team_obj )
 {
-	bp::extract<int> to_int( team_obj );
 	bp::extract<CTeam*> to_team( team_obj );
 
 	int count = 0;
@@ -244,19 +247,18 @@ int pyGetNumActiveTeamPlayers( bp::object team_obj )
 	if ( to_team.check() )
 		team_num = to_team()->GetTeamNumber();
 	else
-		team_num = to_int();
+		team_num = bp::extract<int>( team_obj );
 
-	FOR_EACH_MPPLAYER( i, pPlayer )
+	FOR_EACH_MPPLAYER( pPlayer )
 		if ( pPlayer->GetTeamNumber() == team_num && pPlayer->IsActive() )
 			count++;
 	END_OF_PLAYER_LOOP()
 
-	return count;
+		return count;
 }
 
 int pyGetNumInRoundTeamPlayers( bp::object team_obj )
 {
-	bp::extract<int> to_int( team_obj );
 	bp::extract<CTeam*> to_team( team_obj );
 
 	int count = 0;
@@ -265,16 +267,16 @@ int pyGetNumInRoundTeamPlayers( bp::object team_obj )
 	if ( to_team.check() )
 		team_num = to_team()->GetTeamNumber();
 	else
-		team_num = to_int();
+		team_num = bp::extract<int>( team_obj );
 
-	FOR_EACH_MPPLAYER( i, pPlayer )
+	FOR_EACH_MPPLAYER( pPlayer )
 
 		if ( pPlayer->GetTeamNumber() == team_num && pPlayer->IsInRound() )
 			count++;
 
 	END_OF_PLAYER_LOOP()
 
-	return count;
+		return count;
 }
 
 void pySetExcludedCharacters( const char *str_list )
@@ -310,7 +312,7 @@ bp::object pySetupToken( bp::tuple args, bp::dict kw )
 	GE_Extract(kw, "view_model", pDef->szModelName[0], MAX_MODEL_PATH );
 	GE_Extract(kw, "world_model", pDef->szModelName[1], MAX_MODEL_PATH);
 	GE_Extract(kw, "print_name", pDef->szPrintName, MAX_ENTITY_NAME );
-	
+
 	pDef->flDmgMod       = GE_Extract<float>(kw, "damage_mod",	pDef->flDmgMod);
 	pDef->nSkin          = GE_Extract<int>(kw, "skin",			pDef->nSkin);
 	pDef->bAllowSwitch   = GE_Extract<bool>(kw,	"allow_switch", pDef->bAllowSwitch);
@@ -371,7 +373,7 @@ bp::list pyListContactsNear( const CGERadarResource *radar, const Vector &origin
 				c["team"]         = g_pRadarResource->m_iEntTeam.Get(i);
 				c["type"]         = g_pRadarResource->m_iType.Get(i);
 				c["is_objective"] = g_pRadarResource->m_ObjStatus.Get(i);
-				
+
 				contacts.append( c );
 			}
 		}		
@@ -411,7 +413,8 @@ BOOST_PYTHON_MODULE(GEMPGameRules)
 	def("SetPlayerWinner", pySetPlayerWinner);
 	def("SetTeamWinner", pySetTeamWinner);
 
-	def("GetMapTimeLeft", pyGetMapTimeLeft);
+	def("GetMapTimeLeft", pyGetMatchTimeLeft); // DEPRECATED
+	def("GetMatchTimeLeft", pyGetMatchTimeLeft);
 	def("GetRoundTimeLeft", pyGetRoundTimeLeft);
 	def("IsIntermission", pyIsIntermission);
 	def("IsGameOver", pyIsGameOver);
@@ -456,11 +459,11 @@ BOOST_PYTHON_MODULE(GEMPGameRules)
 		.def("SetForceRadar", &CGERadarResource::SetForceRadar)
 		.def("SetPlayerRangeMod", &CGERadarResource::SetRangeModifier)
 		.def("AddRadarContact", &CGERadarResource::AddRadarContact, ("entity", arg("type")=RADAR_TYPE_DEFAULT, arg("always_visible")=false, 
-																	arg("icon")="", arg("color")=Color()))
+		arg("icon")="", arg("color")=Color()))
 		.def("DropRadarContact", &CGERadarResource::DropRadarContact)
 		.def("IsRadarContact", &CGERadarResource::IsRadarContact)
 		.def("SetupObjective", &CGERadarResource::SetupObjective, ("entity", arg("team_filter")=0, arg("token_filter")="", arg("text")="", 
-																	arg("color")=Color(), arg("min_dist")=0, arg("pulse")=false))
+		arg("color")=Color(), arg("min_dist")=0, arg("pulse")=false))
 		.def("ClearObjective", &CGERadarResource::ClearObjective)
 		.def("IsObjective", &CGERadarResource::IsObjective)
 		.def("DropAllContacts", &CGERadarResource::DropAllContacts)

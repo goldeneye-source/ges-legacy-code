@@ -346,6 +346,12 @@ struct MemAllocFileLine_t
 #define MEM_ALLOC_CREDIT_CLASS()
 #define MEM_ALLOC_CLASSNAME(type) NULL
 
+#define MEM_ALLOC_CREDIT_(tag)	((void)0)
+#define MemAlloc_PushAllocDbgInfo( pszFile, line ) ((void)0)
+#define MemAlloc_PopAllocDbgInfo() ((void)0)
+#define MemAlloc_RegisterAllocation( pFileName, nLine, nLogicalSize, nActualSize, nTime ) ((void)0)
+#define MemAlloc_RegisterDeallocation( pFileName, nLine, nLogicalSize, nActualSize, nTime ) ((void)0)
+
 #endif !STEAM && NO_MALLOC_OVERRIDE
 
 //-----------------------------------------------------------------------------

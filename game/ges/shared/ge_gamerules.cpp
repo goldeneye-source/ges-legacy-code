@@ -8,10 +8,7 @@
 // Created By: Jonathan White <killermonkey> 
 /////////////////////////////////////////////////////////////////////////////
 #include "cbase.h"
-#include "ge_gamerules.h"
-#include "viewport_panel_names.h"
-#include "gameeventdefs.h"
-#include <KeyValues.h>
+
 #include "ammodef.h"
 #include "ge_utils.h"
 #include "ge_character_data.h"
@@ -19,16 +16,12 @@
 #ifdef CLIENT_DLL
 	#include "c_ge_player.h"
 #else
-
+	#include "game.h"
 	#include "ge_webrequest.h"
 	#include "ge_gameplay.h"
 	#include "eventqueue.h"
-	#include "game.h"
 	#include "items.h"
-	#include "entitylist.h"
-	#include "mapentities.h"
 	#include "in_buttons.h"
-	#include <ctype.h>
 	#include "voice_gamemgr.h"
 	#include "Sprite.h"
 	#include "utlbuffer.h"
@@ -49,6 +42,8 @@
 	extern void respawn(CBaseEntity *pEdict, bool fCopyCorpse);
 	class CGEReloadEntityFilter;
 #endif
+
+#include "ge_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -392,7 +387,7 @@ bool CGERules::ClientConnected( edict_t *pEntity, const char *pszName, const cha
 	return BaseClass::ClientConnected(pEntity, pszName, pszAddress, reject, maxrejectlen );
 }
 
-void CGERules::LevelInitPostEntity( void )
+void CGERules::LevelInitPostEntity()
 {
 	UpdateSpawnerLocations();
 
@@ -694,7 +689,7 @@ int CGERules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
 }
 
 extern void StripChar(char *szBuffer, const char cWhiteSpace );
-void CGERules::LoadMapCycle( void )
+void CGERules::LoadMapCycle()
 {
 		const char *mapcfile = mapcyclefile.GetString();
 		Assert( mapcfile != NULL );
@@ -765,55 +760,44 @@ void CGERules::LoadMapCycle( void )
 		}
 }
 
-void CGERules::WorldReload( void )
+void CGERules::WorldReload()
 {
 	// Get rid of all entities except players.
 	CBaseEntity *pCur = gEntList.FirstEnt();
 	while ( pCur )
 	{
-		CGEWeapon *pWeapon = dynamic_cast<CGEWeapon*>( pCur );
-		// Weapons with owners don't want to be removed..
-		if ( pWeapon )
+		// Entities are removed from the world if they will be recreated
+		if ( GEMapEntityFilter()->ShouldCreateEntity(pCur->GetClassname()) )
 		{
-			if ( !pWeapon->GetPlayerOwner() )
+			// Leave entities owned by players (handled on respawn)
+			CBaseEntity *owner = pCur->GetOwnerEntity();
+			if ( !owner || !owner->IsPlayer() )
 				UTIL_Remove( pCur );
-		}
-		// remove entities that has to be restored on roundrestart (breakables etc)
-		else if ( GEMapEntityFilter()->ShouldCreateEntity(pCur->GetClassname()) )
-		{
-			UTIL_Remove( pCur );
 		}
 
 		pCur = gEntList.NextEnt( pCur );
 	}
+
 	// Really remove the entities so we can have access to their slots below.
 	gEntList.CleanupDeleteList();
-
 	engine->AllowImmediateEdictReuse();
 
-	// Clear any events sent to the server (mine detonate?)
+	// Clear any events sent to the server (e.g., mine detonate)
 	g_EventQueue.Clear();
 
-	// with any unrequired entities removed, we use MapEntity_ParseAllEntities to reparse the map entities
-	// this in effect causes them to spawn back to their normal position.
+	// with any unrequired entities removed, we reparse the map entities
+	// causing them to spawn back to their positions as if the map just loaded
 	MapEntity_ParseAllEntities( engine->GetMapEntitiesString(), GEMapEntityFilter(), true);
 
-	// Reload our Spawner Locations
+	// Refresh our spawner locations
 	UpdateSpawnerLocations();
 }
 
-
-void CGERules::SpawnPlayers( void )
+void CGERules::SpawnPlayers()
 {
-	for (int i = 1; i <= gpGlobals->maxClients; i++ )
-	{
-		CGEPlayer *pPlayer = (CGEPlayer *)(UTIL_PlayerByIndex( i ));
-
-		if ( !pPlayer )
-			continue;
-		
+	FOR_EACH_PLAYER( pPlayer )
 		pPlayer->ForceRespawn();
-	}
+	END_OF_PLAYER_LOOP()
 }
 
 bool CGERules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer  )
@@ -839,7 +823,6 @@ CBaseEntity *CGERules::GetSpectatorSpawnSpot( CGEPlayer *pPlayer )
 		return NULL;
 
 	CBaseEntity *pSpawnSpot = pPlayer->EntSelectSpawnPoint();
-
 	if ( pSpawnSpot )
 		pPlayer->JumptoPosition( pSpawnSpot->GetAbsOrigin() + VEC_VIEW, pSpawnSpot->GetAbsAngles() );
 
@@ -853,10 +836,9 @@ CBaseEntity *CGERules::GetSpectatorSpawnSpot( CGEPlayer *pPlayer )
 //-----------------------------------------------------------------------------
 const char *CGERules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 {
-	if ( !pPlayer )  // dedicated server output
-	{
+	// Filter out dedicated server output
+	if ( !pPlayer )
 		return NULL;
-	}
 
 	const char *pszFormat = NULL;
 
@@ -907,7 +889,7 @@ const char *CGERules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 	return pszFormat;
 }
 
-void CGERules::UpdateSpawnerLocations( void )
+void CGERules::UpdateSpawnerLocations()
 {
 	ClearSpawnerLocations();
 
@@ -919,7 +901,7 @@ void CGERules::UpdateSpawnerLocations( void )
 	for ( int i=SPAWN_NONE+1; i < SPAWN_MAX; i++ )
 	{
 		classname = SpawnerTypeToClassName( i );
-		assert( classname );
+		Assert( classname );
 
 		// Troll through our entity list building our vector
 		vEnts = new CUtlVector<EHANDLE>;
@@ -968,7 +950,7 @@ bool CGERules::GetSpawnerStats( int spawn_type, Vector &mins, Vector &maxs, Vect
 	return false;
 }
 
-void CGERules::ClearSpawnerLocations( void )
+void CGERules::ClearSpawnerLocations()
 {
 	for( unsigned int i=0; i < m_vSpawnerLocations.Count(); i++ )
 	{
@@ -980,7 +962,7 @@ void CGERules::ClearSpawnerLocations( void )
 	m_vSpawnerStats.Purge();
 }
 
-void CGERules::InitDefaultAIRelationships( void )
+void CGERules::InitDefaultAIRelationships()
 {
 	int i, j;
 	//  Allocate memory for default relationships
@@ -1116,9 +1098,9 @@ bool CGERules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	return BaseClass::ShouldCollide( collisionGroup0, collisionGroup1 ); 
 }
 
-const unsigned char *CGERules::GetEncryptionKey( void )
+const unsigned char *CGERules::GetEncryptionKey()
 {
-	return GetHash();
+	return GEUTIL_GetSecretHash();
 }
 
 bool CGERules::ShouldUseRobustRadiusDamage( CBaseEntity *pEntity )

@@ -19,17 +19,15 @@ class CGECaptureArea : public CBaseAnimating
 {
 public:
 	DECLARE_CLASS( CGECaptureArea, CBaseAnimating );
-	DECLARE_DATADESC();
 	DECLARE_SERVERCLASS();
 
 	CGECaptureArea();
-	~CGECaptureArea();
 
 	virtual void Spawn();
 	virtual void Precache();
 	virtual void UpdateOnRemove();
 
-	virtual void StartTouch( CBaseEntity *pOther );
+	virtual void Touch( CBaseEntity *pOther );
 	virtual void EndTouch( CBaseEntity *pOther );
 
 	void ClearTouchingEntities();
@@ -51,6 +49,7 @@ private:
 	CNetworkVar( float, m_GlowDist );
 
 	char m_szGroupName[32];
+	float m_fRadius;
 
 	// Entities currently being touched by this capture area
 	CUtlVector< EHANDLE >	m_hTouchingEntities;

@@ -19,6 +19,7 @@
 #include "c_ge_player.h"
 #include "c_gemp_player.h"
 #include "c_ge_playerresource.h"
+#include "c_ge_gameplayresource.h"
 #include "ge_weapon.h"
 #include "gemp_gamerules.h"
 
@@ -334,7 +335,8 @@ protected:
 	{
 		if ( event->GetInt("weaponid") == WEAPON_COUGAR_MAGNUM )
 		{
-			if ( ++m_iKillCount >= 6 )
+			m_iKillCount += 1;
+			if ( m_iKillCount >= 6 )
 				IncrementCount();
 		}
 	}
@@ -499,11 +501,11 @@ protected:
 			// Accumulate our damage amount
 			m_iDmgTaken += event->GetInt("damage");
 			
-			// If our accumulated damage is more than half our max health and we are still alive
+			// If our accumulated damage is more than a third our max health and we are still alive
 			// give us some creds
-			int healthThreshold = pPlayer->GetMaxHealth()*0.5f;
+			int healthThreshold = pPlayer->GetMaxHealth()*0.333f;
 			int currHealth = event->GetInt("health");
-			if ( m_iDmgTaken > healthThreshold && currHealth > 0 )
+			if ( m_iDmgTaken >= healthThreshold && currHealth > 0 )
 			{
 				IncrementCount();
 				m_iDmgTaken = 0;
@@ -565,35 +567,18 @@ protected:
 	{
 		SetFlags( ACH_SAVE_GLOBAL );
 		SetGoal( 50 );
-
-		VarInit();
-	}
-
-	virtual void VarInit()
-	{
-		m_bIsYOLT = false;
 	}
 
 	virtual void ListenForEvents()
 	{
-		ListenForGameEvent( "gamemode_change" );
 		ListenForGameEvent( "round_end" );
-
-		VarInit();
 	}
 
 	virtual void FireGameEvent_Internal( IGameEvent *event )
 	{
-		if ( !Q_stricmp(event->GetName(), "gamemode_change") )
+		if ( !Q_stricmp(event->GetName(), "round_end") )
 		{
-			if ( !Q_stricmp(event->GetString("ident"), "yolt") && event->GetBool("official") )
-				m_bIsYOLT = true;
-			else
-				m_bIsYOLT = false;
-		}
-		else if ( !Q_stricmp(event->GetName(), "round_end") )
-		{
-			if ( !CBasePlayer::GetLocalPlayer() || !event->GetBool("showreport") || !m_bIsYOLT || CalcPlayerCount() < 4 )
+			if ( !CBasePlayer::GetLocalPlayer() || !event->GetBool("showreport") || !IsScenario( "yolt" ) || CalcPlayerCount() < 4 )
 				return;
 
 			// If we won we get cred
@@ -601,9 +586,6 @@ protected:
 				IncrementCount();
 		}
 	}
-
-private:
-	bool m_bIsYOLT;
 };
 DECLARE_GE_ACHIEVEMENT( CAchLastAgentStanding, ACHIEVEMENT_GES_LAST_AGENT_STANDING, "GES_LAST_AGENT_STANDING", 100, GE_ACH_UNLOCKED );
 
@@ -619,22 +601,15 @@ protected:
 		SetGoal( 1 );
 
 		SetCharReq( "ourumov" );
-		VarInit();
-	}
-
-	virtual void VarInit()
-	{
-		m_bIsYOLT = false;
 		m_bDD44Only = true;
 	}
 
 	virtual void ListenForEvents()
 	{
-		ListenForGameEvent( "gamemode_change" );
+		m_bDD44Only = true;
+
 		ListenForGameEvent( "player_hurt" );
 		CGEAchBaseAwardType::ListenForEvents();
-
-		VarInit();
 	}
 
 	virtual void FireGameEvent_Internal( IGameEvent *event )
@@ -643,14 +618,7 @@ protected:
 		if ( !pPlayer )
 			return;
 
-		if ( !Q_stricmp(event->GetName(), "gamemode_change") )
-		{
-			if ( !Q_stricmp(event->GetString("ident"), "yolt") && event->GetBool("official") )
-				m_bIsYOLT = true;
-			else
-				m_bIsYOLT = false;
-		}
-		else if ( !Q_stricmp(event->GetName(), "player_hurt") )
+		if ( !Q_stricmp(event->GetName(), "player_hurt") )
 		{
 			if ( pPlayer->GetUserID() == event->GetInt("attacker") && event->GetInt("userid") != event->GetInt("attacker") )
 			{
@@ -660,7 +628,7 @@ protected:
 		}
 		else if ( !Q_stricmp(event->GetName(), "round_end") )
 		{
-			if ( !event->GetBool("showreport") || !m_bIsYOLT )
+			if ( !event->GetBool("showreport") || !IsScenario( "yolt" ) )
 			{
 				m_bDD44Only = true;
 				return;
@@ -680,7 +648,6 @@ protected:
 	}
 
 private:
-	bool m_bIsYOLT;
 	bool m_bDD44Only;
 };
 DECLARE_GE_ACHIEVEMENT( CAchYouCantWin, ACHIEVEMENT_GES_YOU_CANT_WIN, "GES_YOU_CANT_WIN", 100, GE_ACH_UNLOCKED );
@@ -995,32 +962,19 @@ protected:
 	{
 		SetFlags( ACH_SAVE_GLOBAL );
 		SetGoal( 1 );
-		VarInit();
 	}
-	virtual void VarInit()
-	{
-		m_bIsYOLT = false;
-	}
+
 	virtual void ListenForEvents()
 	{
-		ListenForGameEvent( "gamemode_change" );
 		ListenForGameEvent( "round_end" );
-		VarInit();
 	}
 
 	virtual void FireGameEvent_Internal( IGameEvent *event )
 	{
-		if ( !Q_stricmp(event->GetName(), "gamemode_change") )
-		{
-			if ( !Q_stricmp(event->GetString("ident"), "yolt") && event->GetBool("official") )
-				m_bIsYOLT = true;
-			else
-				m_bIsYOLT = false;
-		}
-		else if ( !Q_stricmp(event->GetName(), "round_end") )
+		if ( !Q_stricmp(event->GetName(), "round_end") )
 		{
 			CBasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
-			if ( !pPlayer || !event->GetBool("showreport") || !m_bIsYOLT || CalcPlayerCount() < 4 )
+			if ( !pPlayer || !event->GetBool("showreport") || !IsScenario( "yolt" ) || CalcPlayerCount() < 4 )
 				return;
 
 			// If we won, got 4+ kills, and earned marksmanship get the cred
@@ -1029,9 +983,6 @@ protected:
 				IncrementCount();
 		}
 	}
-
-private:
-	bool m_bIsYOLT;
 };
 DECLARE_GE_ACHIEVEMENT( CAchTargetPractice, ACHIEVEMENT_GES_TARGET_PRACTICE, "GES_TARGET_PRACTICE", 100, GE_ACH_UNLOCKED );
 

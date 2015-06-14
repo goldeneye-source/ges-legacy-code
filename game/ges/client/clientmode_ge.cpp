@@ -44,7 +44,6 @@
 
 #include "ge_hudgameplay.h"
 #include "ge_hudtargetid.h"
-#include "ge_hudcrosshair.h"
 
 // An internal MP3 player for our levels
 #include "ge_panelhelper.h"
@@ -142,13 +141,16 @@ CON_COMMAND( __OVR_map, "Load the specified map." )
 
 void RenderGEPlayerSprites()
 {
+	// Prevents an assert
+	AllowCurrentViewAccess( true );
+
 	CGETargetID *target = GET_HUDELEMENT( CGETargetID );
 	if ( target )
 		target->DrawOverheadIcons();
 
-	CGEHudCrosshair *crosshair = GET_HUDELEMENT( CGEHudCrosshair );
-	if ( crosshair )
-		crosshair->DrawCrosshair();
+	GEViewEffects()->DrawCrosshair();
+
+	AllowCurrentViewAccess( false );
 }
 
 //-----------------------------------------------------------------------------

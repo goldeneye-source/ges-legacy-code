@@ -8,21 +8,26 @@
 //   Created On: 01/01/2012
 //   Created By: Jonathan White <KillerMonkey>
 ////////////////////////////////////////////////////////////////////////////
-
 #include "cbase.h"
-#include "npc_gebase.h"
-#include "ai_memory.h"
-#include "ge_ai.h"
-#include "ai_pathfinder.h"
-#include "npc_bullseye.h"
-#include "ge_shareddefs.h"
-#include "gemp_gamerules.h"
-#include "ge_weapon.h"
-#include "ent_hat.h"
+
 #include "doors.h"
 #include "BasePropDoor.h"
 #include "func_break.h"
 #include "eventqueue.h"
+#include "ammodef.h"
+
+#include "ai_memory.h"
+#include "ai_pathfinder.h"
+
+#include "ge_shareddefs.h"
+#include "ent_hat.h"
+#include "ge_ai.h"
+#include "ge_weapon.h"
+#include "ge_gameplay.h"
+#include "ge_tokenmanager.h"
+#include "gemp_gamerules.h"
+
+#include "npc_gebase.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -1393,7 +1398,7 @@ void BotDifficulty_Callback( IConVar *var, const char *pOldString, float flOldVa
 {
 	ConVar *cvar = (ConVar*) var;
 
-	FOR_EACH_BOTPLAYER( i, pBot )
+	FOR_EACH_BOTPLAYER( pBot )
 		CNPC_GEBase *npc = pBot->GetNPC();
 		if ( npc )
 			npc->SetDifficulty( cvar->GetInt() );
@@ -1410,7 +1415,7 @@ CON_COMMAND( ge_npc_debugammo, "Dumps the amount and type of ammo the named NPC 
 	}
 
 	CNPC_GEBase *pNPC = NULL;
-	FOR_EACH_BOTPLAYER( i, pBot )
+	FOR_EACH_BOTPLAYER( pBot )
 		if ( !Q_stricmp( pBot->GetCleanPlayerName(), args[1] ) )
 		{
 			pNPC = pBot->GetNPC();

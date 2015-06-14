@@ -8,30 +8,30 @@
 //   Created On: 2/20/2009 1:38:28 PM
 //   Created By: Mark Chandler <mailto:admin@lodle.net>
 ////////////////////////////////////////////////////////////////////////////
-
 #include "cbase.h"
-#include "globalstate.h"
-#include "game.h"
-#include "networkstringtable_gamedll.h"
-
-#include "gemp_player.h"
-#include "gebot_player.h"
-#include "gemp_gamerules.h"
-#include "ge_player_shared.h"
-#include "ge_playerspawn.h"
-#include "ge_gameplay.h"
-#include "ge_radarresource.h"
-#include "ge_tokenmanager.h"
-#include "ge_weapon.h"
-#include "ge_character_data.h"
-#include "ge_achievement_defs.h"
-#include "ge_utils.h"
 
 #include "team.h"
 #include "predicted_viewmodel.h"
 #include "weapon_hl2mpbasehlmpcombatweapon.h"
 #include "in_buttons.h"
+#include "ammodef.h"
 #include "viewport_panel_names.h"
+#include "networkstringtable_gamedll.h"
+
+#include "ge_utils.h"
+#include "ge_playerspawn.h"
+#include "ge_gameplay.h"
+#include "ge_radarresource.h"
+#include "ge_tokenmanager.h"
+#include "ge_loadoutmanager.h"
+#include "ge_weapon.h"
+#include "ge_character_data.h"
+#include "ge_achievement_defs.h"
+#include "ge_player_shared.h"
+#include "gebot_player.h"
+#include "gemp_gamerules.h"
+
+#include "gemp_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -95,12 +95,12 @@ CGEMPPlayer::CGEMPPlayer()
 	m_bSpawnFromDeath = false;
 }
 
-CGEMPPlayer::~CGEMPPlayer( void )
+CGEMPPlayer::~CGEMPPlayer()
 {
 	return;
 }
 
-void CGEMPPlayer::Precache( void )
+void CGEMPPlayer::Precache()
 {
 	BaseClass::Precache();
 
@@ -145,7 +145,7 @@ void CGEMPPlayer::AddThrownObject( CBaseEntity *pObj )
 	m_hThrownObjects[loc] = pObj;
 }
 
-void CGEMPPlayer::UpdateCampingTime( void )
+void CGEMPPlayer::UpdateCampingTime()
 {
 	if ( m_flNextCampCheck > gpGlobals->curtime )
 		return;
@@ -194,7 +194,7 @@ void CGEMPPlayer::UpdateCampingTime( void )
 	m_flNextCampCheck = gpGlobals->curtime + 0.2f;
 }
 
-int CGEMPPlayer::GetCampingPercent( void )
+int CGEMPPlayer::GetCampingPercent()
 {
 	if ( m_flCampingTime > RADAR_BAD_CAMP_TIME )
 		return 100;
@@ -206,7 +206,7 @@ int CGEMPPlayer::GetCampingPercent( void )
 	return 0;
 }
 
-void CGEMPPlayer::PickDefaultSpawnTeam( void )
+void CGEMPPlayer::PickDefaultSpawnTeam()
 {
 	if ( GetTeamNumber() == TEAM_UNASSIGNED )
 	{
@@ -246,7 +246,7 @@ void CGEMPPlayer::PickDefaultSpawnTeam( void )
 	}
 }
 
-void CGEMPPlayer::InitialSpawn( void )
+void CGEMPPlayer::InitialSpawn()
 {
 	m_iLastSpecSpawn = 0;
 
@@ -269,7 +269,7 @@ void CGEMPPlayer::InitialSpawn( void )
 	BaseClass::InitialSpawn();
 }
 
-void CGEMPPlayer::Spawn( void )
+void CGEMPPlayer::Spawn()
 {
 	Precache();
 
@@ -473,7 +473,7 @@ void CGEMPPlayer::Spawn( void )
 	}
 }
 
-void CGEMPPlayer::SetSpawnState( SPAWN_STATE state )
+void CGEMPPlayer::SetSpawnState( SpawnState state )
 {
 #ifdef DEBUG
 	if ( m_iSpawnState != state )
@@ -518,7 +518,7 @@ void CGEMPPlayer::SetSpawnState( SPAWN_STATE state )
 	m_iSpawnState = state;
 }
 
-void CGEMPPlayer::ForceRespawn( void )
+void CGEMPPlayer::ForceRespawn()
 {
 	// If we aren't allowed to respawn yet skip the theatrics of the baseclass
 	if ( !GERules()->FPlayerCanRespawn(this) || (!IsSpawnState( SS_ACTIVE ) && m_bPreSpawn) )
@@ -602,7 +602,7 @@ void CGEMPPlayer::SetPlayerModel( const char* szCharName, int iCharSkin /*=0*/, 
 
 // This function is called when we switch teams so that we always have a valid character from
 // the team we joined
-void CGEMPPlayer::SetPlayerTeamModel( void )
+void CGEMPPlayer::SetPlayerTeamModel()
 {
 	int i = GetCharIndex();
 	const CGECharData *pChar = GECharacters()->Get(i);
@@ -747,7 +747,7 @@ void CGEMPPlayer::ShowTeamNotice( const char *title, const char *msg, const char
 	MessageEnd();
 }
 
-CBaseEntity* CGEMPPlayer::EntSelectSpawnPoint( void )
+CBaseEntity* CGEMPPlayer::EntSelectSpawnPoint()
 {
 	// This call ensures we always default to info_player_deathmatch if none of the other spawn types exist
 	int iSpawnerType = GEMPRules()->GetSpawnPointType( this );
@@ -892,7 +892,7 @@ extern ConVar ge_startarmed;
 //  0 = Only Slappers
 //  1 = Give a knife
 //  2 = Give first weapon in loadout
-void CGEMPPlayer::GiveDefaultItems( void )
+void CGEMPPlayer::GiveDefaultItems()
 {
 	EquipSuit(false);
 
@@ -1124,7 +1124,7 @@ bool CGEMPPlayer::ClientCommand( const CCommand &args )
 }
 
 
-void CGEMPPlayer::PreThink( void )
+void CGEMPPlayer::PreThink()
 {
 	// Keep checking this until we get a valid Steam ID return
 	if ( m_iSteamIDHash == 0  && GERules()->HaveStatusListsUpdated() && !(GetFlags() & FL_FAKECLIENT) )
@@ -1193,7 +1193,7 @@ void CGEMPPlayer::PreThink( void )
 	BaseClass::PreThink();
 }
 
-void CGEMPPlayer::PostThink( void )
+void CGEMPPlayer::PostThink()
 {
 	BaseClass::PostThink();
 	
@@ -1236,7 +1236,7 @@ void CGEMPPlayer::Event_Killed( const CTakeDamageInfo &info )
 	}
 }
 
-void CGEMPPlayer::NotifyOnDeath( void )
+void CGEMPPlayer::NotifyOnDeath()
 {
 	// Notify nearby spawn points of our death (DM Spawns Only)
 	const CUtlVector<EHANDLE> *vSpawns = GERules()->GetSpawnersOfType( SPAWN_PLAYER );
@@ -1355,7 +1355,7 @@ bool CGEMPPlayer::IsValidObserverTarget(CBaseEntity * target)
 	}
 }
 
-void CGEMPPlayer::CheckObserverSettings( void )
+void CGEMPPlayer::CheckObserverSettings()
 {
 	// Observers are never frozen
 	RemoveFlag( FL_FROZEN );
@@ -1447,7 +1447,7 @@ bool CGEMPPlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 
 // Called when the player leaves the server to clean up anything they may have left behind
 // this avoids null entity on owner error messages
-void CGEMPPlayer::RemoveLeftObjects( void )
+void CGEMPPlayer::RemoveLeftObjects()
 {
 	CBaseEntity *pEnt = NULL;
 	for ( int i=0; i < m_hThrownObjects.Count(); i++ )
@@ -1527,12 +1527,37 @@ void CGEMPPlayer::FinishClientPutInServer()
 	ShowViewPortPanel( PANEL_TEAM );
 }
 
-void CGEMPPlayer::ShowScenarioHelp( void )
+void CGEMPPlayer::OnGameplayEvent( GPEvent event )
 {
-//	if ( m_bPreSpawn )
-//		ShowViewPortPanel( PANEL_SCENARIOHELP, true, new KeyValues("data","pane","-1","nextpanel",PANEL_TEAM) );
-//	else
-		ShowViewPortPanel( PANEL_SCENARIOHELP, true, new KeyValues("data","pane","-1") );
+	if ( event == SCENARIO_INIT )
+	{
+		SetDamageMultiplier( 1.0f );
+		SetSpeedMultiplier( 1.0f );
+		SetMaxHealth( MAX_HEALTH );
+		SetMaxArmor( MAX_ARMOR );
+		SetInitialSpawn();  // Next time we spawn will be the "first" time
+		HintMessage( "", 0 );  // Reset hint messages
+	}
+	else if ( event == MATCH_START )
+	{
+		// Show the scenario help (if applicable) on match start
+		ShowScenarioHelp();
+	}
+	else if ( event == ROUND_START )
+	{
+		// Reset markers on round start
+		SetScoreBoardColor( SB_COLOR_NORMAL );
+	}
+	else if ( event == ROUND_END || event == MATCH_END )
+	{
+		// Freeze us when the round or match ends
+		FreezePlayer();
+	}
+}
+
+void CGEMPPlayer::ShowScenarioHelp()
+{
+	ShowViewPortPanel( PANEL_SCENARIOHELP, true, new KeyValues("data","pane","-1") );
 }
 
 // Spawn punch debugging

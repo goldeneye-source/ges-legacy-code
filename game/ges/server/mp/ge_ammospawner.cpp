@@ -7,9 +7,13 @@
 // Created By: KillerMonkey
 ///////////////////////////////////////////////////////////////////////////////
 #include "cbase.h"
+
+#include "ammodef.h"
+
+#include "ge_ammocrate.h"
+#include "ge_loadoutmanager.h"
 #include "gemp_gamerules.h"
 #include "ge_spawner.h"
-#include "ge_ammocrate.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

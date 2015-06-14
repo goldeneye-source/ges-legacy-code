@@ -55,15 +55,13 @@ public:
 	virtual void ClientThink();
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 
-	virtual void ResetAimMode();
-	virtual bool IsInAimMode();
-	virtual void CheckAimMode();
-
-	void SetZoom( int zoom ); 
-	int GetZoomEnd();
-
-	// For debugging only
+	void ResetAimMode( bool forced=false );
+	bool IsInAimMode();
+	void CheckAimMode();
 	int GetAimModeState() { return m_iAimModeState; }
+
+	void SetZoom( int zoom, bool forced=false ); 
+	int GetZoomEnd();
 
 	// Move the viewmodel closer to us if we are crouched
 	virtual void  CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles);
@@ -94,13 +92,13 @@ private:
 	CHandle< C_BaseCombatWeapon > m_hActiveLeftWeapon;
 
 	EHANDLE m_hHat;
+	EHANDLE m_hActiveWeaponCache;
 
 	// Local state tracking
 	int  m_iAimModeState;
 
 	// Networked aiming variables
 	bool m_bInAimMode;
-	bool m_bResetZoom;
 	
 	bool m_bInSpecialMusic;
 	float m_flEndSpecialMusic;

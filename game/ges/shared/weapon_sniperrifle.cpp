@@ -56,32 +56,30 @@ public:
 	virtual int KeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding )
 	{
 		C_GEPlayer *pPlayer = (C_GEPlayer*) C_GEPlayer::GetLocalPlayer();
-		if ( pPlayer && pPlayer->IsInAimMode() )
-		{
-			int old_zoom = pPlayer->GetZoomEnd();
-			int new_zoom = old_zoom;
 
-			switch( keynum )
+		if ( pPlayer && (keynum == MOUSE_WHEEL_UP || keynum == MOUSE_WHEEL_DOWN) )
+		{
+			// Check if we are allowed to zoom in/out
+			if ( pPlayer->IsInAimMode() || pPlayer->GetAimModeState() != AIM_NONE )
 			{
-			case MOUSE_WHEEL_UP:
-				new_zoom -= 5;
-				break;
-			case MOUSE_WHEEL_DOWN:
-				new_zoom += 5;
-				break;
-			}
+				// Grab our current desired zoom
+				int cur_zoom = pPlayer->GetZoomEnd();
+
+				// Modify the zoom based on our input
+				if ( keynum == MOUSE_WHEEL_UP )
+					cur_zoom -= 5;
+				else
+					cur_zoom += 5;
 			
-			if ( old_zoom != new_zoom )
-			{
-				// Clamp zoom and save it off
-				// NOTE: We use direct access since we modify the accessor function below
-				new_zoom = clamp( new_zoom, (90 + GetGEWpnData().m_iZoomOffset) - pPlayer->GetDefaultFOV(), 0 );
+				// Clamp zoom to our default fov and the max sniper rifle zoom
+				// NOTE: We use direct access to GEWpnData since we modify the accessor function below
+				cur_zoom = clamp( cur_zoom, (90 + GetGEWpnData().m_iZoomOffset) - pPlayer->GetDefaultFOV(), 0 );
 			
 				// Apply the new zoom to the player
-				pPlayer->SetZoom( new_zoom );
+				pPlayer->SetZoom( cur_zoom );
 
 				// Save it away
-				m_iLastZoomOffset = new_zoom;
+				m_iLastZoomOffset = cur_zoom;
 
 				// Gobble up the key press
 				return 0;

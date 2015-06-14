@@ -682,8 +682,13 @@ void CHL2_Player::PreThink(void)
 	VPROF_SCOPE_END();
 #endif
 
+#ifdef GE_DLL
+	if ( IsPlayerLockedInPlace() )
+		return;
+#else
 	if ( g_fGameOver || IsPlayerLockedInPlace() )
 		return;         // finale
+#endif
 
 	VPROF_SCOPE_BEGIN( "CHL2_Player::PreThink-ItemPreFrame" );
 	ItemPreFrame( );
@@ -3368,11 +3373,13 @@ bool CHL2_Player::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex 
 	// Recalculate proficiency!
 	SetCurrentWeaponProficiency( CalcWeaponProficiency( pWeapon ) );
 
+#ifndef GE_DLL
 	// Come out of suit zoom mode
 	if ( IsZooming() )
 	{
 		StopZooming();
 	}
+#endif
 
 	return BaseClass::Weapon_Switch( pWeapon, viewmodelindex );
 }

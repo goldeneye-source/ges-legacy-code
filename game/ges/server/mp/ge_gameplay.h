@@ -1,65 +1,55 @@
-///////////// Copyright © 2009 LodleNet. All rights reserved. /////////////
+///////////// Copyright © 2013, Goldeneye: Source. All rights reserved. /////////////
+// 
+// File: ge_gameplay.h
+// Description:
+//      Gameplay Manager Definition
 //
-//   Project     : Server
-//   File        : ge_gameplay.h
-//   Description :
-//      [TODO: Write the purpose of ge_gameplay.h.]
-//
-//   Created On: 8/31/2009 9:37:45 PM
-//   Created By: Mark Chandler <mailto:mark@moddb.com>
-////////////////////////////////////////////////////////////////////////////
+// Created By: Jonathan White <killermonkey> 
+/////////////////////////////////////////////////////////////////////////////
 
 #ifndef MC_GE_GAMEPLAY_H
 #define MC_GE_GAMEPLAY_H
-#ifdef _WIN32
-#pragma once
-#endif
 
 class CGEPlayer;
 class CBaseEntity;
 class CGEWeapon;
 class CGECaptureArea;
 
-enum GES_GAMESTATE
-{
-	GAMESTATE_NONE,
-	GAMESTATE_STARTING,
-	GAMESTATE_RESTART,
-	GAMESTATE_DELAY,
-	GAMESTATE_PLAYING,
-};
-
 // --------------------
-// Creation, Shutdown, Reboot
+// Control of the gameplay manager
 // --------------------
 extern void CreateGameplayManager();
 extern void ShutdownGameplayManager();
 
-
 // --------------------
-// Base Scenario Linker
+// Base Scenario Definition
 // --------------------
-
 class CGEBaseScenario
 {
 public:
 	CGEBaseScenario();
 
+protected:
+	virtual void Init()=0;
+	virtual void Shutdown()=0;
+
+	friend class CGEBaseGameplayManager;
+
+public:
+	// Convar controls
 	void LoadConfig();
 	void CreateCVar(const char* name, const char* defValue, const char* help);
-	void SetIsOfficial(bool state)	{ m_bIsOfficial = state; };
-	bool IsOfficial( void )			{ return m_bIsOfficial; };
+	void UnloadConfig();
 
-	virtual void Cleanup();
+	// Check official
+	bool IsOfficial()  { return m_bIsOfficial; }
+	void SetIsOfficial( bool state )  { m_bIsOfficial = state; }
 
 	virtual const char* GetIdent()=0;
 	virtual const char* GetGameDescription()=0;
 	virtual const char* GetPrintName()=0;
 	virtual int GetHelpString()=0;
 	virtual int GetTeamPlay()=0;
-
-	virtual void OnLoadGamePlay()=0;
-	virtual void OnUnloadGamePlay()=0;
 
 	virtual void ClientConnect(CGEPlayer *pPlayer)=0;
 	virtual void ClientDisconnect(CGEPlayer *pPlayer)=0;
@@ -99,6 +89,7 @@ private:
 	bool m_bIsOfficial;
 	CUtlVector<ConVar*> m_vCVarList;
 
+	// No copies allowed
 	CGEBaseScenario(const CGEBaseScenario &) { }
 };
 
@@ -106,20 +97,23 @@ private:
 // Class that enables event based messaging of gameplay events
 // to all registered listeners. Listeners are registered automatically
 // in the CGEGameplayEventListener constructor
+enum GPEvent {
+	SCENARIO_INIT,
+	MATCH_START,
+	ROUND_START,
+	ROUND_END,
+	MATCH_END,
+	SCENARIO_SHUTDOWN
+};
+
 class CGEGameplayEventListener
 {
 public:
+	// Self register/deregister
 	CGEGameplayEventListener();
 	~CGEGameplayEventListener();
 
-	// Replace these with inherited versions!
-	virtual void OnGameplayLoaded()		{ }		// When gameplay is loaded
-	virtual void OnMatchStarted()		{ }		// Before first round of current gameplay on current level
-	virtual void OnRoundRestart()		{ }		// Called after the world respawns, but before players
-	virtual void OnRoundStarted()		{ }		// After players are spawned in the new round
-	virtual void OnRoundEnded()			{ }		// After the round timer ends
-	virtual void OnMatchEnded()			{ }		// After the last round's intermission time is over
-	virtual void OnGameplayUnloaded()	{ }		// When gameplay is unloaded
+	virtual void OnGameplayEvent( GPEvent event )=0;
 };
 
 
@@ -129,77 +123,106 @@ public:
 	CGEBaseGameplayManager();
 	~CGEBaseGameplayManager();
 
-	virtual bool SetGamePlay( const char* szIdent )=0;
-	virtual CGEBaseScenario* GetScenario( void )=0;
-
+// Abstract methods to access Python Manager implementation
+protected:
+	// Internal loader for scenarios
+	virtual bool DoLoadScenario( const char *ident )=0;
+public:
+	virtual CGEBaseScenario* GetScenario()=0;
+	virtual bool IsValidScenario()=0;
+// End Abstract
+	
 	virtual void Init();
 	virtual void Shutdown();
 
-	virtual void BroadcastGamePlay( void );
-	virtual void BroadcastRoundStart( void );
-	virtual void BroadcastRoundEnd( void );
+	// Loads the next scenario to play
+	bool LoadScenario();
+	// Loads the named scenario to play
+	bool LoadScenario( const char *ident );
 
-	virtual void SetIntermission(bool state)	{ m_bRoundIntermission = state; }
-	virtual bool IsInRoundIntermission( void )	{ return m_bRoundIntermission; }
-	virtual float GetRemainingIntermission( void );
+	// Round controls (does not check conditions)
+	void StartRound();
+	void EndRound( bool showreport = true );
 
-	void SetFirstLoad( bool state )			{ m_bFirstLoad = state; }
-	
-	void SetState(GES_GAMESTATE iState, bool forcenow = false);
-	bool IsInState( GES_GAMESTATE iState )	{ return iState == m_iGameState; }
-	GES_GAMESTATE GetState()				{ return m_iGameState; }
-	
+	// Match controls (does not check conditions)
+	void StartMatch();
+	void EndMatch();
+
+	// Round state checks
+	bool IsInRound();
+	int  GetRoundCount()	{ return m_iRoundCount; }
+
+	// Round locking [TODO: Move into Python Scenario]
 	void SetRoundLocked( bool state )	{ m_bRoundLocked = state; }
 	bool IsRoundLocked()				{ return m_bRoundLocked; }
-	bool IsRoundStarted()				{ return m_bInRound; }
-	int  GetNumRounds()					{ return m_iRoundCount; }
-
-	void DisableRoundScoring()			{ m_bDoRoundScores = false; }
-
+	
+	// Intermission checks
+	bool IsInIntermission();
+	bool IsInRoundIntermission();
+	bool IsInFinalIntermission();
+	bool IsGameOver()				{ return m_bGameOver; }
+	float GetRemainingIntermission();
+	
 	void LoadGamePlayList( const char* path );
 	void PrintGamePlayList();
 	// Merely verifies that the python file exists
 	bool IsValidGamePlay( const char *ident );
 
-	// Gameplay cycle management
-	void OnLoadGamePlay( void );
-	void OnUnloadGamePlay( void );
 	void OnThink();
 
-	void PreRoundBegin();
-	void PostRoundBegin();
-
-	// Event management
-	static void ClearEventListeners();
-
-	// Flow control
-	bool SetGamePlayOrdered();
-	bool SetGamePlayRandom();
-
 protected:
-	CGEBaseGameplayManager( const CGEBaseGameplayManager& ) { };
+	// Return the next scenario to load
+	const char *GetNextScenario();
 
-	void LoadGamePlayCycle();
-	void ResetGameState( void );
-	bool ShouldEndRound( void );
+private:
+	// Gameplay cycle management
+	void InitScenario();
+	void ShutdownScenario();
 
+	void BroadcastMatchStart();
+	void BroadcastRoundStart();
+	void BroadcastRoundEnd( bool showreport );
+	void BroadcastMatchEnd();
+
+	bool ShouldEndRound();
+	bool ShouldEndMatch();
+
+	void LoadScenarioCycle();
+	void ResetState();
+	void ResetGameState();
+
+	// Round State enum for tracking
+	enum RoundState {
+		NONE,  // No state yet, this is the null condition
+		PRE_START, // First round is ready to start
+		PLAYING,  // Round is being played (timer active)
+		INTERMISSION, // In an intermission (timer inactive)
+		GAME_OVER,  // The match is over, waiting to change map
+	};
+
+	// Think Timer
 	float m_flNextThink;
 
-	bool m_bFirstLoad;
-	bool m_bInReload;
-	bool m_bRoundIntermission;
-	bool m_bDoRoundScores;
-	bool m_bRoundLocked;
-	bool m_bInRound;
-	int	 m_iRoundCount;
+	// Round and Match Timers
 	float m_flRoundStart;
+	float m_flMatchStart;
+	
+	// Round state tracker
+	int m_iRoundState;
+	int	m_iRoundCount;
+	bool m_bRoundLocked;
+	bool m_bGameOver;	// Set only when you call EndMatch(), indicates map change is coming
+	float m_flIntermissionEndTime;
+	
+	CUtlVector<char*> m_vScenarioList;
+	CUtlVector<char*> m_vScenarioCycle;
 
-	GES_GAMESTATE m_iGameState;
-
-	CUtlVector<char*> m_vGamePlayList;
-	CUtlVector<char*> m_vCycleList;
+protected:
+	// To satisfy Boost::Python requirements of a wrapper
+	CGEBaseGameplayManager( const CGEBaseGameplayManager& ) { };
 };
 
 extern CGEBaseGameplayManager* GEGameplay();
+extern CGEBaseScenario *GetScenario();
 
 #endif //MC_GE_GAMEPLAY_H

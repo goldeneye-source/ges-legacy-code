@@ -83,11 +83,11 @@ void CGESpectatorGUI::Update()
 	GetHudSize(wide, tall);
 	m_pTopBar->GetBounds( bx, by, bwide, btall );
 
-	int specmode = GetSpectatorMode();
-	m_pPlayerLabel->SetVisible( ShouldShowPlayerLabel(specmode) );
+	bool show_player = ShouldShowPlayerLabel( GetSpectatorMode() );
+	m_pPlayerLabel->SetVisible( show_player );
 
 	// Update player name field
-	if ( m_hLastSpecTarget.IsValid() && GEPlayerRes() )
+	if ( show_player && GEPlayerRes() )
 	{
 		C_GEPlayer *pObserved = ToGEPlayer( m_hLastSpecTarget.Get() );
 		if ( pObserved )
@@ -112,10 +112,10 @@ void CGESpectatorGUI::Update()
 			int health = 0, armor = 0;
 
 			if ( pObserved->GetMaxHealth() > 0 )
-				health = (int) ((float) max(pObserved->GetHealth(), 0) / pObserved->GetMaxHealth() ) * 100;
+				health = (int) ((float) max(pObserved->GetHealth(), 0) * 100.0f / pObserved->GetMaxHealth() );
 
 			if ( pObserved->GetMaxArmor() > 0 )
-				armor = (int) ((float) max(pObserved->GetArmor(), 0) / pObserved->GetMaxArmor() ) * 100;
+				armor = (int) ((float) max(pObserved->GetArmor(), 0) * 100.0f / pObserved->GetMaxArmor() );
 
 			// Build the localization string (we use %%%% due to key binding syntax...)
 			char label_text[128] = "";

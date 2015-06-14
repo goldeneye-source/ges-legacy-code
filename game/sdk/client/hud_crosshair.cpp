@@ -58,6 +58,11 @@ void CHudCrosshair::ApplySchemeSettings( IScheme *scheme )
 //-----------------------------------------------------------------------------
 bool CHudCrosshair::ShouldDraw( void )
 {
+#ifdef GE_DLL
+	// GE:S handles it's own crosshair
+	return false;
+#endif
+
 	bool bNeedsDraw;
 
 	if ( m_bHideCrosshair )

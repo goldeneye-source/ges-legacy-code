@@ -39,20 +39,19 @@ private:
 
 public:
 	CGETeamMenu(IViewPort *pViewPort);
-	virtual ~CGETeamMenu();
 
-	virtual const char *GetName( void ) { return PANEL_TEAM; }
+	virtual const char *GetName() { return PANEL_TEAM; }
 	virtual void SetData( KeyValues *data ) {};
 	virtual void Reset() {};
 	virtual void Update();
-	virtual bool NeedsUpdate( void ) { return false; }
-	virtual bool HasInputElements( void ) { return true; }
+	virtual bool NeedsUpdate();
+	virtual bool HasInputElements() { return true; }
 	virtual void ShowPanel( bool bShow );
 
 	virtual void OnGameplayDataUpdate();
 
 	// both vgui::Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
-	vgui::VPANEL GetVPanel( void ) { return BaseClass::GetVPanel(); }
+	vgui::VPANEL GetVPanel() { return BaseClass::GetVPanel(); }
   	virtual bool IsVisible() { return BaseClass::IsVisible(); }
 	virtual void SetParent( vgui::VPANEL parent ) { BaseClass::SetParent( parent ); }
 	
@@ -63,10 +62,8 @@ protected:
 
 	virtual void FireGameEvent( IGameEvent *pEvent );
 
-	virtual void OnThink( void );
-
 	// helper functions
-	virtual void MakeTeamButtons( void );
+	virtual void MakeTeamButtons();
 	virtual vgui::Button *AddButton( const wchar_t *label, int iTeam );
 	virtual vgui::Button *AddButton( const char* label, int iTeam );
 	virtual void ServerOptAdder( const char* name, void *value, int type );
@@ -74,20 +71,18 @@ protected:
 	virtual void SetMapName( const char* name );
 
 	// MOTD functions
-	virtual void ShowMOTD( void );
+	virtual void ShowMOTD();
 	virtual void ShowFile( const char *filename);
 	virtual void ShowURL( const char *URL);
 
-	virtual void CreateServerOptText( void );
+	virtual void CreateServerOptText();
 
 	IViewPort					*m_pViewPort;
 	vgui::HTML					*m_pHTMLMessage;
 	vgui::PanelListPanel		*m_pTeamButtonList;
 	vgui::SectionedListPanel	*m_pServerOptList;
 
-	bool		m_bTeamButtonsUpdated;
 	bool		m_bTeamplay;
-	float		m_flNextThink;
 	float		m_flNextUpdateTime;
 
 	char		m_szGameMode[64];

@@ -24,6 +24,7 @@ IMPLEMENT_SERVERCLASS_ST( CGEGameplayResource, DT_GEGameplayResource )
 	SendPropBool( SENDINFO(m_GameplayOfficial) ),
 	SendPropInt( SENDINFO(m_GameplayRoundNum) ),
 	SendPropFloat( SENDINFO(m_GameplayRoundStart) ),
+	SendPropBool( SENDINFO(m_GameplayIntermission) ),
 	// Loadout Data
 	SendPropString( SENDINFO(m_LoadoutIdent) ),
 	SendPropString( SENDINFO(m_LoadoutName) ),
@@ -51,23 +52,31 @@ int CGEGameplayResource::UpdateTransmitState()
 	return SetTransmitState( FL_EDICT_ALWAYS );
 }
 
-void CGEGameplayResource::OnGameplayLoaded( void )
+void CGEGameplayResource::OnGameplayEvent( GPEvent event )
 {
-	CGEBaseScenario *pScenario = GEGameplay()->GetScenario();
-	if ( !pScenario )
-		return;
+	if ( event == SCENARIO_INIT )
+	{
+		CGEBaseScenario *pScenario = GEGameplay()->GetScenario();
+		if ( !pScenario )
+			return;
 
-	Q_strncpy( m_GameplayIdent.GetForModify(), pScenario->GetIdent(),	  32 );
-	Q_strncpy( m_GameplayName.GetForModify(),  pScenario->GetPrintName(), 64 );
-	m_GameplayHelp = pScenario->GetHelpString();
-	m_GameplayOfficial = pScenario->IsOfficial();
-	m_GameplayRoundNum = 0;
-}
-
-void CGEGameplayResource::OnRoundStarted( void )
-{
-	m_GameplayRoundStart = gpGlobals->curtime;
-	m_GameplayRoundNum++;
+		Q_strncpy( m_GameplayIdent.GetForModify(), pScenario->GetIdent(),	  32 );
+		Q_strncpy( m_GameplayName.GetForModify(),  pScenario->GetPrintName(), 64 );
+		m_GameplayHelp = pScenario->GetHelpString();
+		m_GameplayOfficial = pScenario->IsOfficial();
+		m_GameplayIntermission = true;
+		m_GameplayRoundNum = 0;
+	}
+	else if ( event == ROUND_START )
+	{
+		m_GameplayIntermission = false;
+		m_GameplayRoundStart = gpGlobals->curtime;
+		m_GameplayRoundNum++;
+	}
+	else if ( event == ROUND_END || event == MATCH_END )
+	{
+		m_GameplayIntermission = true;
+	}
 }
 
 void CGEGameplayResource::OnLoadoutChanged( const char *ident, const char *name, CUtlVector<int>& weapons )

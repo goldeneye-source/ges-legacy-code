@@ -148,7 +148,7 @@ void CGELoadout::PrintList()
 	DevMsg( "--- Weapon List For %s ---\n", GetPrintName() );
 
 	for ( int i=0; i < MAX_WEAPON_SPAWN_SLOTS; i++ )
-		DevMsg( "[%d]\n", WeaponIDToAlias( GetWeapon(i) ) );	
+		DevMsg( "  %s\n", WeaponIDToAlias( GetWeapon(i) ) );	
 }
 
 void CGELoadout::SwitchActiveWeapon( int slot )

@@ -83,6 +83,45 @@ private: // required holder implementation
     Held m_held;
 };
 
+template <class Value>
+struct value_holder_custom : instance_holder
+{
+	typedef Value held_type;
+	typedef Value value_type;
+
+	static void* allocate(PyObject*p, std::size_t offset, std::size_t size)
+	{
+		return held_type::PyAllocate(p, offset, size);
+	}
+
+	void release(PyObject*p, void* storage)
+	{
+		this->~value_holder_custom();
+		held_type::PyDeallocate(p, storage);
+	}
+
+	// Forward construction to the held object
+#  define BOOST_PP_ITERATION_PARAMS_1 (4, (0, BOOST_PYTHON_MAX_ARITY, <boost/python/object/value_holder.hpp>, 3))
+#  include BOOST_PP_ITERATE()
+
+private: // required holder implementation
+	void* holds(type_info, bool null_ptr_only);
+
+	template <class T>
+	inline void* holds_wrapped(type_info dst_t, wrapper<T>*,T* p)
+	{
+		return python::type_id<T>() == dst_t ? p : 0;
+	}
+
+	inline void* holds_wrapped(type_info, ...)
+	{
+		return 0;
+	}
+private: // data members
+	Value m_held;
+};
+
+
 #  undef BOOST_PYTHON_UNFORWARD_LOCAL
 
 template <class Value>
@@ -110,6 +149,18 @@ void* value_holder_back_reference<Value,Held>::holds(
     else
         return find_static_type(x, src_t, dst_t);
 }
+
+template <class Value>
+void* value_holder_custom<Value>::holds(type_info dst_t, bool /*null_ptr_only*/)
+{
+	if (void* wrapped = holds_wrapped(dst_t, boost::addressof(m_held), boost::addressof(m_held)))
+		return wrapped;
+
+	type_info src_t = python::type_id<Value>();
+	return src_t == dst_t ? boost::addressof(m_held)
+		: find_static_type(boost::addressof(m_held), src_t, dst_t);
+}
+
 
 }}} // namespace boost::python::objects
 
@@ -163,6 +214,28 @@ void* value_holder_back_reference<Value,Held>::holds(
             )
     {
     }
+
+# undef N
+
+#elif BOOST_PP_ITERATION_DEPTH() == 1 && BOOST_PP_ITERATION_FLAGS() == 3
+# if !(BOOST_WORKAROUND(__MWERKS__, > 0x3100)                      \
+	&& BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3201)))
+#  line BOOST_PP_LINE(__LINE__, value_holder.hpp(value_holder_back_reference))
+# endif
+
+# define N BOOST_PP_ITERATION()
+
+# if (N != 0)
+template <BOOST_PP_ENUM_PARAMS_Z(1, N, class A)>
+# endif
+value_holder_custom(
+			 PyObject* self BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_BINARY_PARAMS_Z(1, N, A, a))
+			 : m_held(
+			 BOOST_PP_REPEAT_1ST(N, BOOST_PYTHON_UNFORWARD_LOCAL, nil)
+			 )
+{
+	python::detail::initialize_wrapper(self, boost::addressof(this->m_held));
+}
 
 # undef N
 

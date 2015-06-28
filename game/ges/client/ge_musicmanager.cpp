@@ -289,42 +289,41 @@ void CGEMusicManager::InternalLoadPlaylist( void )
 			// If we fail to load the level music, try the default mix
 			Q_snprintf( sz, sizeof(sz), "scripts/music/level_music_%s", GE_MUSIC_DEFAULT );
 			pKV = ReadEncryptedKVFile( filesystem, sz, NULL );
-
-			// If we fail the default, don't play anything...
-			if ( !pKV )
-				return;
 		}
 
-		// Always add the default soundscape entry
-		m_Playlists.Insert( GE_MUSIC_DEFAULTSCAPE, new CUtlVector<char*>() );
-
-		// Start the file parse
-		KeyValues *pKey = pKV->GetFirstSubKey();
-		while( pKey )
+		if ( pKV )
 		{
-			if ( !Q_stricmp( pKey->GetName(), "file" ) && !pKey->GetFirstSubKey() )
-			{
-				// A bare "file" key means add it to the default list
-				AddSong( pKey->GetString(), GE_MUSIC_DEFAULTSCAPE );
-			}
-			else if ( pKey->GetFirstSubKey() )
-			{
-				// We encountered a soundscape entry
-				const char *soundscape = pKey->GetName();
+			// Always add the default soundscape entry
+			m_Playlists.Insert( GE_MUSIC_DEFAULTSCAPE, new CUtlVector<char*>() );
 
-				KeyValues *pFile = pKey->GetFirstSubKey();
-				while ( pFile )
+			// Start the file parse
+			KeyValues *pKey = pKV->GetFirstSubKey();
+			while( pKey )
+			{
+				if ( !Q_stricmp( pKey->GetName(), "file" ) && !pKey->GetFirstSubKey() )
 				{
-					if ( !Q_stricmp( pFile->GetName(), "file" ) )
-						AddSong( pFile->GetString(), soundscape );
-					pFile = pFile->GetNextKey();
+					// A bare "file" key means add it to the default list
+					AddSong( pKey->GetString(), GE_MUSIC_DEFAULTSCAPE );
 				}
+				else if ( pKey->GetFirstSubKey() )
+				{
+					// We encountered a soundscape entry
+					const char *soundscape = pKey->GetName();
+
+					KeyValues *pFile = pKey->GetFirstSubKey();
+					while ( pFile )
+					{
+						if ( !Q_stricmp( pFile->GetName(), "file" ) )
+							AddSong( pFile->GetString(), soundscape );
+						pFile = pFile->GetNextKey();
+					}
+				}
+
+				pKey = pKey->GetNextKey();
 			}
 
-			pKey = pKey->GetNextKey();
+			DevMsg( 2, "[FMOD] Loaded playlist %s\n", sz );
 		}
-
-		DevMsg( 2, "[FMOD] Loaded playlist %s\n", sz );
 	}
 
 	m_fNextSongTime = 0;

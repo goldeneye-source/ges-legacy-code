@@ -14,12 +14,6 @@
 #define GE_PUSHAWAY_THINK_INTERVAL		(1.0f / 20.0f)
 #include "studio.h"
 
-#ifdef CLIENT_DLL
-	#include "c_ge_player.h"
-#else
-	#include "ge_player.h"
-#endif
-
 #if defined( CLIENT_DLL )
 	#define CGEPlayer C_GEPlayer
 	#define CGEMPPlayer C_GEMPPlayer

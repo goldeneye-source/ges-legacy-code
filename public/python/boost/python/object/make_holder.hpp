@@ -31,6 +31,14 @@
 
 #  include <cstddef>
 
+# include <boost/mpl/if.hpp>
+# include <boost/type_traits/is_base_of.hpp>
+# include <boost/python/object/value_holder.hpp>
+
+// List of forward declarations that have custom memory allocation.
+class IClientEntity;
+class IServerEntity;
+
 namespace boost { namespace python { namespace objects {
 
 template <int nargs> struct make_holder;
@@ -88,15 +96,30 @@ struct make_holder<N>
 #endif
             BOOST_PP_ENUM_TRAILING_BINARY_PARAMS_Z(1, N, t, a))
         {
-            typedef instance<Holder> instance_t;
-            
-            void* memory = Holder::allocate(p, offsetof(instance_t, storage), sizeof(Holder));
+			typedef is_base_of<IClientEntity, typename Holder::value_type> is_IClientEntity;
+			typedef is_base_of<IServerEntity, typename Holder::value_type> is_IServerEntity;
+
+			typedef typename mpl::if_<
+				is_IClientEntity
+				, value_holder_custom<typename Holder::value_type>
+				, Holder
+			>::type NewHolder;
+
+			typedef typename mpl::if_<
+				is_IServerEntity
+				, value_holder_custom<typename Holder::value_type>
+				, NewHolder
+			>::type NewHolder2;
+
+            typedef instance<NewHolder2> instance_t;
+
+            void* memory = NewHolder2::allocate(p, offsetof(instance_t, storage), sizeof(NewHolder2));
             try {
-                (new (memory) Holder(
+                (new (memory) NewHolder2(
                     p BOOST_PP_REPEAT_1ST(N, BOOST_PYTHON_DO_FORWARD_ARG, nil)))->install(p);
             }
             catch(...) {
-                Holder::deallocate(p, memory);
+                NewHolder2::deallocate(p, memory);
                 throw;
             }
         }

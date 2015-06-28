@@ -7,12 +7,6 @@
 	#pragma warning(disable : 4217)
 #endif
 
-// Store the value of _DEBUG for resetting after boost load
-#ifdef _DEBUG
-#	define REDEFDEBUG
-#	define BOOST_DEBUG_PYTHON
-#endif
-
 #include "cbase.h"
 
 // Undefine max/min
@@ -26,16 +20,6 @@
 
 #include <boost/python.hpp>
 namespace bp = boost::python;
-
-// Remove any setting to _DEBUG from the boost stuff
-#ifdef _DEBUG
-	#undef _DEBUG
-#endif
-
-// Redefine the previous setting of _DEBUG
-#ifdef REDEFDEBUG
-	#define _DEBUG 1
-#endif
 
 // Functions that can be hooked are exposed in the GEGlobal module
 // Registering a hook is done in GEUtil module

@@ -3526,5 +3526,11 @@
     <Library Include="..\lib\public\vstdlib.lib">
       <Filter>Link Libraries</Filter>
     </Library>
+    <Library Include="..\lib\python\boost_python.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\lib\python\python34.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
   </ItemGroup>
 </Project>

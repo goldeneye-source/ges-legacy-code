@@ -9,9 +9,6 @@
 /////////////////////////////////////////////////////////////////////////////'
 #ifndef GE_UTILS_H
 #define GE_UTILS_H
-#ifdef _WIN32
-#pragma once
-#endif
 
 #include "mathlib/IceKey.H"
 #include "filesystem.h"
@@ -72,6 +69,8 @@ void pyShowPopupHelpTeam( int team, const char *title, const char *msg, const ch
 bool GEUTIL_IsValidColorHint( int ch );
 char *GEUTIL_RemoveColorHints( char *src );
 wchar_t *GEUTIL_RemoveColorHints( wchar_t *src );
+
+void GEUTIL_StripWhitespace( char *str );
 
 // Delays removal of the given entity by the given time in seconds
 // it hides the entity from everyone until removal time

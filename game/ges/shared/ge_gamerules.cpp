@@ -150,7 +150,7 @@ void OnVersionLoad( const char *result, const char *error )
 				Warning( "=====================================================================\n" );
 				Warning( "              GoldenEye: Source Update Available\n" );
 				Warning( "There is a new version of GES available for download!\n" );
-				Warning( "Your Version: %s\n", ges_version_text );
+				Warning( "Your Version: %s\n", ges_version_text.ToCStr() );
 				Warning( "New Version: %s\n", kv->GetString("version") );
 				Warning( "Download: %s\n", kv->GetString("server_mirror") );
 				Warning( "=====================================================================\n" );
@@ -161,7 +161,7 @@ void OnVersionLoad( const char *result, const char *error )
 		kv->deleteThis();
 	}
 
-	// NOTE: We leave the reqeust object in memory
+	// NOTE: We leave the request object in memory
 }
 #endif
 
@@ -688,7 +688,6 @@ int CGERules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
 	return GR_NOTTEAMMATE;
 }
 
-extern void StripChar(char *szBuffer, const char cWhiteSpace );
 void CGERules::LoadMapCycle()
 {
 		const char *mapcfile = mapcyclefile.GetString();
@@ -730,8 +729,7 @@ void CGERules::LoadMapCycle()
 						bool bIgnore = false;
 
 						// Strip out the spaces in the name
-						StripChar( m_MapList[i] , '\r');
-						StripChar( m_MapList[i] , ' ');
+						GEUTIL_StripWhitespace( m_MapList[i] );
 						
 						if ( !engine->IsMapValid( m_MapList[i] ) )
 						{

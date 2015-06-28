@@ -697,17 +697,17 @@ void CGEMPPlayer::ChangeTeam( int iTeam, bool bWasForced /* = false */ )
 		if ( GEMPRules()->IsTeamplay() )
 		{
 			char msg[128];
-			char *teamimg = (iTeam == TEAM_MI6 ? "team_mi6" : "team_janus");
+			const char *teaming = (iTeam == TEAM_MI6 ? "team_mi6" : "team_janus");
 			if ( bWasForced )
 			{
 				Q_snprintf( msg, 128, "#GES_GPH_AUTOTEAM\r%s", GetTeam()->GetName() );
-				ShowTeamNotice( "#GES_GPH_AUTOTEAM_TITLE", msg, teamimg );
+				ShowTeamNotice( "#GES_GPH_AUTOTEAM_TITLE", msg, teaming );
 				m_iAutoTeamSwaps++;
 			}
 			else
 			{
 				Q_snprintf( msg, 128, "#GES_GPH_JOINTEAM\r%s", GetTeam()->GetName() );
-				ShowTeamNotice( "#GES_GPH_JOINTEAM_TITLE", msg, teamimg );
+				ShowTeamNotice( "#GES_GPH_JOINTEAM_TITLE", msg, teaming );
 				m_iAutoTeamSwaps = 0;
 				m_flTeamJoinTime = gpGlobals->curtime;
 			}

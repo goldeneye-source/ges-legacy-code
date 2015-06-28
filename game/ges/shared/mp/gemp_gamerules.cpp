@@ -399,6 +399,7 @@ CGEMPRules::CGEMPRules()
 	// Load our bot names
 	g_vBotNames.RemoveAll();
 	CUtlBuffer buf;
+	buf.SetBufferType( true, false );
 	if ( filesystem->ReadFile( "scripts/bot_names.txt", "MOD", buf ) )
 	{
 		char line[32];

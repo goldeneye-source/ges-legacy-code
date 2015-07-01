@@ -256,12 +256,12 @@ void CGEPlayer::PostThink( void )
 		if ( GetHealth() < (GetMaxHealth() / 2) )
 			flTime += 0.006f * (((float)GetMaxHealth() / 2.0f) - GetHealth());
 		
-		StartInvul( flTime );
+	//	StartInvul( flTime );
 	}
 	else if ( m_pCurrAttacker == this )
 	{
 		// If we hurt ourselves give us half the normal invuln time
-		StartInvul( 0.33f );
+	//	StartInvul( 0.33f );
 	}
 
 	// Clamp force on alive players to 1000
@@ -321,14 +321,15 @@ bool CGEPlayer::ShouldRunRateLimitedCommand( const CCommand &args )
 int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 {
 	// Reset invulnerability if we take world or self damage
-	if ( inputinfo.GetAttacker()->IsWorld() || inputinfo.GetAttacker() == this || Q_stristr("trigger_", inputinfo.GetAttacker()->GetClassname()) )
-		StopInvul();
+
+	//-if ( inputinfo.GetAttacker()->IsWorld() || inputinfo.GetAttacker() == this || Q_stristr("trigger_", inputinfo.GetAttacker()->GetClassname()) )
+	//-	StopInvul();
 
 	int dmg = BaseClass::OnTakeDamage(inputinfo);
 
 	// Did we accumulate more damage?
-	if ( m_iDmgTakenThisFrame < (m_DmgTake + m_DmgSave) )
-	{
+	//-if ( m_iDmgTakenThisFrame < (m_DmgTake + m_DmgSave) )
+	//-{
 		// Record our attacker
 		m_pCurrAttacker = inputinfo.GetAttacker();
 
@@ -351,6 +352,11 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 		angles.y *= -0.030f;
 		angles.z *= 0.025f;
 		angles.x *= -0.0375f;
+
+		// Scale the punch again for testing
+		angles.y *= 0.3f;
+		angles.z *= 0.3f;
+		angles.x *= 0.3f;
 
 		float aimscale = IsInAimMode() ? 0.3f : 1.0f;
 
@@ -405,11 +411,11 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 			event->SetBool( "penetrated", FBitSet(inputinfo.GetDamageStats(), FIRE_BULLETS_PENETRATED_SHOT)?true:false );
 			gameeventmanager->FireEvent( event );
 		}
-	}
-	else
-	{
-		DevMsg( "%s's invulnerability blocked that hit!\n", GetPlayerName() );
-	}
+	//-}
+	//-else
+	//-{
+	//-	DevMsg( "%s's invulnerability blocked that hit!\n", GetPlayerName() );
+	//-}
 
 	return dmg;
 }

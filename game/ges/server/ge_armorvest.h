@@ -29,6 +29,7 @@ public:
 
 	virtual void ItemTouch( CBaseEntity *pEntity );
 	virtual bool MyTouch( CBasePlayer *pPlayer );
+	int CalcSpawnProgress();
 
 	void SetEnabled( bool state );
 	bool IsEnabled() { return m_bEnabled; }
@@ -44,6 +45,8 @@ protected:
 
 private:
 	int		m_iAmount;
+	int		m_iSpawnpoints;
+	int		m_iSpawnpointsgoal;
 	bool	m_bEnabled;
 };
 

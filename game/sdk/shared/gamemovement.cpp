@@ -2394,8 +2394,8 @@ bool CGameMovement::CheckJumpButton( void )
 	}
 
 #ifdef GE_DLL
-	if ( !ge_allowjump.GetBool() || (((CGEPlayer*)player)->IsMPPlayer() && gpGlobals->curtime < ((CGEMPPlayer*)player)->GetNextJumpTime()) )
-		return false;
+	//if ( !ge_allowjump.GetBool() || (((CGEPlayer*)player)->IsMPPlayer() && gpGlobals->curtime < ((CGEMPPlayer*)player)->GetNextJumpTime()) )
+	//	return false;
 #endif
 
 	// See if we are waterjumping.  If so, decrement count and return.

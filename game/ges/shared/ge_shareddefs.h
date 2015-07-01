@@ -303,8 +303,8 @@ const int MAX_HEALTH = 160;
 const float STARTING_ARMOR = 0;
 const float MAX_ARMOR = 160;
 
-#define GE_NORM_SPEED	172
-#define GE_AIMED_SPEED	90
+#define GE_NORM_SPEED	200
+#define GE_AIMED_SPEED	110
 
 #ifdef GAME_DLL
 	typedef enum

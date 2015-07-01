@@ -223,7 +223,7 @@ void CGEShell::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 #endif
 
 	// Set our final velocity based on the calcs above
-	PhysCallbackSetVelocity( pEvent->pObjects[index], vecCalcVelocity );
+	//PhysCallbackSetVelocity( pEvent->pObjects[index], vecCalcVelocity );
 	
 	// Update our bounce count
 	++m_iBounceCount;

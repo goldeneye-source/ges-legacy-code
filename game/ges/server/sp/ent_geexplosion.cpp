@@ -268,7 +268,7 @@ void CGE_Explosion::Think()
 		}
 
 		// Apply another round of damage in 1/3 of a second
-		SetNextThink( gpGlobals->curtime + 0.25f );
+		SetNextThink( gpGlobals->curtime + 0.75f );
 	}
 	else
 	{

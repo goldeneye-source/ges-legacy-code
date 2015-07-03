@@ -68,22 +68,35 @@ void CGEArmorVest::Precache( void )
 	BaseClass::Precache();
 }
 
-CBaseEntity *CGEArmorVest::Respawn( void )
+CBaseEntity *CGEArmorVest::Respawn(void)
 {
-	 BaseClass::Respawn();
-	 SetNextThink( gpGlobals->curtime + GEMPRules()->FlArmorRespawnTime(this) );
-	 return this;
+	BaseClass::Respawn();
+	m_iSpawnpointsgoal = (int)(120 - 15 * sqrt((float)GEMPRules()->GetNumAlivePlayers()));
+	m_iSpawnpoints = 0;
+	SetNextThink(gpGlobals->curtime + 1);
+	return this;
 }
 
-void CGEArmorVest::Materialize( void )
+void CGEArmorVest::Materialize(void)
 {
-	// Only materialize if we are enabled and allowed
-	if ( GEMPRules()->ArmorShouldRespawn() && m_bEnabled )
+	// I repurposed the respawn -> materalize loop to demo the dynamic respawn concept.
+	// May cause issues, create seperate loop if so.
+
+	m_iSpawnpoints += CalcSpawnProgress();
+	DevMsg("Armor progress is %d out of %d\n", m_iSpawnpoints, m_iSpawnpointsgoal);
+
+	if (m_iSpawnpointsgoal < m_iSpawnpoints)
 	{
-		BaseClass::Materialize();
-		// Override base's ItemTouch for NPC's
-		SetTouch( &CGEArmorVest::ItemTouch );
+		// Only materialize if we are enabled and allowed
+		if (GEMPRules()->ArmorShouldRespawn() && m_bEnabled)
+		{
+			BaseClass::Materialize();
+			// Override base's ItemTouch for NPC's
+			SetTouch(&CGEArmorVest::ItemTouch);
+		}
 	}
+	else
+		SetNextThink(gpGlobals->curtime + 1);
 }
 
 void CGEArmorVest::ItemTouch( CBaseEntity *pOther )
@@ -124,6 +137,38 @@ bool CGEArmorVest::MyTouch( CBasePlayer *pPlayer )
 		return false;
 
 	return pGEPlayer->AddArmor(m_iAmount) || GERules()->ShouldForcePickup(pPlayer, this);
+}
+
+
+// Finds two different values and uses them to compute a point total
+// The first is a point value based on how many players are in range and how close they are.
+// The second is the distance between the vest and the closest player.
+
+// The closer the closest player is, the slower the armor will respawn.
+// However, the weighted average of all the other nearby players can serve to counteract this.
+// This means that heavily contested armor spawns still appear fairly frequently.
+// A player within 64 units will completely freeze the timer, however.
+
+int CGEArmorVest::CalcSpawnProgress()
+{
+	float closestlength = 262144;
+	float currentlength = 0;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CGEMPPlayer *pPlayer = ToGEMPPlayer(UTIL_PlayerByIndex(i));
+		if (pPlayer && pPlayer->IsConnected())
+		{
+			currentlength = (pPlayer->GetAbsOrigin() - GetAbsOrigin()).LengthSqr();
+			if (currentlength < closestlength)
+				closestlength = currentlength;
+		}
+	}
+
+
+	// Ticks up at 4 points at minimum and 10 points at maximum.  Linear falloff.
+	return (int)min((sqrt(closestlength)) / 84 + 4, 10);
+
 }
 
 void CGEArmorVest::OnEnabled( void )

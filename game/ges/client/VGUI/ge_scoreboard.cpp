@@ -289,16 +289,16 @@ void CGEScoreBoard::UpdateSpectatorList( void )
 	if ( !specTeam || !spectators )
 		return;
 
-	char szSpecNames[1024];
+	wchar_t wszSpecNames[1024];
 	int iPlayers = specTeam->Get_Number_Players();
-	szSpecNames[0] = '\0';
+	wszSpecNames[0] = 0;
 
 	if ( iPlayers > 0 )
 	{
 		char name[64];
 		wchar_t wszNames[1024];
 		wchar_t wszPlayer[MAX_PLAYER_NAME_LENGTH];
-		wszNames[0] = '\0';
+		wszNames[0] = 0;
 
 		// Parse out the spectators' names into a list
 		for ( int i=0; i < iPlayers; i++ )
@@ -312,14 +312,10 @@ void CGEScoreBoard::UpdateSpectatorList( void )
 		}
 		
 		// Smash the spectator name list into our localization
-		wchar_t wszString[1024];
-		g_pVGuiLocalize->ConstructString( wszString, sizeof(wszString), g_pVGuiLocalize->Find("#ScoreBoard_Spectators"), 1, wszNames );
-
-		// Finally convert us back into a char string
-		g_pVGuiLocalize->ConvertUnicodeToANSI( wszString, szSpecNames, 1024 );
+		g_pVGuiLocalize->ConstructString(wszSpecNames, sizeof(wszSpecNames), g_pVGuiLocalize->Find("#ScoreBoard_Spectators"), 1, wszNames);
 	}
 
-	PostMessage( spectators, new KeyValues( "SetText", "text", szSpecNames ) );
+	PostMessage(spectators, new KeyValues("SetText", "text", wszSpecNames));
 
 	IScheme *pScheme = scheme()->GetIScheme( GetScheme() );
 	spectators->SetFgColor( pScheme->GetColor( "Scoreboard_Spectators", Color(100,100,100,200) ) );

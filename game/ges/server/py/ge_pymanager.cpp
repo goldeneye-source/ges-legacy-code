@@ -71,8 +71,11 @@ PyAPI_DATA(int) Py_NoSiteFlag;
 void CPythonManager::InitDll()
 {
 	// Only init once!
-	if ( m_bInit )
+	if (m_bInit)
+	{
+		Warning("[GESPy] Attempted to initialize python more than once!\n");
 		return;
+	}
 
 	try
 	{
@@ -135,8 +138,11 @@ void CPythonManager::InitDll()
 void CPythonManager::ShutdownDll()
 {
 	// We can't shutdown if we didn't init
-	if ( !m_bInit )
+	if (m_bInit)
+	{
+		Warning("[GESPy] Attempted to shutdown python before initialization!\n");
 		return;
+	}
 
 	// Let everyone know we are going down
 	NotifyShutdown();

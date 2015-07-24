@@ -215,7 +215,7 @@ private:
 	float m_flIntermissionEndTime;
 	
 	CUtlVector<char*> m_vScenarioList;
-	CUtlVector<char*> m_vScenarioCycle;
+	CUtlVector<string_t> m_vScenarioCycle;
 
 protected:
 	// To satisfy Boost::Python requirements of a wrapper

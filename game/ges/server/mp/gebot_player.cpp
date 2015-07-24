@@ -569,12 +569,9 @@ void CGEBotPlayer::GiveDefaultItems( void )
 
 	const CGELoadout *loadout = GEMPRules()->GetLoadoutManager()->CurrLoadout();
 	if ( loadout )
-	{
-		if ( ge_startarmed.GetInt() >= 1 )
-			pGivenWeapon = m_pNPC->GiveNamedItem( "weapon_knife" );			
-
+	{		
 		// Give the weakest weapon in our set if more conditions are met
-		if ( ge_startarmed.GetInt() >= 2 )
+		if ( ge_startarmed.GetInt() >= 1 )
 		{
 			int wID = loadout->GetFirstWeapon();
 			int aID = GetAmmoDef()->Index( GetAmmoForWeapon(wID) );
@@ -583,6 +580,9 @@ void CGEBotPlayer::GiveDefaultItems( void )
 			m_pNPC->GiveAmmo( GetAmmoDef()->CrateAmount(aID), aID );
 			pGivenWeapon = m_pNPC->GiveNamedItem( WeaponIDToAlias(wID) );
 		}
+
+		if (ge_startarmed.GetInt() >= 2)
+			pGivenWeapon = m_pNPC->GiveNamedItem("weapon_knife");
 	} 
 	else
 	{

@@ -579,13 +579,24 @@ void CBaseEntity::HandleBulletPenetration( CBaseCombatWeapon *pWeapon, const Fir
 	if ( info.m_flPenetrateDepth < 1.0f )
 		return;
 
+	// Also give up if trace is from outside world.
+#ifdef GAME_DLL
+	if (engine->GetClusterForOrigin(tr.endpos) == -1)
+		return;
+#endif
+
+	//Entities get penetrated twice as far.
+	float depthmult = 1.0;
+	if (tr.DidHitNonWorldEntity())
+		depthmult = 2.0;
+
 	// Move through up to our max penetration
-	Vector	testPos = tr.endpos + ( vecDir * info.m_flPenetrateDepth );
+	Vector	testPos = tr.endpos + ( vecDir * info.m_flPenetrateDepth * depthmult);
 
 	trace_t	passTrace;
 	// Re-trace as if the bullet had passed right through
 	UTIL_TraceLine( testPos, tr.endpos, MASK_SHOT, pTraceFilter, &passTrace );
-
+	
 	// If we didn't make it through, we are done
 	if ( passTrace.startsolid || passTrace.fraction == 1.0f )
 		return;
@@ -598,8 +609,6 @@ void CBaseEntity::HandleBulletPenetration( CBaseCombatWeapon *pWeapon, const Fir
 	{
 		// Don't let this bullet hit us again
 		refireInfo.m_pAdditionalIgnoreEnt = tr.m_pEnt;
-		// Players take away half the actual depth
-		depth /= 2.0f;
 	}
 	else
 	{

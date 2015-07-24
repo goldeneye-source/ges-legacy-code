@@ -104,15 +104,17 @@ void CGERocket::IgniteThink( void )
 
 void CGERocket::AccelerateThink( void ) 
 {
+	//Some really lazy math to show mangley that it would be awesome if the rockets traveled in a sine wave pattern.  Change this back later.
 	float lifetime = gpGlobals->curtime - m_flSpawnTime;
 	if ( lifetime > 0.75f )
 	{
+		SetAbsVelocity(m_vForward * GE_ROCKET_MAXVEL * (lifetime < 0.75f ? lifetime : 0.75f) + Vector(0, 0, 1024) * sinf(lifetime * 90));
 		SetThink( &CGERocket::FlyThink );
 		SetNextThink( gpGlobals->curtime + 0.1f );
 	}
 	else
 	{
-		SetAbsVelocity( m_vForward * GE_ROCKET_MAXVEL * (lifetime < 0.75f ? lifetime : 0.75f) );
+		SetAbsVelocity((m_vForward * GE_ROCKET_MAXVEL + Vector(0, 0, 1024) * sinf(lifetime * 90)) * (lifetime < 0.75f ? lifetime : 0.75f));
 		SetNextThink( gpGlobals->curtime + 0.1f );
 	}
 }
@@ -124,6 +126,10 @@ void CGERocket::FlyThink( void )
 		Explode();
 		return;
 	}
+
+	float lifetime = gpGlobals->curtime - m_flSpawnTime;
+
+	SetAbsVelocity(m_vForward * GE_ROCKET_MAXVEL * 0.75 + Vector(0, 0, 1024) * sinf(lifetime*90));
 
 	SetNextThink( gpGlobals->curtime + 0.1 );
 }

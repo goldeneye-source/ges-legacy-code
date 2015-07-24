@@ -63,6 +63,7 @@ public:
 	void ResetAimMode( bool forced=false );
 	bool IsInAimMode();
 	bool AddArmor( int amount );
+	bool CheckInPVS(CBasePlayer *player);
 
 	virtual void KnockOffHat( bool bRemove = false, const CTakeDamageInfo *dmg = NULL );
 	virtual void GiveHat( void );
@@ -195,6 +196,10 @@ protected:
 
 	CNetworkHandle( CBaseCombatWeapon,	m_hActiveLeftWeapon );
 	CNetworkHandle( CBaseEntity,		m_hHat );
+
+private:
+
+	byte m_iPVS[MAX_MAP_CLUSTERS / 8];
 };
 
 CGEPlayer *ToGEPlayer( CBaseEntity *pEntity );

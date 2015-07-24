@@ -179,8 +179,8 @@ static const GEWeaponInfo_t GEWeaponInfo[] =
 	{WEAPON_PP7,			"weapon_pp7",			AMMO_9MM,		"#GE_PP7",			10	},
 	{WEAPON_PP7_SILENCED,	"weapon_pp7_silenced",	AMMO_9MM,		"#GE_PP7_SILENCED",	20	},
 	{WEAPON_DD44,			"weapon_dd44",			AMMO_9MM,		"#GE_DD44",			20	},
-	{WEAPON_SILVERPP7,		"weapon_silver_pp7",	AMMO_9MM,		"#GE_SilverPP7",	5	},
-	{WEAPON_GOLDENPP7,		"weapon_golden_pp7",	AMMO_9MM,		"#GE_GoldPP7",		1	},
+	{ WEAPON_SILVERPP7,		"weapon_silver_pp7",	AMMO_MAGNUM,	"#GE_SilverPP7", 5 },
+	{ WEAPON_GOLDENPP7,		"weapon_golden_pp7",	AMMO_GOLDENGUN, "#GE_GoldPP7", 1 },
 	{WEAPON_COUGAR_MAGNUM,	"weapon_cmag",			AMMO_MAGNUM,	"#GE_CougarMagnum",	10	},
 	{WEAPON_GOLDENGUN,		"weapon_golden_gun",	AMMO_GOLDENGUN,	"#GE_GoldenGun",	2	},
 
@@ -303,7 +303,7 @@ const int MAX_HEALTH = 160;
 const float STARTING_ARMOR = 0;
 const float MAX_ARMOR = 160;
 
-#define GE_NORM_SPEED	200
+#define GE_NORM_SPEED	190
 #define GE_AIMED_SPEED	110
 
 #ifdef GAME_DLL

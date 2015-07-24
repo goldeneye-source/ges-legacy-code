@@ -74,6 +74,8 @@ CGEPlayer::CGEPlayer()
 
 	m_iFavoriteWeapon = WEAPON_NONE;
 	m_iScoreBoardColor = 0;
+
+	memset(m_iPVS, 0, sizeof(m_iPVS));
 }
 
 CGEPlayer::~CGEPlayer( void )
@@ -245,8 +247,8 @@ void CGEPlayer::PostThink( void )
 	BaseClass::PostThink();
 
 	// Don't apply invuln if the damage was caused by us
-	if ( m_iDmgTakenThisFrame > 0 && m_pCurrAttacker != this )
-	{
+	//if ( m_iDmgTakenThisFrame > 0 && m_pCurrAttacker != this )
+	//{
 		// Record our attacker for inter-invuln attacks
 		m_pLastAttacker = m_pCurrAttacker;
 		m_iPrevDmgTaken = m_iDmgTakenThisFrame;
@@ -257,12 +259,12 @@ void CGEPlayer::PostThink( void )
 			flTime += 0.006f * (((float)GetMaxHealth() / 2.0f) - GetHealth());
 		
 	//	StartInvul( flTime );
-	}
-	else if ( m_pCurrAttacker == this )
-	{
+	//}
+	//else if ( m_pCurrAttacker == this )
+	//{
 		// If we hurt ourselves give us half the normal invuln time
 	//	StartInvul( 0.33f );
-	}
+	//}
 
 	// Clamp force on alive players to 1000
 	if ( m_iHealth > 0 && m_vDmgForceThisFrame.Length() > 1000.0f )
@@ -318,6 +320,11 @@ bool CGEPlayer::ShouldRunRateLimitedCommand( const CCommand &args )
 
 // This function checks to see if we are invulnerable, if we are and the time limit hasn't passed by
 // then don't do the damage applied. Otherwise, go for it!
+
+//--------------------------------------------
+// Disabling the invuln code for now because everyone really wants to see how unbalancable the game is without it.
+//--------------------------------------------
+
 int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 {
 	// Reset invulnerability if we take world or self damage
@@ -369,9 +376,13 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 		float flIntegerDamage = m_DmgTake + m_DmgSave - flFractionalDamage;
 		DevMsg( "%s took %0.1f damage to hitbox %i, %i HP / %i AP remaining.\n", GetPlayerName(), flIntegerDamage, LastHitGroup(), GetHealth(), ArmorValue() );
 
-		CBasePlayer *pAttacker = ToBasePlayer( inputinfo.GetAttacker() );
+		CBasePlayer *pAttacker = ToBasePlayer(inputinfo.GetAttacker());
+
 		if ( !pAttacker )
 			return dmg;
+
+		if (!CheckInPVS(pAttacker))
+			return 0;
 
 		// Tell our attacker that they damaged me
 		ToGEPlayer( pAttacker )->Event_DamagedOther( this, flIntegerDamage, inputinfo );
@@ -420,6 +431,17 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 	return dmg;
 }
 
+bool CGEPlayer::CheckInPVS(CBasePlayer *player)
+{
+	int clusterIndex = engine->GetClusterForOrigin(EyePosition());
+	engine->GetPVSForCluster(clusterIndex, sizeof(m_iPVS), m_iPVS);
+
+	if (player->NetworkProp()->IsInPVS(edict(), m_iPVS, sizeof(m_iPVS)))
+		return true;
+
+	return false;
+}
+
 // This simply accumulates our force from damages in this frame to be applied in PostThink
 extern float DamageForce( const Vector &size, float damage );
 int CGEPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
@@ -447,6 +469,9 @@ int CGEPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 		force.z = clamp( force.z, -250.0f, 250.0f );
 	else if ( m_iHealth > 0 )
 		force.z = clamp( force.z, -450.0f, 450.0f );
+
+	// Scale down pushforce for no-invuln testing.
+	force *= 0.4;
 
 	m_vDmgForceThisFrame += force;
 

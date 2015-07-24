@@ -240,6 +240,7 @@ void CGE_Explosion::CreateInitialBlast( void )
 	CreateHeatWave();
 }
 
+
 void CGE_Explosion::Think()
 {
 	if ( gpGlobals->curtime > m_flDieTime + GE_EXP_DIE_DELAY )
@@ -276,6 +277,7 @@ void CGE_Explosion::Think()
 		SetNextThink( gpGlobals->curtime + 0.1f );
 	}
 }
+
 
 void CGE_Explosion::CreateHeatWave( void )
 {

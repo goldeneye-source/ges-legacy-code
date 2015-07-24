@@ -32,6 +32,7 @@ public:
 
 	void NotifyOnDeath( float dist );
 	void NotifyOnUse();
+	void SetLastUseTime( float usetime );
 
 	// Returns desirability weighting (high weight, high desirability)
 	int GetDesirability( CGEPlayer *pRequestor );

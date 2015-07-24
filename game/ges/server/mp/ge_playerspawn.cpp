@@ -19,17 +19,17 @@
 // Efficiency of our desirability calcs
 #define SPAWNER_CALC_EFFICIENCY		1.0f
 // Rate decrease of nearby death memory (in points / sec)
-#define SPAWNER_DEATHFORGET_RATE	0.2f
+#define SPAWNER_DEATHFORGET_RATE	0.01f
 // Last use limit in secs
-#define SPAWNER_LASTUSE_LIMIT		10.0f
+#define SPAWNER_LASTUSE_LIMIT		40.0f
 // Default weight for calcs, raising this will decrease the effect of negative weight
-#define SPAWNER_DEFAULT_WEIGHT		500
+#define SPAWNER_DEFAULT_WEIGHT		1000
 
-#define SPAWNER_MAX_ENEMY_WEIGHT	600
-#define SPAWNER_MAX_DEATH_WEIGHT	100
-#define SPAWNER_MAX_USE_WEIGHT		300
-
-#define SPAWNER_MAX_ENEMY_DIST		1500.0f
+#define SPAWNER_MAX_ENEMY_WEIGHT	1200
+#define SPAWNER_MAX_DEATH_WEIGHT	800
+#define SPAWNER_MAX_USE_WEIGHT		800
+#define SPAWNER_MAX_ENEMY_DIST		1600.0f
+#define SPAWNER_MAX_DEATH_DIST		800.0f
 
 // Spawnflag to disallow bots to use this point
 #define SF_NO_BOTS 0x1
@@ -51,6 +51,7 @@ CGEPlayerSpawn::CGEPlayerSpawn( void )
 { 
 	memset( m_iPVS, 0, sizeof(m_iPVS) );
 	m_bFoundPVS = false;
+	m_fLastUseTime = 0;
 }
 
 void CGEPlayerSpawn::Spawn( void )
@@ -92,6 +93,12 @@ void CGEPlayerSpawn::Think( void )
 
 int CGEPlayerSpawn::GetDesirability( CGEPlayer *pRequestor )
 {
+	//Calculates proximity modifier, and ticks down use and death modifiers.
+	//Proximity is based on the most threatening player in range.  This is calculated mostly on proximity but has many modifiers on top of it.
+	//Use is just based on the last usetime of the spawn and the spawns near it.  Should help destribute spawns more evenly.
+	//Deaths is a slowly ticking modifier that's meant to add up over time and prevent spawns that are the site of frequent deaths.
+	//The death modifier still has a lot of kinks to work out.
+
 	// We should never be picked if we are not enabled
 	if ( !IsEnabled() )
 		return 0;
@@ -108,13 +115,10 @@ int CGEPlayerSpawn::GetDesirability( CGEPlayer *pRequestor )
 
 	m_iLastEnemyWeight = m_iLastUseWeight = m_iLastDeathWeight = 0;
 
-	// Knock us down for nearby enemies
+	// Calculate most threatening player, based on proximity, weapon, health, and PVS.
 	FOR_EACH_PLAYER( pPlayer )
 	{
 		if ( pPlayer->IsObserver() || pPlayer->IsDead() )
-			continue;
-
-		if ( !CheckInPVS( pPlayer ) )
 			continue;
 
 		// Check team affiliation
@@ -125,21 +129,84 @@ int CGEPlayerSpawn::GetDesirability( CGEPlayer *pRequestor )
 
 		Vector diff = pPlayer->GetAbsOrigin() - GetAbsOrigin();
 		float dist = diff.Length2D();
+		float life = pPlayer->ArmorValue() + pPlayer->GetHealth();
 
-		// Check if this player is "near" me
-		if ( abs(diff.z) <= 100.0f && dist <= SPAWNER_MAX_ENEMY_DIST )
+		// First check to see if the player is close enough so that we can
+		// avoid having to do the fancy math on people across the map.
+		if (dist > SPAWNER_MAX_ENEMY_DIST)
+			continue;
+
+		// Now check for players on lower levels and pay them slightly less mind since
+		// even if it is possible dropping down is often a hassle and not always worth 
+		// it for a spawn kill.  If they are higher consider them further than that because going up
+		// is even harder.  Hopefully this doesn't cause too many problems around stairs.
+		if (diff.z > 128.0f)
+			dist += 200;
+		else if (diff.z < -128.0f)
+			dist += 300;
+
+		// If player is not in the PVS, check to see how we should treat them.
+		if (!CheckInPVS(pPlayer))
 		{
-			int weight = min( SPAWNER_MAX_ENEMY_WEIGHT, 
-							  (int)( SPAWNER_MAX_ENEMY_DIST * (1.0f - Bias( dist / SPAWNER_MAX_ENEMY_DIST, 0.8 )) ) );
-
-			// If I am a DM spawn in teamplay, add a boost for player's near me on my team
-			if ( onMyTeam )
-				m_iLastEnemyWeight -= weight;
-			else
-				m_iLastEnemyWeight += weight;
+			// If they aren't even on our level why do they deserve to be considered?
+			if (abs(diff.z) > 128.0f)
+				continue;
+			// If they are apply massive penalties for being outside PVS.
+			dist *= 2.00;
+			dist += 300;
 		}
+		else
+		{
+			trace_t		tr;
+			UTIL_TraceLine(GetAbsOrigin() + Vector(0, 0, 32) , pPlayer->EyePosition(), MASK_OPAQUE, pPlayer, COLLISION_GROUP_NONE, &tr);
+
+			if (tr.fraction == 1.0f)
+			{
+				if (dist > SPAWNER_MAX_ENEMY_DIST / 2)
+					dist -= SPAWNER_MAX_ENEMY_DIST / 2;
+				else
+					dist = 0;
+			}
+		}
+
+		// TODO: Make a decent weapon ranking system.
+		//CGEWeapon *pWeapon = NULL;
+		//pWeapon = ToGEWeapon(((CBaseCombatCharacter*)this)->GetActiveWeapon());
+
+		//if (pWeapon)
+		//{
+		//	wepthreat = min(2.0, pWeapon->GetGEWpnData().m_iDamage / pWeapon->GetClickFireRate() / 300); // How much damage the weapon does.
+		//}
+
+		// Scale threat by health level of player.  Players with low health are
+		// treated as just as dangerous as players with high health so new players
+		// players don't spawn right on top of them and ruin their day
+
+		dist /= min(2.0, powf(160.00 - life, 2.0) / 64000.00f + 1); // 160*80*5, to get 0.4 as the max value
+
+		// Check if this player is still close enough after modifiers.
+		if ( dist > SPAWNER_MAX_ENEMY_DIST )
+			continue;
+
+		//Adjusted square root curve so far away players aren't considered as much.
+		int threat = (1 - sqrt(dist / SPAWNER_MAX_ENEMY_DIST + 0.05) + 0.025) * 125;
+
+		// If I am a DM spawn in teamplay, make spawn more desirable for teammates
+
+		if (onMyTeam)
+			threat *= -1;
+
+
+		// Finally, compare the calculated threat level to the highest one on record and
+		// replace it if higher.
+		if (abs(threat) > abs(m_iLastEnemyWeight))
+			m_iLastEnemyWeight = min(100, threat);
+
 	}
 	END_OF_PLAYER_LOOP()
+
+	//scale value to the max enemy weight.
+	m_iLastEnemyWeight = RemapValClamped(m_iLastEnemyWeight, 0, 100, 0, SPAWNER_MAX_ENEMY_WEIGHT);
 
 	// Clean up nearby deaths and scale our metric
 	float timeDiff = gpGlobals->curtime - m_fLastDeathCalc;
@@ -149,11 +216,11 @@ int CGEPlayerSpawn::GetDesirability( CGEPlayer *pRequestor )
 	m_iLastDeathWeight = min( SPAWNER_MAX_DEATH_WEIGHT, SPAWNER_MAX_DEATH_WEIGHT*m_fNearbyDeathMetric );
 
 	// Spit out percentage wait from last use
-	timeDiff = gpGlobals->curtime - m_fLastUseTime;
-	m_iLastUseWeight = RemapValClamped( timeDiff, 0, SPAWNER_LASTUSE_LIMIT, SPAWNER_MAX_USE_WEIGHT, 0 );
+	timeDiff = m_fLastUseTime - gpGlobals->curtime;
+	m_iLastUseWeight = RemapValClamped(timeDiff, 0, SPAWNER_LASTUSE_LIMIT, 0, SPAWNER_MAX_USE_WEIGHT);
 
-	// Return a sum of our weight factors against the default
-	return max( SPAWNER_DEFAULT_WEIGHT - m_iLastEnemyWeight - m_iLastDeathWeight - m_iLastUseWeight, 0 );
+	// Return a sum of our weight factors against the default  - m_iLastDeathWeight - m_iLastUseWeight
+	return max(SPAWNER_DEFAULT_WEIGHT - m_iLastEnemyWeight - m_iLastUseWeight - m_iLastDeathWeight, 0);
 }
 
 bool CGEPlayerSpawn::IsOccupied( void )
@@ -161,9 +228,10 @@ bool CGEPlayerSpawn::IsOccupied( void )
 	if ( !IsEnabled() )
 		return false;
 
+	// Disabled because of retooling the lastusetime variable.  Should be fixed when system is recoded.
 	// Quick check if we have been used very recently
-	if ( gpGlobals->curtime < (m_fLastUseTime + 0.5f) )
-		return true;
+	//if ( gpGlobals->curtime < (m_fLastUseTime + 0.5f) )
+	//	return true;
 
 	CBaseEntity *pList[32];
 	int count = UTIL_EntitiesInBox( pList, 32, GetAbsOrigin() + VEC_HULL_MIN, GetAbsOrigin() + VEC_HULL_MAX, 0 );
@@ -185,17 +253,59 @@ void CGEPlayerSpawn::NotifyOnDeath( float dist )
 {
 	if ( dist < SPAWNER_MAX_ENEMY_DIST )
 	{
+		// Disabled because of attempt to repurpose death system to stack up over longer timespan.
 		// Give a boost for rapid deaths
-		float timeScale = RemapValClamped( gpGlobals->curtime - m_fLastDeathNotice, 0, 5.0f, 3.0f, 1.0f );
-		m_fNearbyDeathMetric += Bias( RemapValClamped( dist, SPAWNER_MAX_ENEMY_DIST, 0, 0, 1.0f ), 0.8 ) * timeScale;
+		//float timeScale = RemapValClamped( gpGlobals->curtime - m_fLastDeathNotice, 0, 5.0f, 3.0f, 1.0f );
+		//m_fNearbyDeathMetric += Bias( RemapValClamped( dist, SPAWNER_MAX_ENEMY_DIST, 0, 0, 1.0f ), 0.8 ) * timeScale;
+		m_fNearbyDeathMetric += (1 - dist / SPAWNER_MAX_DEATH_DIST) * 0.25;
+
 		m_fLastDeathNotice = m_fLastDeathCalc = gpGlobals->curtime;
 	}
 }
 
 void CGEPlayerSpawn::NotifyOnUse( void )
 {
-	m_fLastUseTime = gpGlobals->curtime;
+	const CUtlVector<EHANDLE> *vSpawns = GERules()->GetSpawnersOfType(SPAWN_PLAYER);
+
+	Vector myPos = GetAbsOrigin();
+
+	float maxdist = 0.00;
+
+	for (int i = (vSpawns->Count() - 1); i >= 0; i--)
+	{
+		CGEPlayerSpawn *pSpawn = (CGEPlayerSpawn*)vSpawns->Element(i).Get();
+		Vector diff = pSpawn->GetAbsOrigin() - GetAbsOrigin();
+		float dist = diff.Length2DSqr();
+
+		if (dist > maxdist)
+			maxdist = dist;
+	}
+
+	maxdist = sqrt(maxdist)*0.6; //rooting maxdist to correct Length2DSqr and multiplying by 3/5 to limit range.
+	for (int i = (vSpawns->Count() - 1); i >= 0; i--)
+	{
+		CGEPlayerSpawn *pSpawn = (CGEPlayerSpawn*)vSpawns->Element(i).Get();
+		Vector diff = pSpawn->GetAbsOrigin() - GetAbsOrigin();
+		float dist = diff.Length2D();
+		if (abs(diff.z) < 128)
+			pSpawn->SetLastUseTime(( 1 - dist/maxdist ) * 15);
+	}
 }
+
+void CGEPlayerSpawn::SetLastUseTime(float usetime)
+{
+	float modtime = m_fLastUseTime - gpGlobals->curtime;
+
+	if (modtime + usetime > SPAWNER_LASTUSE_LIMIT)
+		usetime = SPAWNER_LASTUSE_LIMIT - modtime;
+
+	if (modtime > 0)
+		m_fLastUseTime += usetime;
+	else
+		m_fLastUseTime = gpGlobals->curtime + usetime;
+}
+
+
 
 void CGEPlayerSpawn::OnEnabled( void )
 {

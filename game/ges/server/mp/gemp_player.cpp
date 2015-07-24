@@ -769,6 +769,23 @@ CBaseEntity* CGEMPPlayer::EntSelectSpawnPoint()
 	CUtlVector<CGEPlayerSpawn*> vLeftovers;
 	CUtlVector<float> vWeights;
 
+	// Figure out the spawn with the highest weight
+
+	int bestweight = 2;
+
+	for (int i = 0; i < vSpots->Count(); i++)
+	{
+		CGEPlayerSpawn *pSpawn = (CGEPlayerSpawn*)vSpots->Element(i).Get();
+		if (GERules()->IsSpawnPointValid(pSpawn, this))
+		{
+			int weight = pSpawn->GetDesirability(this);
+			if (weight > bestweight)
+				bestweight = weight;
+		}
+	}
+
+	bestweight *= 0.5; //establish a threshold for spawns that are within a certain value of bestweight.
+
 	// Build a list of player spawns
 	for ( int i=0; i < vSpots->Count(); i++ )
 	{
@@ -776,7 +793,7 @@ CBaseEntity* CGEMPPlayer::EntSelectSpawnPoint()
 		if ( GERules()->IsSpawnPointValid( pSpawn, this ) )
 		{
 			int weight = pSpawn->GetDesirability( this );
-			if ( weight > 0 )
+			if ( weight > bestweight )
 			{
 				vSpawners.AddToTail( pSpawn );
 				vWeights.AddToTail( weight );

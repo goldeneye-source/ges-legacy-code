@@ -172,7 +172,7 @@ CGEBaseGameplayManager::CGEBaseGameplayManager()
 
 CGEBaseGameplayManager::~CGEBaseGameplayManager()
 {
-	m_vScenarioCycle.PurgeAndDeleteElements();
+	m_vScenarioCycle.Purge();
 	m_vScenarioList.PurgeAndDeleteElements();
 }
 
@@ -318,7 +318,7 @@ const char *CGEBaseGameplayManager::GetNextScenario()
 				g_iScenarioIndex = GERandom<int>( count );
 			} while ( count > 1 && g_iScenarioIndex != cur );
 
-			return m_vScenarioCycle[ g_iScenarioIndex ];
+			return m_vScenarioCycle[ g_iScenarioIndex ].ToCStr();
 		}
 	}
 	else if ( mode == GAMEPLAY_MODE_CYCLE )
@@ -330,7 +330,7 @@ const char *CGEBaseGameplayManager::GetNextScenario()
 			if ( ++g_iScenarioIndex  >= count )
 				g_iScenarioIndex = 0;
 
-			return m_vScenarioCycle[ g_iScenarioIndex ];
+			return m_vScenarioCycle[ g_iScenarioIndex ].ToCStr();
 		}
 	}
 
@@ -622,87 +622,56 @@ bool CGEBaseGameplayManager::ShouldEndMatch()
 
 void CGEBaseGameplayManager::LoadScenarioCycle()
 {
-	if ( m_vScenarioCycle.Count() > 0 )
-		return;
+	// Clear out the existing cycle and index
+	m_vScenarioCycle.Purge();
 
-	const char *cfile = ge_gp_cyclefile.GetString();
-	Assert( cfile != NULL );
+	const char *curr_scenario = ge_gameplay.GetString();
+	const char *cycle_file = ge_gp_cyclefile.GetString();
+	Assert(cycle_file != NULL);
 
-	// Check the time of the mapcycle file and re-populate the list of level names if the file has been modified
-	const int nCycleTimeStamp = filesystem->GetPathTime( cfile, "GAME" );
-
-	if ( 0 == nCycleTimeStamp )
+	CUtlBuffer buf;
+	buf.SetBufferType(true, false);
+	if (filesystem->ReadFile(cycle_file, "MOD", buf))
 	{
-		// cycle file does not exist, make a list containing only the current gameplay
-		char *szCurrentGameplay = new char[32];
-		Q_strncpy( szCurrentGameplay, GetScenario()->GetIdent(), 32 );
-		m_vScenarioCycle.AddToTail( szCurrentGameplay );
-	}
-	else
-	{
-		int nFileLength;
-		char *aFileList = (char*)UTIL_LoadFileForMe( cfile, &nFileLength );
-
-		const char* curMode = ge_gameplay.GetString();
-
-		if ( aFileList && nFileLength )
+		char line[32];
+		buf.GetLine(line, 32);
+		while (line[0])
 		{
-			CUtlVector<char*> vList;
-			V_SplitString( aFileList, "\n", vList );
+			// Strip out the spaces in the name
+			GEUTIL_StripWhitespace(line);
 
-			for ( int i = 0; i < vList.Count(); i++ )
+			if (!IsValidGamePlay(line))
+			{ Warning("Invalid scenario '%s' included in gameplay cycle file. Ignored.\n", line); }
+			else if (!Q_strncmp(line, "//", 2))
+			{ /* Ignore this line */ }
+			else
+			{ m_vScenarioCycle.AddToTail(AllocPooledString(line)); }
+
+			// Load next line
+			buf.GetLine(line, 32);
+
+		}
+
+		// TODO: This might cause issues when running random or cycled scenarios on first load...
+		// Reset the gameplay index 
+		if (g_iScenarioIndex < 0 || g_iScenarioIndex >= m_vScenarioCycle.Count())
+		{
+			for (int i = 0; i < m_vScenarioCycle.Count(); i++)
 			{
-				bool bIgnore = false;
-
-				// Strip out the spaces in the name
-				GEUTIL_StripWhitespace( vList[i] );
-				
-				if ( !IsValidGamePlay( vList[i] ) )
+				// Find the first match for our current game mode if it exists in the list
+				if (curr_scenario && Q_stricmp(m_vScenarioCycle[i].ToCStr(), curr_scenario) == 0)
 				{
-					bIgnore = true;
-					Warning( "Invalid scenario '%s' included in gameplay cycle file. Ignored.\n", vList[i] );
-				}
-				else if ( !Q_strncmp( vList[i], "//", 2 ) )
-				{
-					bIgnore = true;
-				}
-
-				if ( !bIgnore )
-				{
-					m_vScenarioCycle.AddToTail(vList[i]);
-					vList[i] = NULL;
+					g_iScenarioIndex = i;
+					break;
 				}
 			}
-
-			// Only resolve our gameplay index if we are out of bounds
-			if ( g_iScenarioIndex < 0 || g_iScenarioIndex >= m_vScenarioCycle.Count() )
-			{
-				for (int i=0; i<m_vScenarioCycle.Size(); i++)
-				{
-					// Find the first match for our current game mode if it exists in the list
-					if ( curMode && Q_stricmp(m_vScenarioCycle[i], curMode) == 0 )
-						g_iScenarioIndex = i;
-				}
-			}
-
-			for ( int i = 0; i < vList.Count(); i++ )
-			{
-				if ( vList[i] )
-					delete [] vList[i];
-			}
-
-			vList.Purge();
-
-			UTIL_FreeFile( (byte *)aFileList );
 		}
 	}
 
-	// If somehow we have no scenarios in the list then add the current one
-	if ( m_vScenarioCycle.Count() == 0 )
+	// Check if we loaded any scenarios at all
+	if (m_vScenarioCycle.Count() == 0)
 	{
-		char *ident = new char[32];
-		Q_strncpy( ident, GetScenario()->GetIdent(), 32 );
-		m_vScenarioCycle.AddToTail( ident );
+		m_vScenarioCycle.AddToTail(AllocPooledString(curr_scenario));
 	}
 }
 

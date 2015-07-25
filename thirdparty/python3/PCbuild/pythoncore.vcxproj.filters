@@ -31,6 +31,12 @@
     <Filter Include="Resource Files">
       <UniqueIdentifier>{c3e03a5c-56c7-45fd-8543-e5d2326b907d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GES_Modules">
+      <UniqueIdentifier>{08e78632-01a8-4381-beb8-6c82c8930248}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GES_Modules\Headers">
+      <UniqueIdentifier>{e9b0e6be-c49d-472f-81e1-c06d54cd690a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Include\abstract.h">
@@ -428,6 +434,33 @@
     </ClInclude>
     <ClInclude Include="..\Modules\hashtable.h">
       <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Modules\_ctypes\ctypes.h">
+      <Filter>GES_Modules\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Modules\_ctypes\ctypes_dlfcn.h">
+      <Filter>GES_Modules\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Modules\_ctypes\libffi_msvc\ffi.h">
+      <Filter>GES_Modules\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Modules\_ctypes\libffi_msvc\ffi_common.h">
+      <Filter>GES_Modules\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Modules\_ctypes\libffi_msvc\fficonfig.h">
+      <Filter>GES_Modules\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Modules\_ctypes\libffi_msvc\ffitarget.h">
+      <Filter>GES_Modules\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Modules\socketmodule.h">
+      <Filter>GES_Modules\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Modules\unicodename_db.h">
+      <Filter>GES_Modules\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Modules\unicodedata_db.h">
+      <Filter>GES_Modules\Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -952,6 +985,42 @@
     </ClCompile>
     <ClCompile Include="..\Modules\hashtable.c">
       <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Modules\_ctypes\_ctypes.c">
+      <Filter>GES_Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Modules\_ctypes\callproc.c">
+      <Filter>GES_Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Modules\_ctypes\cfield.c">
+      <Filter>GES_Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Modules\_ctypes\libffi_msvc\ffi.c">
+      <Filter>GES_Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Modules\_ctypes\malloc_closure.c">
+      <Filter>GES_Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Modules\_ctypes\libffi_msvc\prep_cif.c">
+      <Filter>GES_Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Modules\_ctypes\stgdict.c">
+      <Filter>GES_Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Modules\_ctypes\libffi_msvc\win32.c">
+      <Filter>GES_Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Modules\socketmodule.c">
+      <Filter>GES_Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Modules\_ctypes\callbacks_ges.c">
+      <Filter>GES_Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Modules\selectmodule.c">
+      <Filter>GES_Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Modules\unicodedata.c">
+      <Filter>GES_Modules</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

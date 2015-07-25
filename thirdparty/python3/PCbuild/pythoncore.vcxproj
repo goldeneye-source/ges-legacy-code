@@ -186,7 +186,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <AdditionalOptions>/Zm200  %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>..\Python;..\Modules\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Python;..\Modules\zlib;..\Modules\_ctypes\libffi_msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_USRDLL;Py_BUILD_CORE;Py_ENABLE_SHARED;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
@@ -200,7 +200,7 @@
       <Command>"$(OutDir)make_buildinfo.exe" Release "$(IntDir)\"</Command>
     </PreLinkEvent>
     <Link>
-      <AdditionalDependencies>$(IntDir)getbuildinfo.o;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(IntDir)getbuildinfo.o;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(PyDllName).dll</OutputFile>
       <IgnoreSpecificDefaultLibraries>libc;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <BaseAddress>0x1e000000</BaseAddress>
@@ -552,6 +552,15 @@ IF %ERRORLEVEL% NEQ 0 (
     <ClInclude Include="..\Include\ucnhash.h" />
     <ClInclude Include="..\Include\unicodeobject.h" />
     <ClInclude Include="..\Include\weakrefobject.h" />
+    <ClInclude Include="..\Modules\socketmodule.h" />
+    <ClInclude Include="..\Modules\unicodedata_db.h" />
+    <ClInclude Include="..\Modules\unicodename_db.h" />
+    <ClInclude Include="..\Modules\_ctypes\ctypes.h" />
+    <ClInclude Include="..\Modules\_ctypes\ctypes_dlfcn.h" />
+    <ClInclude Include="..\Modules\_ctypes\libffi_msvc\ffi.h" />
+    <ClInclude Include="..\Modules\_ctypes\libffi_msvc\fficonfig.h" />
+    <ClInclude Include="..\Modules\_ctypes\libffi_msvc\ffitarget.h" />
+    <ClInclude Include="..\Modules\_ctypes\libffi_msvc\ffi_common.h" />
     <ClInclude Include="..\Modules\_math.h" />
     <ClInclude Include="..\Modules\hashtable.h" />
     <ClInclude Include="..\Modules\rotatingtree.h" />
@@ -597,10 +606,22 @@ IF %ERRORLEVEL% NEQ 0 (
     <ClInclude Include="..\Python\thread_nt.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Modules\selectmodule.c" />
+    <ClCompile Include="..\Modules\socketmodule.c" />
+    <ClCompile Include="..\Modules\unicodedata.c" />
     <ClCompile Include="..\Modules\_bisectmodule.c" />
     <ClCompile Include="..\Modules\_codecsmodule.c" />
     <ClCompile Include="..\Modules\_collectionsmodule.c" />
     <ClCompile Include="..\Modules\_csv.c" />
+    <ClCompile Include="..\Modules\_ctypes\callbacks_ges.c" />
+    <ClCompile Include="..\Modules\_ctypes\callproc.c" />
+    <ClCompile Include="..\Modules\_ctypes\cfield.c" />
+    <ClCompile Include="..\Modules\_ctypes\libffi_msvc\ffi.c" />
+    <ClCompile Include="..\Modules\_ctypes\libffi_msvc\prep_cif.c" />
+    <ClCompile Include="..\Modules\_ctypes\libffi_msvc\win32.c" />
+    <ClCompile Include="..\Modules\_ctypes\malloc_closure.c" />
+    <ClCompile Include="..\Modules\_ctypes\stgdict.c" />
+    <ClCompile Include="..\Modules\_ctypes\_ctypes.c" />
     <ClCompile Include="..\Modules\_functoolsmodule.c" />
     <ClCompile Include="..\Modules\_heapqmodule.c" />
     <ClCompile Include="..\Modules\_json.c" />

@@ -68,6 +68,13 @@ extern PyObject* PyInit__string(void);
 extern PyObject* PyInit__stat(void);
 extern PyObject* PyInit__opcode(void);
 
+// GES Additions
+extern PyObject* PyInit_unicodedata(void);
+extern PyObject* PyInit__socket(void);
+extern PyObject* PyInit__ctypes(void);
+extern PyObject* PyInit_select(void);
+// END GES
+
 /* tools/freeze/makeconfig.py marker for additional "extern" */
 /* -- ADDMODULE MARKER 1 -- */
 
@@ -142,6 +149,13 @@ struct _inittab _PyImport_Inittab[] = {
 
 /* tools/freeze/makeconfig.py marker for additional "_inittab" entries */
 /* -- ADDMODULE MARKER 2 -- */
+
+// GES Additions
+	{"unicodedata", PyInit_unicodedata},
+	{"_socket", PyInit__socket},
+	{"_ctypes", PyInit__ctypes},
+	{"select", PyInit_select},
+// END GES
 
     /* This module "lives in" with marshal.c */
     {"marshal", PyMarshal_Init},

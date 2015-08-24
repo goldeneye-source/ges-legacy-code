@@ -47,6 +47,7 @@ public:
 private:
 	void ParseGameplayAffinity( void );
 	void ClearLoadouts( void );
+	void AdjustWeights(CUtlVector<CGELoadout*> &loadouts, CUtlVector<int> &weights);
 
 	struct GameplaySet
 	{
@@ -56,6 +57,7 @@ private:
 
 	// Our loadout information
 	CGELoadout *m_pCurrentLoadout;
+	int			m_iCurrentGroup[3];
 	CUtlDict<CGELoadout*, int>	m_Loadouts;
 	CUtlDict<GameplaySet*, int> m_GameplaySets;
 	// Used to select random_loadout or cycle_loadout

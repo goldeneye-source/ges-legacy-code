@@ -105,8 +105,6 @@ void CWeaponAutoShotgun::PrimaryAttack( void )
 
 	if (!pPlayer)
 		return;
-	
-	CGEPlayer *pGEPlayer = ToGEPlayer( pPlayer );
 
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	WeaponSound(SINGLE);
@@ -120,9 +118,6 @@ void CWeaponAutoShotgun::PrimaryAttack( void )
 	m_flSoonestPrimaryAttack = gpGlobals->curtime + GetClickFireRate();
 	m_iClip1 -= 1;
 
-	// Add an accuracy penalty which can move past our maximum penalty time if we're really spastic
-	m_flAccuracyPenalty += GetClickFireRate();
-
 	// player "shoot" animation
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 	ToGEPlayer(pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
@@ -130,16 +125,16 @@ void CWeaponAutoShotgun::PrimaryAttack( void )
 	Vector	vecSrc		= pPlayer->Weapon_ShootPosition( );
 	Vector	vecAiming	= pPlayer->GetAutoaimVector( AUTOAIM_10DEGREES );	
 
-	FireBulletsInfo_t info( 5, vecSrc, vecAiming, pGEPlayer->GetAttackSpread(this), MAX_TRACE_LENGTH, m_iPrimaryAmmoType );
-	info.m_pAttacker = pPlayer;
+//	FireBulletsInfo_t info( 5, vecSrc, vecAiming, pGEPlayer->GetAttackSpread(this), MAX_TRACE_LENGTH, m_iPrimaryAmmoType );
+//	info.m_pAttacker = pPlayer;
 
 	RecordShotFired();
 
 	// Knock the player's view around
 	AddViewKick();
 
-	// Fire the bullets, and force the first shot to be perfectly accuracy
-	pPlayer->FireBullets( info );
+	// Prepare to fire 5 shots
+	PrepareFireBullets(5, pPlayer, vecSrc, vecAiming, true);
 
 	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 	{
@@ -171,7 +166,7 @@ void CWeaponAutoShotgun::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, 
 		vecShootDir = npc->GetActualShootTrajectory( vecShootOrigin );
 	}
 
-	pOperator->FireBullets( 5, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0 );
+	PrepareFireBullets(5, pOperator, vecShootOrigin, vecShootDir, false);
 }
 #endif
 

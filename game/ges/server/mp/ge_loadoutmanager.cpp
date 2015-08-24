@@ -26,7 +26,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define RANDOM_LOADOUT	"random_loadout"
+#define RANDOM_LOADOUT "random_loadout"
 
 void GEWeaponSet_Callback( IConVar *var, const char *pOldString, float flOldValue )
 {
@@ -88,6 +88,7 @@ protected:
 				pLoadout->SetIdent( szName );
 				pLoadout->SetPrintName( pKVLoadout->GetString("print_name", pLoadout->GetIdent()) );
 				pLoadout->SetWeight( pKVLoadout->GetInt("weight", 0) );
+				pLoadout->SetGroup( pKVLoadout->GetInt("group", -1) );
 				pLoadout->LoadWeapons( pKVLoadout->FindKey("weapons") );
 			
 				m_pMgr->AddLoadout( pLoadout );
@@ -233,6 +234,9 @@ void CGELoadoutManager::AddLoadout( CGELoadout *pNew )
 void CGELoadoutManager::ClearLoadouts( void )
 {
 	m_pCurrentLoadout = NULL;
+	m_iCurrentGroup[0] = -1;
+	m_iCurrentGroup[1] = -1;
+	m_iCurrentGroup[2] = -1;
 	m_Loadouts.PurgeAndDeleteElements();
 
 	// Clear out the gameplay set loading
@@ -274,6 +278,7 @@ bool CGELoadoutManager::SpawnWeapons( void )
 	}
 
 	CGELoadout *pNewLoadout = NULL;
+	int iNewGroup = -1;
 
 	if ( m_pCurrentLoadout != NULL && m_bKeepCurrLoadout )
 	{
@@ -296,10 +301,11 @@ bool CGELoadoutManager::SpawnWeapons( void )
 		{
 			// We have a set, go through and find a random loadout from the set
 			const GameplaySet *set = m_GameplaySets[idx];
+
 			do {
 				char* const choice = GERandomWeighted<char* const,int>( set->loadouts.Base(), set->weights.Base(), set->loadouts.Count() );
 				pNewLoadout = GetLoadout( choice );
-			} while ( set->loadouts.Count() > 1 && pNewLoadout == m_pCurrentLoadout );
+			} while (set->loadouts.Count() > 1 && pNewLoadout == m_pCurrentLoadout); //TODO: Set up the group selector for this too.
 		}
 		else
 		{
@@ -309,12 +315,14 @@ bool CGELoadoutManager::SpawnWeapons( void )
 
 			GetLoadouts( loadouts );
 
-			for ( int i=0; i < loadouts.Count(); i++ )
-				weights.AddToTail( loadouts[i]->GetWeight() );
+			for (int i = 0; i < loadouts.Count(); i++)
+				weights.AddToTail(loadouts[i]->GetWeight());
+
+			AdjustWeights(loadouts, weights); //Adjust the weights to filter out recently used groups.
 
 			do {
 				pNewLoadout = GERandomWeighted<CGELoadout*>( loadouts.Base(), weights.Base(), loadouts.Count() );
-			} while ( m_Loadouts.Count() > 1 && pNewLoadout == m_pCurrentLoadout );
+			} while (m_Loadouts.Count() > 1 && pNewLoadout == m_pCurrentLoadout);
 		}
 	}
 	else
@@ -341,6 +349,16 @@ bool CGELoadoutManager::SpawnWeapons( void )
 
 	// Make it official
 	m_pCurrentLoadout = pNewLoadout;
+	iNewGroup = pNewLoadout->GetGroup();
+
+	// Shift group list over
+	for (int i = 2; i > 0; i--)
+	{
+			m_iCurrentGroup[i] = m_iCurrentGroup[i - 1];
+	}
+
+	m_iCurrentGroup[0] = iNewGroup;
+	DevMsg("%d is the new group\n", iNewGroup);
 
 	// Remove excess weapons
 	RemoveWeapons();
@@ -480,6 +498,56 @@ void CGELoadoutManager::GetWeaponLists( CUtlVector<int> &vWeaponIds, CUtlVector<
 
 	vWeaponIds.CopyArray( sWeaponList.Base(), sWeaponList.Count() );
 	vWeaponWeights.CopyArray( sWeaponWeights.Base(), sWeaponWeights.Count() );
+}
+
+void CGELoadoutManager::AdjustWeights(CUtlVector<CGELoadout*> &loadouts, CUtlVector<int> &weights)
+{
+	static CUtlVector<int> validgroups, validweights;
+	validgroups.RemoveAll();
+	validweights.RemoveAll();
+
+	int desiredgroup = -1;
+	int groupweight = 0;
+
+	for (int g = 0; g < 4; g++)
+	{
+		if (g != m_iCurrentGroup[0] && g != m_iCurrentGroup[1])
+		{
+			groupweight = 0;
+
+			for (int i = 0; i < loadouts.Count(); i++)
+			{
+				if (loadouts[i]->GetGroup() == g)
+				{
+					groupweight += loadouts[i]->GetWeight();
+				}
+			}
+			if (groupweight > 0)
+			{
+				validgroups.AddToTail(g);
+				validweights.AddToTail(groupweight);
+			}
+		}
+	}
+
+	// No recently unused valid groups exist, try to use the older recent group instead.
+	if (validgroups.Count() < 1)
+	{
+		if (m_iCurrentGroup[1] != -1)
+			validgroups.AddToTail(m_iCurrentGroup[1]);
+		else
+			return; //Either no valid groups exist or only one valid group exists, so give up on this whole group weighting idea.
+	}
+
+	desiredgroup = GERandomWeighted<int, int>(validgroups.Base(), validweights.Base(), validgroups.Count());
+
+	DevMsg("%d is desiredgroup", desiredgroup);
+
+	for (int i = 0; i < loadouts.Count(); i++)
+	{
+		if (loadouts[i]->GetGroup() != desiredgroup || loadouts[i]->GetGroup() == -1 )
+			weights[i] *= 0; // Adjust weights so loadouts not in the desired group won't get picked.  Ignore sets that have no group at all.
+	}
 }
 
 CON_COMMAND( ge_weaponset_reload, "Reloads the weaponset script files" )

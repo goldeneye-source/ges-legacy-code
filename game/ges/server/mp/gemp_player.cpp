@@ -93,6 +93,9 @@ CGEMPPlayer::CGEMPPlayer()
 	m_bPreSpawn = true;
 	m_bFirstSpawn = true;
 	m_bSpawnFromDeath = false;
+
+	m_vLastDeath = Vector(-1, -1, -1);
+	m_vLastSpawn = Vector(-1, -1, -1);
 }
 
 CGEMPPlayer::~CGEMPPlayer()
@@ -371,6 +374,9 @@ void CGEMPPlayer::Spawn()
 
 		// Add spawn time for Awards calculations
 		m_flSpawnTime = gpGlobals->curtime;
+
+		// Spawn system variables
+		m_vLastSpawn = GetAbsOrigin();
 
 		// Reset invuln variables
 		m_pLastAttacker = m_pCurrAttacker = NULL;
@@ -930,8 +936,8 @@ void CGEMPPlayer::GiveDefaultItems()
 			CBasePlayer::GiveAmmo( GetAmmoDef()->CrateAmount(aID), aID );
 			pGivenWeapon = GiveNamedItem( WeaponIDToAlias(wID) );
 		}
-		if (ge_startarmed.GetInt() >= 2)
-			pGivenWeapon = GiveNamedItem("weapon_knife");
+		//if (ge_startarmed.GetInt() >= 2)
+		//	pGivenWeapon = GiveNamedItem("weapon_knife");
 	} 
 	else
 	{
@@ -1220,6 +1226,7 @@ void CGEMPPlayer::PostThink()
 void CGEMPPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
 	m_bSpawnFromDeath = true;
+	m_vLastDeath = GetAbsOrigin();
 
 	NotifyOnDeath();
 

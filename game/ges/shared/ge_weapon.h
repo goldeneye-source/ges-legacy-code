@@ -67,6 +67,7 @@ public:
 	virtual void	PrimaryAttack();
 	virtual bool	Reload();
 	virtual void	DryFire();
+	virtual void	PrepareFireBullets(int number, CBaseCombatCharacter *pOperator, Vector vecShootOrigin, Vector vecShootDir, bool haveplayer, int tracerfreq = 1);
 
 #ifdef GAME_DLL
 	virtual void	Spawn();
@@ -93,13 +94,14 @@ public:
 	virtual float			GetFireRate( void );
 	virtual float			GetClickFireRate(void);
 	virtual const Vector&	GetBulletSpread( void );
+	virtual int				GetGaussFactor( void );
 	virtual float			GetFireDelay( void );
 	virtual int				GetTracerFreq( void ) { return GetGEWpnData().m_iTracerFreq; };
 
+	virtual int		GetDamageCap(void) { return GetGEWpnData().m_iDamageCap; };
+
 	virtual float	GetMaxPenetrationDepth( void ) { return GetGEWpnData().m_flMaxPenetration; };
-	virtual float	GetMaximumPenaltyTime( void ) { return 2.875 * GetFireRate(); };
-	virtual float	GetRecoil( void ) { return GetGEWpnData().m_flRecoil; };
-	virtual void	UpdatePenaltyTime( void );
+	virtual void	UpdateAccPenalty( void );
 
 	// Fixes for NPC's
 	virtual bool	HasAmmo( void );
@@ -133,6 +135,8 @@ public:
 	virtual void	ToggleSilencer( bool doanim = true );
 	virtual void	SetAlwaysSilenced( bool set ) { m_bIsAlwaysSilent = set; };
 	virtual bool	IsAlwaysSilenced() { return m_bIsAlwaysSilent; };
+	virtual float	GetAccFireRate(){ return GetGEWpnData().m_flAccurateRateOfFire; }
+	virtual int		GetAccShots(){ return GetGEWpnData().m_flAccurateShots; }
 
 	virtual int		GetTracerAttachment( void );
 

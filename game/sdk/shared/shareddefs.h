@@ -614,6 +614,7 @@ struct FireBulletsInfo_t
 		m_bPrimaryAttack = true;
 	#ifdef GE_DLL
 		m_flPenetrateDepth = 0;
+		m_iGaussFactor = 1;
 	#endif
 	}
 
@@ -635,6 +636,7 @@ struct FireBulletsInfo_t
 		m_bPrimaryAttack = bPrimaryAttack;
 	#ifdef GE_DLL
 		m_flPenetrateDepth = 0;
+		m_iGaussFactor = 1;
 	#endif
 	}
 
@@ -654,6 +656,7 @@ struct FireBulletsInfo_t
 	bool m_bPrimaryAttack;
 #ifdef GE_DLL
 	float m_flPenetrateDepth;
+	int m_iGaussFactor;
 #endif
 };
 

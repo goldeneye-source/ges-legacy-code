@@ -32,6 +32,8 @@ BEGIN_DATADESC( CGERocket )
 	DEFINE_THINKFUNC( FlyThink ),
 END_DATADESC()
 
+ConVar ge_crazyrockets("ge_crazyrockets", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Makes rockets do all sorts of crazy patterns!");
+
 void CGERocket::Spawn( void )
 {
 	Precache();
@@ -94,28 +96,53 @@ void CGERocket::IgniteThink( void )
 	EmitSound( "Weapon_RocketLauncher.Ignite" );
 
 	AngleVectors( GetLocalAngles(), &m_vForward );
-	SetAbsVelocity( m_vForward * GE_ROCKET_MAXVEL * 0.1f );
+	AngleVectors(GetLocalAngles() + QAngle(-90, 0, 0), &m_vUp);
+
+	m_vRight = CrossProduct(m_vForward, m_vUp);
+
+//	SetAbsVelocity( m_vForward * GE_ROCKET_MAXVEL * 0.1f );
 
 	SetThink( &CGERocket::AccelerateThink );
-	SetNextThink( gpGlobals->curtime + 0.1f );
+	SetNextThink(gpGlobals->curtime + m_fthinktime);
+
+	m_iseed1 = rand() % 100;
+	m_iseed2 = rand() % 100;
+	m_iseed3 = rand() % 6 + 4;
+
+	m_fthinktime = 0.1;
 
 	CreateSmokeTrail();
+
+/*
+	DevMsg("modifiers are..");
+	if (m_iseed1 < 50) // Vertical Sine Wave
+		DevMsg(", sine");
+	if (m_iseed1 % 50 < 25) // Horizontal Cosine Wave, overlap with sine wave causes spiral.
+		DevMsg(", cosine");
+	if (m_iseed1 % 25 < 5) // Comes back
+		DevMsg(", return");
+	if (m_iseed1 % 20 < 5) // Gravity
+		DevMsg(", gravity");
+	if (m_iseed1 % 10 < 4) // Random Jitter
+		DevMsg(", jitter");
+
+	DevMsg(", and seed 1 is %d, seed 2 is %d, seed 3 is %d.", m_iseed1, m_iseed2, m_iseed3); 
+*/
 }
 
 void CGERocket::AccelerateThink( void ) 
 {
-	//Some really lazy math to show mangley that it would be awesome if the rockets traveled in a sine wave pattern.  Change this back later.
 	float lifetime = gpGlobals->curtime - m_flSpawnTime;
-	if ( lifetime > 0.75f )
+	if (lifetime > 0.75f && !ge_crazyrockets.GetBool())
 	{
-		SetAbsVelocity(m_vForward * GE_ROCKET_MAXVEL * (lifetime < 0.75f ? lifetime : 0.75f) + Vector(0, 0, 1024) * sinf(lifetime * 90));
+		SetAbsVelocity(m_vForward * GE_ROCKET_MAXVEL * (lifetime < 0.75f ? lifetime : 0.75f) * phys_timescale.GetFloat());
 		SetThink( &CGERocket::FlyThink );
 		SetNextThink( gpGlobals->curtime + 0.1f );
 	}
 	else
 	{
-		SetAbsVelocity((m_vForward * GE_ROCKET_MAXVEL + Vector(0, 0, 1024) * sinf(lifetime * 90)) * (lifetime < 0.75f ? lifetime : 0.75f));
-		SetNextThink( gpGlobals->curtime + 0.1f );
+		SetAbsVelocity( CalPath() );
+		SetNextThink(gpGlobals->curtime + m_fthinktime);
 	}
 }
 
@@ -127,11 +154,50 @@ void CGERocket::FlyThink( void )
 		return;
 	}
 
-	float lifetime = gpGlobals->curtime - m_flSpawnTime;
-
-	SetAbsVelocity(m_vForward * GE_ROCKET_MAXVEL * 0.75 + Vector(0, 0, 1024) * sinf(lifetime*90));
-
+	SetAbsVelocity(m_vForward * GE_ROCKET_MAXVEL * 0.75f * phys_timescale.GetFloat());
 	SetNextThink( gpGlobals->curtime + 0.1 );
+}
+
+Vector CGERocket::CalPath(void)
+{
+	float lifetime = gpGlobals->curtime - m_flSpawnTime;
+	Vector flypath = Vector(0, 0, 0);
+	float mult1 = 2.0;
+	float mult2 = 50.0 * m_iseed3;
+	float timescale = phys_timescale.GetFloat();
+
+	flypath = m_vForward * GE_ROCKET_MAXVEL * min(lifetime, 0.75);
+
+
+	if (!ge_crazyrockets.GetBool()) //If the server admins are not crazy, we are not allowed to be crazy.
+	{
+		flypath *= timescale;
+		return flypath;
+	}
+
+	//Initial modifiers
+
+	if (m_iseed2 < 50)
+		mult1 = lifetime;
+
+	//Patterns
+	if (m_iseed1 < 50) // Vertical Sine Wave
+		flypath += m_vRight * sinf(lifetime * -24) * mult1 * mult2;
+	if (m_iseed1 % 50 < 25) // Horizontal Cosine Wave, overlap with sine wave causes spiral.
+		flypath += m_vUp * cosf(lifetime * -24) * mult1 * mult2;
+	if (m_iseed1 % 25 < 5) // Comes back
+		flypath -= m_vForward * GE_ROCKET_MAXVEL * min(lifetime * lifetime, 1.5);
+//	if (m_iseed1 % 20 < 5) // Falls
+//		flypath -= m_vUp * ((int)(lifetime * 10) % 10 - 5);
+	
+
+	flypath += Vector(rand() % 20 - 10, rand() % 20 - 10, rand() % 20 - 10) * mult2 * mult1 / 15; // Random Jitter
+
+	flypath *= timescale;
+
+	m_fthinktime = 0.05;
+
+	return flypath;
 }
 
 // Always explode immediately upon hitting anything

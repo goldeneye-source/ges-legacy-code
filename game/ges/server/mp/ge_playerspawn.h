@@ -56,10 +56,13 @@ private:
 	float m_fLastDeathNotice;
 	float m_fLastDeathCalc;
 	float m_fNearbyDeathMetric;
+	float m_fMaxSpawnDist;
 
 	int m_iLastEnemyWeight;
 	int m_iLastDeathWeight;
 	int m_iLastUseWeight;
+	int m_iUniLastDeathWeight;
+	int m_iUniLastUseWeight;
 
 	// PVS Checks
 	byte m_iPVS[ MAX_MAP_CLUSTERS/8 ];

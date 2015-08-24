@@ -94,6 +94,10 @@ void CGEWeaponPistol::PrimaryAttack( void )
 	m_flLastAttackTime = gpGlobals->curtime;
 	m_flSoonestPrimaryAttack = gpGlobals->curtime + GetClickFireRate();
 
+	// Don't fire again until our ROF expires
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
+	m_iClip1 -= 1;
+
 	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 
 	if( pOwner )
@@ -106,9 +110,6 @@ void CGEWeaponPistol::PrimaryAttack( void )
 	}
 
 	BaseClass::PrimaryAttack();
-
-	// Add an accuracy penalty which can move past our maximum penalty time if we're really spastic
-	m_flAccuracyPenalty += GetClickFireRate();
 }
 
 //-----------------------------------------------------------------------------

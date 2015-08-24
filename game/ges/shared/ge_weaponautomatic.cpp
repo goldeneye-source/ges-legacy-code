@@ -87,9 +87,6 @@ void CGEWeaponAutomatic::PrimaryAttack( void )
 		m_nNumShotsFired++;
 	}
 
-	// Add an accuracy penalty which can move past our maximum penalty time if we're really spastic
-	m_flAccuracyPenalty += GetFireRate() * iBulletsToFire;
-
 	// Make sure we don't fire more than the amount in the clip, if this weapon uses clips
 	if ( UsesClipsForAmmo1() )
 	{
@@ -98,6 +95,7 @@ void CGEWeaponAutomatic::PrimaryAttack( void )
 		m_iClip1 -= iBulletsToFire;
 	}
 		// Fire the bullets
+	/*
 	FireBulletsInfo_t info;
 	info.m_iShots = iBulletsToFire;
 	info.m_vecSrc = pPlayer->Weapon_ShootPosition( );
@@ -107,6 +105,9 @@ void CGEWeaponAutomatic::PrimaryAttack( void )
 	info.m_iAmmoType = m_iPrimaryAmmoType;
 	info.m_iTracerFreq = 2;
 	pPlayer->FireBullets( info );
+	*/
+
+	PrepareFireBullets(iBulletsToFire, pPlayer, pPlayer->Weapon_ShootPosition(), pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES), true, 2);
 
 	// Record our shots
 	RecordShotFired( iBulletsToFire );
@@ -244,6 +245,7 @@ bool CGEWeaponAutomatic::Reload( void )
 //-----------------------------------------------------------------------------
 void CGEWeaponAutomatic::AddViewKick( void )
 {
+	/*
 	//Get the view kick
 	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
 
@@ -257,4 +259,6 @@ void CGEWeaponAutomatic::AddViewKick( void )
 	viewPunch.z = 0.0f;
 
 	DoMachineGunKick( pPlayer, 0.5f, viewPunch.y, m_fFireDuration, viewPunch.x );
+	*/
+	BaseClass::AddViewKick();
 }

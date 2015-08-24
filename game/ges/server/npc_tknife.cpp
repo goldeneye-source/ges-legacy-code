@@ -158,6 +158,9 @@ void CGETKnife::DamageTouch( CBaseEntity *pOther )
 	trace_t tr;
 	UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + (vecAiming * 24), MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
 
+	if (tr.m_pEnt != pOther)
+		UTIL_TraceLine(GetAbsOrigin(), pOther->GetAbsOrigin(), MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
+
 // TEMPORARY DEBUGGING PURPOSES
 //	DebugDrawLine( tr.startpos, tr.endpos, 0, 255, 0, true, 5.0f );
 //	debugoverlay->AddSweptBoxOverlay( tr.startpos, tr.endpos, CollisionProp()->OBBMins(), CollisionProp()->OBBMaxs(), GetAbsAngles(), 0, 0, 255, 100, 5.0f );

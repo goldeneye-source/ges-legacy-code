@@ -138,6 +138,12 @@ public:
 		SS_BLOCKED_GAMEPLAY,
 	};
 
+	// Spawn system info functions
+	Vector	GetLastDeath() { return m_vLastDeath; }
+	Vector	GetLastSpawn() { return m_vLastSpawn; }
+	float	GetLastSpawnTime() { return m_flSpawnTime; }
+
+
 protected:
 	// Spawn state management
 	void SetSpawnState( SpawnState state );
@@ -188,6 +194,10 @@ protected:
 	bool	m_bFirstSpawn;
 	bool	m_bPreSpawn;
 	bool	m_bSpawnFromDeath;
+
+	// Spawn system personal modifiers.
+	Vector	m_vLastDeath;
+	Vector	m_vLastSpawn;
 };
 
 CGEMPPlayer *ToGEMPPlayer( CBaseEntity *pEntity );

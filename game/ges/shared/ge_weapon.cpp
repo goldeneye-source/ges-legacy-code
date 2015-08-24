@@ -230,8 +230,18 @@ void CGEWeapon::RecordShotFired(int count /*=1*/)
 void CGEWeapon::PrimaryAttack(void)
 {
 	CBasePlayer *pPlayer = ToBasePlayer(GetOwner());
+
 	if(!pPlayer)
 		return;
+
+//	CGEPlayer *pGEPlayer = ToGEPlayer(pPlayer);
+	
+	// MUST call sound before removing a round from the clip of a CMachineGun
+	WeaponSound(SINGLE);
+
+	pPlayer->DoMuzzleFlash();
+
+	SendWeaponAnim(ACT_VM_PRIMARYATTACK);
 
 	//This stops silent firing...
 	if(pPlayer->m_nButtons & IN_RELOAD)
@@ -241,11 +251,30 @@ void CGEWeapon::PrimaryAttack(void)
 	}
 
 	// Send the animation event to the client/server
+	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 	ToGEPlayer(pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
+
+	//BaseClass::PrimaryAttack();  //Taking this out for now so weapon logic can be consistent and handled in one place someday.
+
+	Vector	vecSrc = pPlayer->Weapon_ShootPosition();
+	Vector	vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
+
+	//	FireBulletsInfo_t info( 5, vecSrc, vecAiming, pGEPlayer->GetAttackSpread(this), MAX_TRACE_LENGTH, m_iPrimaryAmmoType );
+	//	info.m_pAttacker = pPlayer;
 
 	RecordShotFired();
 
-	BaseClass::PrimaryAttack();
+	// Knock the player's view around
+	AddViewKick();
+
+	// Prepare to fire the bullets
+	PrepareFireBullets(1, pPlayer, vecSrc, vecAiming, true);
+
+	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
+	{
+		// HEV suit - indicate out of ammo condition
+		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
+	}
 }
 
 bool CGEWeapon::Reload( void )
@@ -464,9 +493,9 @@ void CGEWeapon::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUse
 		vecShootDir = npc->GetActualShootTrajectory( vecShootOrigin );
 
 		// NOTE: CBaseCombatCharacter::FindMissTarget( void ) is jacked up
-	}
 
-	pOperator->FireBullets( 1, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0 );
+		PrepareFireBullets(1, pOperator, vecShootOrigin, vecShootDir, false);
+	}
 }
 
 void CGEWeapon::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator )
@@ -520,10 +549,36 @@ void CGEWeapon::SetEnableGlow( bool state )
 
 #endif
 
+// Consolidate the fire preps into one function since all the custom primary attack functions have to do their own otherwise,
+// And updating them all every time it needs to be changed kind of sucks.
+void CGEWeapon::PrepareFireBullets(int number, CBaseCombatCharacter *pOperator, Vector vecShootOrigin, Vector vecShootDir, bool haveplayer, int tracerfreq)
+{
+	UpdateAccPenalty(); //Update the penalty before doing any of this nonsense, as it affects both gauss factor and spread cone.
+
+	FireBulletsInfo_t info(number, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0);
+	info.m_iGaussFactor = GetGaussFactor(); //Calculates the gauss factor and adds it to the fire info.
+	info.m_iTracerFreq = tracerfreq; //How many bullets per tracer.
+
+	if (haveplayer)
+		info.m_pAttacker = pOperator;
+
+	pOperator->FireBullets(info); //Actually fires the bullets this time.  For real!
+
+	m_flAccuracyPenalty += number; //Adds an innaccuracy penalty equal to shots fired.  File settings determine how fast it decays and how much it affects.
+	m_flCoolDownTime = gpGlobals->curtime; // Update our cool down time
+}
+
 const Vector& CGEWeapon::GetBulletSpread( void )
 {
 	static Vector cone;
 	Vector minSpread, maxSpread;
+	float aimbonus, jumppenalty;
+
+	minSpread = GetGEWpnData().m_vecSpread;
+	maxSpread = GetGEWpnData().m_vecMaxSpread;
+	aimbonus = GetGEWpnData().m_flAimBonus;
+	jumppenalty = GetGEWpnData().m_flJumpPenalty;
+
 
 	CBaseCombatCharacter *pOwner = GetOwner();
 	if ( pOwner && pOwner->IsPlayer() )
@@ -532,52 +587,68 @@ const Vector& CGEWeapon::GetBulletSpread( void )
 
 		// Give penalty for being in the air (jumping/falling)
 		// (ladder check: pPlayer->GetMoveType() == MOVETYPE_LADDER)
-		if ( pPlayer->GetGroundEntity() == NULL )
-			minSpread = GetGEWpnData().m_vecSpread * 1.2f;
-		else if( pPlayer->IsInAimMode() )
-			minSpread = GetGEWpnData().m_vecSpreadSighted;
-		else 
-			minSpread = GetGEWpnData().m_vecSpread;
-	}
-	else
-	{
-		minSpread = GetGEWpnData().m_vecSpread;
-	}
 
-	// Make sure we enforce the cool down
-	if ( gpGlobals->curtime >= m_flCoolDownTime )
-		maxSpread = minSpread;
-	else
-		maxSpread = minSpread + ( GetRecoil()*(m_flCoolDownTime - gpGlobals->curtime) / (3.0f * GetFireRate()) );
+		if (pPlayer->GetGroundEntity() == NULL)
+		{
+			minSpread.x += jumppenalty;
+			minSpread.y += jumppenalty;
+			maxSpread.x += jumppenalty * 2;
+			maxSpread.y += jumppenalty * 2;
+		}
+		else if (pPlayer->IsInAimMode()) //Aim bonus only affects min spread, meaning full auto gets no benefits.
+		{
+			minSpread.x -= min(aimbonus, minSpread.x);
+			minSpread.y -= min(aimbonus, minSpread.y);
+		}
+	}
 
 	// Map our penalty time from 0-MaxPenalty  to  0-1
-	float ramp = RemapValClamped( m_flAccuracyPenalty, 0.0f, GetMaximumPenaltyTime(), 0.0f, 1.0f ); 
+	float ramp = RemapValClamped(m_flAccuracyPenalty, 0.0f, GetAccShots(), 0.0f, 1.0f);
 
 	// We lerp from very accurate to inaccurate over time
-	VectorLerp( minSpread, maxSpread, ramp, cone );
+	VectorLerp(minSpread, maxSpread, ramp, cone);
 
-	// Update our cool down time
-	if ( (gpGlobals->curtime - m_flCoolDownTime) <= (2.0f*GetFireRate()) )
-		m_flCoolDownTime = gpGlobals->curtime + 2.0f*GetFireRate();
-	else
-		m_flCoolDownTime = gpGlobals->curtime + 4.0f*GetFireRate();
+	// Valve says spread vector input on firebullets assumes sin(degrees/2), adjust to that.
+	// Except that's just what valve says, after some digging and testing it's actually tan(degrees/2)
+
+	cone.x = tanf(DEG2RAD(cone.x));
+	cone.y = tanf(DEG2RAD(cone.y));
 
 	return cone;
 }
 
-void CGEWeapon::UpdatePenaltyTime( void )
+void CGEWeapon::UpdateAccPenalty()
 {
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
+	// Reduce accuracy penalty based on time of last attack
+	float timeratio = (gpGlobals->curtime - m_flCoolDownTime) / GetAccFireRate();
 
-	if ( pOwner == NULL )
-		return;
+	m_flAccuracyPenalty -= timeratio*timeratio; //Time squared so waiting longer yeilds much greater benefits.
+	m_flAccuracyPenalty = max(m_flAccuracyPenalty, 0.0f);
+	m_flAccuracyPenalty = min(m_flAccuracyPenalty, (float)GetAccShots());
+}
 
-	// Check our penalty time decay
-	if ( (pOwner->m_nButtons & IN_ATTACK) == false  && m_flAccuracyPenalty != 0 )
+int CGEWeapon::GetGaussFactor()
+{
+	int gaussfactor = GetGEWpnData().m_flGaussFactor;
+	int gausspenalty = GetGEWpnData().m_flGaussPenalty;
+
+	// Jumping lowers gauss to 1, or keeps it at 0.
+	CBaseCombatCharacter *pOwner = GetOwner();
+	if (pOwner && pOwner->IsPlayer())
 	{
-		m_flAccuracyPenalty -= gpGlobals->frametime;
-		m_flAccuracyPenalty = max( m_flAccuracyPenalty, 0.0f );
+		CGEPlayer *pPlayer = ToGEPlayer(pOwner);
+
+		if (pPlayer->GetGroundEntity() == NULL)
+		{
+			gaussfactor = min(gaussfactor, 1);
+			gausspenalty = 0;
+		}
 	}
+
+	// Calculate ramp as it plays into gauss penalty.
+	float ramp = RemapValClamped(m_flAccuracyPenalty, 0.0f, GetAccShots(), 0.0f, 1.0f);
+
+	return (int)(gaussfactor - ramp * gausspenalty);
 }
 
 bool CGEWeapon::HasAmmo( void )
@@ -615,10 +686,10 @@ bool CGEWeapon::IsWeaponVisible( void )
 		return BaseClass::IsWeaponVisible();
 }
 
+// Have to leave this in for now because all the other weapon class files love it.
 void CGEWeapon::ItemPreFrame( void )
 {
 	BaseClass::ItemPreFrame();
-	UpdatePenaltyTime();
 }
 
 void CGEWeapon::ItemPostFrame( void )

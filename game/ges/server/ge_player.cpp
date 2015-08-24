@@ -53,6 +53,8 @@ END_DATADESC()
 #define GE_COMMAND_MAX_RATE		0.5f
 #define GE_HITOTHER_DELAY		0.15f
 
+#define INVULN_PERIOD			0.5f
+
 #ifdef _MSC_VER
 #pragma warning( disable : 4355 )
 #endif
@@ -247,8 +249,9 @@ void CGEPlayer::PostThink( void )
 	BaseClass::PostThink();
 
 	// Don't apply invuln if the damage was caused by us
-	//if ( m_iDmgTakenThisFrame > 0 && m_pCurrAttacker != this )
-	//{
+/*	if ( m_iDmgTakenThisFrame > 0 && m_pCurrAttacker != this )
+	if (ToBasePlayer(m_pCurrAttacker) && CheckInvul(ToBasePlayer(m_pCurrAttacker)))
+	{
 		// Record our attacker for inter-invuln attacks
 		m_pLastAttacker = m_pCurrAttacker;
 		m_iPrevDmgTaken = m_iDmgTakenThisFrame;
@@ -258,14 +261,14 @@ void CGEPlayer::PostThink( void )
 		if ( GetHealth() < (GetMaxHealth() / 2) )
 			flTime += 0.006f * (((float)GetMaxHealth() / 2.0f) - GetHealth());
 		
-	//	StartInvul( flTime );
-	//}
-	//else if ( m_pCurrAttacker == this )
-	//{
+		StartInvul( flTime );
+	}
+	else if ( m_pCurrAttacker == this )
+	{
 		// If we hurt ourselves give us half the normal invuln time
-	//	StartInvul( 0.33f );
-	//}
-
+		StartInvul( 0.33f );
+	}
+	*/
 	// Clamp force on alive players to 1000
 	if ( m_iHealth > 0 && m_vDmgForceThisFrame.Length() > 1000.0f )
 	{
@@ -321,22 +324,19 @@ bool CGEPlayer::ShouldRunRateLimitedCommand( const CCommand &args )
 // This function checks to see if we are invulnerable, if we are and the time limit hasn't passed by
 // then don't do the damage applied. Otherwise, go for it!
 
-//--------------------------------------------
-// Disabling the invuln code for now because everyone really wants to see how unbalancable the game is without it.
-//--------------------------------------------
 
 int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 {
 	// Reset invulnerability if we take world or self damage
 
-	//-if ( inputinfo.GetAttacker()->IsWorld() || inputinfo.GetAttacker() == this || Q_stristr("trigger_", inputinfo.GetAttacker()->GetClassname()) )
-	//-	StopInvul();
+	if ( inputinfo.GetAttacker()->IsWorld() || inputinfo.GetAttacker() == this || Q_stristr("trigger_", inputinfo.GetAttacker()->GetClassname()) )
+		StopInvul();
 
 	int dmg = BaseClass::OnTakeDamage(inputinfo);
 
 	// Did we accumulate more damage?
-	//-if ( m_iDmgTakenThisFrame < (m_DmgTake + m_DmgSave) )
-	//-{
+	if (CheckInvul(ToBasePlayer(inputinfo.GetAttacker())))
+	{
 		// Record our attacker
 		m_pCurrAttacker = inputinfo.GetAttacker();
 
@@ -381,8 +381,9 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 		if ( !pAttacker )
 			return dmg;
 
-		if (!CheckInPVS(pAttacker))
-			return 0;
+		// Make sure that our attacker has us loaded and we have our attacker loaded.
+		if (!CheckInPVS(pAttacker) && !ToGEPlayer(pAttacker)->CheckInPVS(this) && inputinfo.GetDamageType() != DMG_BLAST)
+			return dmg;
 
 		// Tell our attacker that they damaged me
 		ToGEPlayer( pAttacker )->Event_DamagedOther( this, flIntegerDamage, inputinfo );
@@ -422,11 +423,11 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 			event->SetBool( "penetrated", FBitSet(inputinfo.GetDamageStats(), FIRE_BULLETS_PENETRATED_SHOT)?true:false );
 			gameeventmanager->FireEvent( event );
 		}
-	//-}
-	//-else
-	//-{
-	//-	DevMsg( "%s's invulnerability blocked that hit!\n", GetPlayerName() );
-	//-}
+	}
+	else
+	{
+		DevMsg( "%s's invulnerability blocked that hit!\n", GetPlayerName() );
+	}
 
 	return dmg;
 }
@@ -448,6 +449,12 @@ int CGEPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 {
 	CBaseEntity * attacker = inputInfo.GetAttacker();
 	if ( !attacker )
+		return 0;
+
+	// Can't damage players not in your PVS
+	CBasePlayer *pAttacker = ToBasePlayer(inputInfo.GetAttacker());
+
+	if (pAttacker && !CheckInPVS(pAttacker) && !ToGEPlayer(pAttacker)->CheckInPVS(this)  && inputInfo.GetDamageType() != DMG_BLAST)
 		return 0;
 
 	// Check to see if we have already calculated a damage force
@@ -490,6 +497,13 @@ void CGEPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vec
 		StopInvul();
 	else if ( m_pLastAttacker && m_pLastAttacker != info.GetAttacker() )
 		m_takedamage = DAMAGE_YES;
+
+	// Can't damage players not in your PVS.
+	CBasePlayer *pAttacker = ToBasePlayer(info.GetAttacker());
+
+	if (pAttacker && !CheckInPVS(pAttacker) && !ToGEPlayer(pAttacker)->CheckInPVS(this) && info.GetDamageType() != DMG_BLAST)
+		m_takedamage = DAMAGE_NO;
+
 
 	if ( m_takedamage != DAMAGE_NO )
 	{
@@ -556,8 +570,10 @@ void CGEPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vec
 
 		// Since we scaled our damage, now check to see if we did enough damage to override the invuln
 		// if we didn't we set us back to invuln (pending we actually were in it previously)
-		if ( info.GetAttacker() != m_pLastAttacker && info.GetDamage() > m_iPrevDmgTaken )
-			info.SetDamage( info.GetDamage() - m_iPrevDmgTaken );
+//		if ( info.GetAttacker() != m_pLastAttacker && info.GetDamage() > m_iPrevDmgTaken )
+//			info.SetDamage( info.GetDamage() - m_iPrevDmgTaken );
+		if (ToBasePlayer(info.GetAttacker()))
+			info.SetDamage(CalcInvul(info.GetDamage(), ToBasePlayer(info.GetAttacker())));
 		else if ( m_pLastAttacker )
 			m_takedamage = DAMAGE_NO;
 
@@ -735,6 +751,14 @@ void CGEPlayer::Spawn()
 
 	m_iDmgTakenThisFrame = 0;
 	m_iAimModeState = AIM_NONE;
+
+	for (int i = 0; i < 16; i++)
+	{
+		m_iAttackListTimes[i] = 0.0;
+		m_iAttackList[i] = 0;
+	}
+
+	m_justhit = false;
 }
 
 void CGEPlayer::HideBloodScreen( void )
@@ -773,6 +797,115 @@ void CGEPlayer::StartInvul( float time )
 	DevMsg( "%s is invulnerable for %0.2f seconds...\n", GetPlayerName(), time );
 	m_takedamage = DAMAGE_NO;
 	m_flEndInvulTime = gpGlobals->curtime + time;
+}
+
+bool CGEPlayer::CheckInvul(CBasePlayer *pAttacker)
+{
+	int totaldamage = 0;
+
+	if (m_justhit)
+		return true;
+
+	m_justhit = false;
+
+	if (!pAttacker)
+		return true;
+
+	CBaseEntity *pInflictor;
+	pInflictor = pAttacker->GetActiveWeapon();
+
+	if (!pInflictor)
+		return true;
+
+	CGEWeapon *pWeapon = ToGEWeapon((CBaseCombatWeapon*)pInflictor);
+
+	if (!pWeapon)
+		return true;
+
+	for (int i = 0; i < 16; i++)
+	{
+		totaldamage += m_iAttackList[i];
+	}
+
+	if (totaldamage >= pWeapon->GetDamageCap())
+		return false;
+	else
+		return true;
+}
+
+int CGEPlayer::CalcInvul(int damage, CBasePlayer *pAttacker)
+{
+	DevMsg("%s took %d damage...\n", GetPlayerName(), damage);
+
+	float lowtime = gpGlobals->curtime - INVULN_PERIOD;
+	int emptyid = -1;
+
+	// Scans for empty and expired damage slots.
+	for (int i = 0; i < 16; i++)
+	{
+		if (m_iAttackListTimes[i] < lowtime)
+		{
+			m_iAttackListTimes[i] = 0.0;
+			m_iAttackList[i] = 0;
+			emptyid = i;
+		}
+	}
+
+
+	// If all damage slots are filled somehow, the player gets to cheat the system.  They earned it.
+	if (emptyid == -1)
+	{
+		m_takedamage = DAMAGE_NO;
+		return 0;
+	}
+
+
+	if (!pAttacker)
+		return damage;
+
+	CBaseEntity *pInflictor;
+
+
+	pInflictor = pAttacker->GetActiveWeapon();
+
+	if (!pInflictor)
+		return damage;
+
+	CGEWeapon *pWeapon = ToGEWeapon((CBaseCombatWeapon*)pInflictor);
+
+	if (!pWeapon)
+		return damage;
+
+	// Calculate the damage taken in the last invuln period.
+	int totaldamage = 0;
+
+	for (int i = 0; i < 16; i++)
+	{
+		totaldamage += m_iAttackList[i];
+	}
+
+	// If we've hit the cap already, give up.
+	if (totaldamage >= pWeapon->GetDamageCap())
+	{
+		m_takedamage = DAMAGE_NO;
+		return 0;
+	}
+	
+	//Otherwise it's time to add the entry to the list and announce the target has been hit.
+
+	damage = min(damage, pWeapon->GetDamageCap() - totaldamage);
+
+	m_iAttackListTimes[emptyid] = gpGlobals->curtime;
+	m_iAttackList[emptyid] = damage;
+
+	m_takedamage = DAMAGE_YES;
+	m_justhit = true;
+
+	DevMsg("...damage cap is %d...", pWeapon->GetDamageCap());
+	DevMsg("...total damage is %d...", totaldamage);
+	DevMsg("...Which became %d damage after invuln calcs!\n", damage);
+
+	return damage;
 }
 
 void CGEPlayer::StopInvul( void )

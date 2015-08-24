@@ -12,6 +12,7 @@
 #include "cbase.h"
 #include "ge_playerspawn.h"
 #include "gemp_gamerules.h"
+#include "gemp_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -52,6 +53,7 @@ CGEPlayerSpawn::CGEPlayerSpawn( void )
 	memset( m_iPVS, 0, sizeof(m_iPVS) );
 	m_bFoundPVS = false;
 	m_fLastUseTime = 0;
+	m_fMaxSpawnDist = 0;
 }
 
 void CGEPlayerSpawn::Spawn( void )
@@ -91,7 +93,8 @@ void CGEPlayerSpawn::Think( void )
 		DEBUG_ShowOverlay( SPAWNER_CALC_EFFICIENCY );
 }
 
-int CGEPlayerSpawn::GetDesirability( CGEPlayer *pRequestor )
+
+int CGEPlayerSpawn::GetDesirability(CGEPlayer *pRequestor)
 {
 	//Calculates proximity modifier, and ticks down use and death modifiers.
 	//Proximity is based on the most threatening player in range.  This is calculated mostly on proximity but has many modifiers on top of it.
@@ -100,31 +103,31 @@ int CGEPlayerSpawn::GetDesirability( CGEPlayer *pRequestor )
 	//The death modifier still has a lot of kinks to work out.
 
 	// We should never be picked if we are not enabled
-	if ( !IsEnabled() )
+	if (!IsEnabled())
 		return 0;
 
 	int myTeam = m_iTeam;
 
 	// Spectators have no loyalty or cares in the world!
-	if ( myTeam == TEAM_SPECTATOR )
+	if (myTeam == TEAM_SPECTATOR)
 		return SPAWNER_DEFAULT_WEIGHT;
 
 	// Adjust for team spawn swaps
-	if ( GEMPRules()->IsTeamplay() && GEMPRules()->IsTeamSpawnSwapped() && m_iTeam >= FIRST_GAME_TEAM )
+	if (GEMPRules()->IsTeamplay() && GEMPRules()->IsTeamSpawnSwapped() && m_iTeam >= FIRST_GAME_TEAM)
 		myTeam = (myTeam == TEAM_JANUS) ? TEAM_MI6 : TEAM_JANUS;
 
 	m_iLastEnemyWeight = m_iLastUseWeight = m_iLastDeathWeight = 0;
 
 	// Calculate most threatening player, based on proximity, weapon, health, and PVS.
-	FOR_EACH_PLAYER( pPlayer )
+	FOR_EACH_PLAYER(pPlayer)
 	{
-		if ( pPlayer->IsObserver() || pPlayer->IsDead() )
+		if (pPlayer->IsObserver() || pPlayer->IsDead())
 			continue;
 
 		// Check team affiliation
 		bool onMyTeam = false;
-		if ( GEMPRules()->IsTeamplay() && (pPlayer->GetTeamNumber() == myTeam ||
-			(myTeam == TEAM_UNASSIGNED && pPlayer->GetTeamNumber() == pRequestor->GetTeamNumber()) ) )
+		if (GEMPRules()->IsTeamplay() && (pPlayer->GetTeamNumber() == myTeam ||
+			(myTeam == TEAM_UNASSIGNED && pPlayer->GetTeamNumber() == pRequestor->GetTeamNumber())))
 			onMyTeam = true;
 
 		Vector diff = pPlayer->GetAbsOrigin() - GetAbsOrigin();
@@ -158,7 +161,7 @@ int CGEPlayerSpawn::GetDesirability( CGEPlayer *pRequestor )
 		else
 		{
 			trace_t		tr;
-			UTIL_TraceLine(GetAbsOrigin() + Vector(0, 0, 32) , pPlayer->EyePosition(), MASK_OPAQUE, pPlayer, COLLISION_GROUP_NONE, &tr);
+			UTIL_TraceLine(GetAbsOrigin() + Vector(0, 0, 32), pPlayer->EyePosition(), MASK_OPAQUE, pPlayer, COLLISION_GROUP_NONE, &tr);
 
 			if (tr.fraction == 1.0f)
 			{
@@ -185,7 +188,7 @@ int CGEPlayerSpawn::GetDesirability( CGEPlayer *pRequestor )
 		dist /= min(2.0, powf(160.00 - life, 2.0) / 64000.00f + 1); // 160*80*5, to get 0.4 as the max value
 
 		// Check if this player is still close enough after modifiers.
-		if ( dist > SPAWNER_MAX_ENEMY_DIST )
+		if (dist > SPAWNER_MAX_ENEMY_DIST)
 			continue;
 
 		//Adjusted square root curve so far away players aren't considered as much.
@@ -205,22 +208,57 @@ int CGEPlayerSpawn::GetDesirability( CGEPlayer *pRequestor )
 	}
 	END_OF_PLAYER_LOOP()
 
-	//scale value to the max enemy weight.
-	m_iLastEnemyWeight = RemapValClamped(m_iLastEnemyWeight, 0, 100, 0, SPAWNER_MAX_ENEMY_WEIGHT);
+		//scale value to the max enemy weight.
+		m_iLastEnemyWeight = RemapValClamped(m_iLastEnemyWeight, 0, 100, 0, SPAWNER_MAX_ENEMY_WEIGHT);
 
 	// Clean up nearby deaths and scale our metric
 	float timeDiff = gpGlobals->curtime - m_fLastDeathCalc;
 	m_fLastDeathCalc = gpGlobals->curtime;
-	m_fNearbyDeathMetric = max( 0, m_fNearbyDeathMetric - (timeDiff * SPAWNER_DEATHFORGET_RATE) );
+	m_fNearbyDeathMetric = max(0, m_fNearbyDeathMetric - (timeDiff * SPAWNER_DEATHFORGET_RATE));
 
-	m_iLastDeathWeight = min( SPAWNER_MAX_DEATH_WEIGHT, SPAWNER_MAX_DEATH_WEIGHT*m_fNearbyDeathMetric );
+	m_iLastDeathWeight = min(SPAWNER_MAX_DEATH_WEIGHT, SPAWNER_MAX_DEATH_WEIGHT*m_fNearbyDeathMetric);
 
 	// Spit out percentage wait from last use
 	timeDiff = m_fLastUseTime - gpGlobals->curtime;
 	m_iLastUseWeight = RemapValClamped(timeDiff, 0, SPAWNER_LASTUSE_LIMIT, 0, SPAWNER_MAX_USE_WEIGHT);
 
-	// Return a sum of our weight factors against the default  - m_iLastDeathWeight - m_iLastUseWeight
-	return max(SPAWNER_DEFAULT_WEIGHT - m_iLastEnemyWeight - m_iLastUseWeight - m_iLastDeathWeight, 0);
+	//-------------------
+	// PERSONAL MODIFIERS
+	//-------------------
+
+	// Ultimate lazy programming please ignore.
+
+
+	CGEMPPlayer *pUniquePlayer = ToGEMPPlayer(pRequestor);
+
+	if (pUniquePlayer->GetLastDeath() != Vector(-1, -1, -1))
+	{
+		Vector diff = pUniquePlayer->GetLastDeath() - GetAbsOrigin();
+		float dist = diff.Length2D();
+
+		if (dist < SPAWNER_MAX_ENEMY_DIST)
+			m_iUniLastDeathWeight = (1 - dist / SPAWNER_MAX_ENEMY_DIST) * 0.75 * SPAWNER_MAX_DEATH_WEIGHT;
+		else
+			m_iUniLastDeathWeight = 0;
+	}
+
+	if (pUniquePlayer->GetLastSpawn() != Vector(-1, -1, -1))
+	{
+		Vector diff = pUniquePlayer->GetLastSpawn() - GetAbsOrigin();
+		float dist = diff.Length2D();
+
+		// Only cares about last spawn position if player's last spawn was within 40 seconds of this one.  If not double death multiplier.
+		if (dist < SPAWNER_MAX_ENEMY_DIST && pUniquePlayer->GetLastSpawnTime() > gpGlobals->curtime - 40)
+			m_iUniLastUseWeight = (1 - dist / SPAWNER_MAX_ENEMY_DIST) * 0.75 * SPAWNER_MAX_USE_WEIGHT;
+		else
+		{
+			m_iUniLastUseWeight = 0;
+			m_iUniLastDeathWeight *= 2;
+		}
+	}
+
+	// Return a sum of our weight factors
+	return max(SPAWNER_DEFAULT_WEIGHT - m_iLastEnemyWeight - m_iLastUseWeight - m_iLastDeathWeight - m_iUniLastDeathWeight - m_iUniLastUseWeight, 0);
 }
 
 bool CGEPlayerSpawn::IsOccupied( void )
@@ -251,15 +289,15 @@ bool CGEPlayerSpawn::IsBotFriendly( void )
 
 void CGEPlayerSpawn::NotifyOnDeath( float dist )
 {
-	if ( dist < SPAWNER_MAX_ENEMY_DIST )
+	if ( dist < SPAWNER_MAX_DEATH_DIST )
 	{
 		// Disabled because of attempt to repurpose death system to stack up over longer timespan.
 		// Give a boost for rapid deaths
 		//float timeScale = RemapValClamped( gpGlobals->curtime - m_fLastDeathNotice, 0, 5.0f, 3.0f, 1.0f );
 		//m_fNearbyDeathMetric += Bias( RemapValClamped( dist, SPAWNER_MAX_ENEMY_DIST, 0, 0, 1.0f ), 0.8 ) * timeScale;
-		m_fNearbyDeathMetric += (1 - dist / SPAWNER_MAX_DEATH_DIST) * 0.25;
+		m_fNearbyDeathMetric += (1 - dist / SPAWNER_MAX_DEATH_DIST) * 0.30; // Death right on top of the spawn raises death motifier 30%
 
-		m_fLastDeathNotice = m_fLastDeathCalc = gpGlobals->curtime;
+		//m_fLastDeathNotice = m_fLastDeathCalc = gpGlobals->curtime;
 	}
 }
 
@@ -269,26 +307,29 @@ void CGEPlayerSpawn::NotifyOnUse( void )
 
 	Vector myPos = GetAbsOrigin();
 
-	float maxdist = 0.00;
-
-	for (int i = (vSpawns->Count() - 1); i >= 0; i--)
+	if (m_fMaxSpawnDist == 0)
 	{
-		CGEPlayerSpawn *pSpawn = (CGEPlayerSpawn*)vSpawns->Element(i).Get();
-		Vector diff = pSpawn->GetAbsOrigin() - GetAbsOrigin();
-		float dist = diff.Length2DSqr();
+		float maxdist = 0.00;
+		for (int i = (vSpawns->Count() - 1); i >= 0; i--)
+		{
+			CGEPlayerSpawn *pSpawn = (CGEPlayerSpawn*)vSpawns->Element(i).Get();
+			Vector diff = pSpawn->GetAbsOrigin() - GetAbsOrigin();
+			float dist = diff.Length2DSqr();
 
-		if (dist > maxdist)
-			maxdist = dist;
+			if (dist > maxdist)
+				maxdist = dist;
+		}
+
+		m_fMaxSpawnDist = sqrt(maxdist)*0.6; //rooting maxdist to correct Length2DSqr and multiplying by 3/5 to limit range.
 	}
 
-	maxdist = sqrt(maxdist)*0.6; //rooting maxdist to correct Length2DSqr and multiplying by 3/5 to limit range.
 	for (int i = (vSpawns->Count() - 1); i >= 0; i--)
 	{
 		CGEPlayerSpawn *pSpawn = (CGEPlayerSpawn*)vSpawns->Element(i).Get();
 		Vector diff = pSpawn->GetAbsOrigin() - GetAbsOrigin();
 		float dist = diff.Length2D();
 		if (abs(diff.z) < 128)
-			pSpawn->SetLastUseTime(( 1 - dist/maxdist ) * 15);
+			pSpawn->SetLastUseTime((1 - dist / m_fMaxSpawnDist) * 15);
 	}
 }
 
@@ -428,6 +469,16 @@ void CGEPlayerSpawn::DEBUG_ShowOverlay( float duration )
 			{
 				Q_snprintf( tempstr, 64, "Use Weight: -%i", m_iLastUseWeight );
 				EntityText( ++line, tempstr, duration );
+			}
+			if (m_iUniLastDeathWeight > 0)
+			{
+				Q_snprintf(tempstr, 64, "Unique Death Weight: -%i", m_iUniLastDeathWeight);
+				EntityText(++line, tempstr, duration);
+			}
+			if (m_iUniLastUseWeight > 0)
+			{
+				Q_snprintf(tempstr, 64, "Unique Use Weight: -%i", m_iUniLastUseWeight);
+				EntityText(++line, tempstr, duration);
 			}
 		}
 	}

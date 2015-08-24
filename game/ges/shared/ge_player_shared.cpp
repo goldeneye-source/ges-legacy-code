@@ -227,7 +227,7 @@ void CGEPlayer::FireBullets( const FireBulletsInfo_t &info )
 	// also, this shot counts for 0 damage!
 	if ( m_bInSpawnInvul && !IsObserver() )
 	{
-		modinfo.m_iPlayerDamage = modinfo.m_iDamage = 0;
+//		modinfo.m_iPlayerDamage = modinfo.m_iDamage = 0;
 		StopInvul();
 	}
 #endif
@@ -309,7 +309,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	}
 
 	// Prediction seed
-	int iSeed = CBaseEntity::GetPredictionRandomSeed() & 255;
+	int iSeed = CBaseEntity::GetPredictionRandomSeed();
 
 	//-----------------------------------------------------
 	// Set up our shot manipulator.
@@ -332,8 +332,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 		}
 		else
 		{
-			// Don't run the biasing code for the player at the moment.
-			vecDir = Manipulator.ApplySpread( modinfo.m_vecSpread );
+			vecDir = ApplySpreadGauss(modinfo.m_vecSpread, modinfo.m_vecDirShooting, modinfo.m_iGaussFactor, CBaseEntity::GetPredictionRandomSeed() + iShot);
 		}
 
 		vecEnd = modinfo.m_vecSrc + vecDir * modinfo.m_flDistance;
@@ -521,6 +520,51 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	} // end fire bullets loop
 }
 
+inline const Vector CBaseEntity::ApplySpreadGauss(const Vector &vecSpread, const Vector &vecShotDir, int gfactor, int pseed)
+{
+	Vector vecRight, vecUp;
+
+	VectorVectors(vecShotDir, vecRight, vecUp);
+
+	// establish polar coordinates
+	float x, y, radius, angle, sin, cos;
+
+	//Get random angle from 0 to 360 degrees
+	angle = random->RandomFloat(0, 6.2831853); //approximation of 2 pi.
+
+
+	// Calculate a gaussian integer with a given gaussfactor
+	// The higher the gaussfactor is, the closer the range becomes to a true normal destribution.
+
+	float gausrand = 0.000;
+
+	if (gfactor < 1) //A GFactor of 0 or less should mean equal destribution across the cone of fire's area
+	{
+		RandomSeed(pseed - 1); //Avoid having the same seed as the random angle.
+		gausrand = rand() % 1000;
+		radius = sqrtf(gausrand / 1000); //Radius is rooted here to make the spread a function of circle area, not radius.
+	}
+	else //A GFactor of 1 should mean equal destribution across the cone of fire's radius
+	{
+		for (int i = 0; i < gfactor; i++)
+		{
+			RandomSeed(pseed + i);
+			gausrand += rand() % 1000;
+		}
+
+		// Adjust gauss range to 0-1 where 0 is the middle of the normal curve.
+		// This is a function of radius, not area, meaning shots will tend towards the center even at gfactor = 1!
+		radius = abs(gausrand / (gfactor * 500) - 1);
+	}
+
+	SinCos(angle, &sin, &cos);
+
+	x = radius * cos;
+	y = radius * sin;
+
+	return (vecShotDir + x * vecSpread.x * vecRight + y * vecSpread.y * vecUp);
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Handle bullet penetrations
 //-----------------------------------------------------------------------------
@@ -587,7 +631,7 @@ void CBaseEntity::HandleBulletPenetration( CBaseCombatWeapon *pWeapon, const Fir
 
 	//Entities get penetrated twice as far.
 	float depthmult = 1.0;
-	if (tr.DidHitNonWorldEntity())
+	if (tr.DidHitNonWorldEntity() && info.m_flPenetrateDepth >= 2)
 		depthmult = 2.0;
 
 	// Move through up to our max penetration
@@ -601,10 +645,12 @@ void CBaseEntity::HandleBulletPenetration( CBaseCombatWeapon *pWeapon, const Fir
 	if ( passTrace.startsolid || passTrace.fraction == 1.0f )
 		return;
 
-	// Impact the other side (will look like an exit effect)
-	DoImpactEffect( passTrace, GetAmmoDef()->DamageType(info.m_iAmmoType) );
-
 	float depth = info.m_flPenetrateDepth * (1.0 - passTrace.fraction);
+
+	// If surface is thick enough, impact the other side (will look like an exit effect)
+	if (depth/depthmult > 4)
+		DoImpactEffect( passTrace, GetAmmoDef()->DamageType(info.m_iAmmoType) );
+
 	if ( tr.m_pEnt && (tr.m_pEnt->IsPlayer() || tr.m_pEnt->IsNPC()) )
 	{
 		// Don't let this bullet hit us again

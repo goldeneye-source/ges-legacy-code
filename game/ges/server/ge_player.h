@@ -157,6 +157,9 @@ protected:
 	void StartInvul( float time );
 	void StopInvul( void );
 
+	int CalcInvul(int damage, CBasePlayer *pAttacker);
+	bool CheckInvul(CBasePlayer *pAttacker);
+
 	void SetCharIndex(int index){m_iCharIndex = index;}
 
 	CHintSystem *m_pHints;
@@ -181,6 +184,9 @@ protected:
 	int			m_iPrevDmgTaken;
 	CBaseEntity *m_pLastAttacker;
 	CBaseEntity *m_pCurrAttacker;
+	int			m_iAttackList [16];
+	float		m_iAttackListTimes [16];
+	bool		m_justhit; //shoddy fix for now
 
 	// This lets us rate limit the commands the players can execute so they don't overflow things like reliable buffers.
 	CUtlDict<float,int>	m_RateLimitLastCommandTimes;

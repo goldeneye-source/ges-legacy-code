@@ -19,10 +19,12 @@
 
 // Efficiency of our desirability calcs
 #define SPAWNER_CALC_EFFICIENCY		1.0f
-// Rate decrease of nearby death memory (in points / sec)
-#define SPAWNER_DEATHFORGET_RATE	0.01f
-// Last use limit in secs
-#define SPAWNER_LASTUSE_LIMIT		40.0f
+// Fade time cap
+#define SPAWNER_USEFADE_LIMIT		40.0f
+// Death time cap
+#define SPAWNER_DEATHFADE_LIMIT		60.0f
+// Death time cap
+#define SPAWNER_DEATHBOOST_BASE		20.0f
 // Default weight for calcs, raising this will decrease the effect of negative weight
 #define SPAWNER_DEFAULT_WEIGHT		1000
 
@@ -41,6 +43,7 @@ LINK_ENTITY_TO_CLASS( info_player_janus, CGEPlayerSpawn );
 LINK_ENTITY_TO_CLASS( info_player_mi6, CGEPlayerSpawn );
 
 BEGIN_DATADESC( CGEPlayerSpawn )
+	DEFINE_KEYFIELD( m_flDesirabilityMultiplier, FIELD_FLOAT, "desirability" ),
 	// Think
 	DEFINE_THINKFUNC( Think ),
 END_DATADESC()
@@ -53,7 +56,10 @@ CGEPlayerSpawn::CGEPlayerSpawn( void )
 	memset( m_iPVS, 0, sizeof(m_iPVS) );
 	m_bFoundPVS = false;
 	m_fLastUseTime = 0;
+	m_fUseFadeTime = 0;
+	m_fDeathFadeTime = 0;
 	m_fMaxSpawnDist = 0;
+	m_flDesirabilityMultiplier = 1;
 }
 
 void CGEPlayerSpawn::Spawn( void )
@@ -74,6 +80,9 @@ void CGEPlayerSpawn::Spawn( void )
 		m_iTeam = TEAM_JANUS;
 	else if ( !Q_stricmp(GetClassname(), "info_player_mi6") )
 		m_iTeam = TEAM_MI6;
+
+	// Multiply the default weight by the hammer modifer
+	m_iBaseDesirability = SPAWNER_DEFAULT_WEIGHT * m_flDesirabilityMultiplier;
 
 	SetThink( &CGEPlayerSpawn::Think );
 	SetNextThink( gpGlobals->curtime );
@@ -110,7 +119,7 @@ int CGEPlayerSpawn::GetDesirability(CGEPlayer *pRequestor)
 
 	// Spectators have no loyalty or cares in the world!
 	if (myTeam == TEAM_SPECTATOR)
-		return SPAWNER_DEFAULT_WEIGHT;
+		return m_iBaseDesirability;
 
 	// Adjust for team spawn swaps
 	if (GEMPRules()->IsTeamplay() && GEMPRules()->IsTeamSpawnSwapped() && m_iTeam >= FIRST_GAME_TEAM)
@@ -172,20 +181,13 @@ int CGEPlayerSpawn::GetDesirability(CGEPlayer *pRequestor)
 			}
 		}
 
-		// TODO: Make a decent weapon ranking system.
-		//CGEWeapon *pWeapon = NULL;
-		//pWeapon = ToGEWeapon(((CBaseCombatCharacter*)this)->GetActiveWeapon());
-
-		//if (pWeapon)
-		//{
-		//	wepthreat = min(2.0, pWeapon->GetGEWpnData().m_iDamage / pWeapon->GetClickFireRate() / 300); // How much damage the weapon does.
-		//}
-
-		// Scale threat by health level of player.  Players with low health are
+		// Scale threat by health level of player.  Players with very low health are
 		// treated as just as dangerous as players with high health so new players
-		// players don't spawn right on top of them and ruin their day
+		// players don't spawn right on top of nearly dead players and ruin their day
 
-		dist /= min(2.0, powf(160.00 - life, 2.0) / 64000.00f + 1); // 160*80*5, to get 0.4 as the max value
+		int adjlife = 160 - life;
+
+		dist /= min(2.0, adjlife*adjlife / 51200.00f + 1); // 51200 is 160*160*2, to get 1.5 as the typical max value
 
 		// Check if this player is still close enough after modifiers.
 		if (dist > SPAWNER_MAX_ENEMY_DIST)
@@ -193,6 +195,7 @@ int CGEPlayerSpawn::GetDesirability(CGEPlayer *pRequestor)
 
 		//Adjusted square root curve so far away players aren't considered as much.
 		int threat = (1 - sqrt(dist / SPAWNER_MAX_ENEMY_DIST + 0.05) + 0.025) * 125;
+
 
 		// If I am a DM spawn in teamplay, make spawn more desirable for teammates
 
@@ -208,57 +211,52 @@ int CGEPlayerSpawn::GetDesirability(CGEPlayer *pRequestor)
 	}
 	END_OF_PLAYER_LOOP()
 
-		//scale value to the max enemy weight.
-		m_iLastEnemyWeight = RemapValClamped(m_iLastEnemyWeight, 0, 100, 0, SPAWNER_MAX_ENEMY_WEIGHT);
+	//scale value to the max enemy weight.
+	m_iLastEnemyWeight = RemapValClamped(m_iLastEnemyWeight, 0, 100, 0, SPAWNER_MAX_ENEMY_WEIGHT);
 
-	// Clean up nearby deaths and scale our metric
-	float timeDiff = gpGlobals->curtime - m_fLastDeathCalc;
-	m_fLastDeathCalc = gpGlobals->curtime;
-	m_fNearbyDeathMetric = max(0, m_fNearbyDeathMetric - (timeDiff * SPAWNER_DEATHFORGET_RATE));
+	// Spit out percentage of death time
+	float timeDiff = m_fDeathFadeTime - gpGlobals->curtime;
+	m_iLastDeathWeight = RemapValClamped(timeDiff, 0, SPAWNER_DEATHFADE_LIMIT, 0, SPAWNER_MAX_DEATH_WEIGHT);
 
-	m_iLastDeathWeight = min(SPAWNER_MAX_DEATH_WEIGHT, SPAWNER_MAX_DEATH_WEIGHT*m_fNearbyDeathMetric);
-
-	// Spit out percentage wait from last use
-	timeDiff = m_fLastUseTime - gpGlobals->curtime;
-	m_iLastUseWeight = RemapValClamped(timeDiff, 0, SPAWNER_LASTUSE_LIMIT, 0, SPAWNER_MAX_USE_WEIGHT);
+	// Spit out percentage of use time
+	timeDiff = m_fUseFadeTime - gpGlobals->curtime;
+	m_iLastUseWeight = RemapValClamped(timeDiff, 0, SPAWNER_USEFADE_LIMIT, 0, SPAWNER_MAX_USE_WEIGHT);
 
 	//-------------------
 	// PERSONAL MODIFIERS
 	//-------------------
 
-	// Ultimate lazy programming please ignore.
-
 
 	CGEMPPlayer *pUniquePlayer = ToGEMPPlayer(pRequestor);
 
-	if (pUniquePlayer->GetLastDeath() != Vector(-1, -1, -1))
+	// Zero out these penalties because they might not get calculated again.
+	m_iUniLastDeathWeight = m_iUniLastUseWeight = 0;
+
+	// They haven't had their first death yet, so don't bother with this nonsense.
+	if (pUniquePlayer->GetLastDeath() == Vector(-1, -1, -1))
+		return clamp(m_iBaseDesirability - m_iLastEnemyWeight - m_iLastUseWeight - m_iLastDeathWeight, 0, SPAWNER_DEFAULT_WEIGHT);
+	
+	// Calculate penalty based on where requesting player last died.
+	float dist = (pUniquePlayer->GetLastDeath() - GetAbsOrigin()).Length2D();
+
+	if (dist < SPAWNER_MAX_ENEMY_DIST)
+		m_iUniLastDeathWeight = (1 - dist / SPAWNER_MAX_ENEMY_DIST) * 0.75 * SPAWNER_MAX_DEATH_WEIGHT;
+
+	// If player spawned within 40 seconds, also calculate penalty based on where they last spawned.  If not double death multiplier.
+	if (pUniquePlayer->GetLastSpawnTime() > gpGlobals->curtime - 40)
 	{
-		Vector diff = pUniquePlayer->GetLastDeath() - GetAbsOrigin();
-		float dist = diff.Length2D();
+		dist = (pUniquePlayer->GetLastSpawn() - GetAbsOrigin()).Length2D();
 
 		if (dist < SPAWNER_MAX_ENEMY_DIST)
-			m_iUniLastDeathWeight = (1 - dist / SPAWNER_MAX_ENEMY_DIST) * 0.75 * SPAWNER_MAX_DEATH_WEIGHT;
-		else
-			m_iUniLastDeathWeight = 0;
-	}
-
-	if (pUniquePlayer->GetLastSpawn() != Vector(-1, -1, -1))
-	{
-		Vector diff = pUniquePlayer->GetLastSpawn() - GetAbsOrigin();
-		float dist = diff.Length2D();
-
-		// Only cares about last spawn position if player's last spawn was within 40 seconds of this one.  If not double death multiplier.
-		if (dist < SPAWNER_MAX_ENEMY_DIST && pUniquePlayer->GetLastSpawnTime() > gpGlobals->curtime - 40)
 			m_iUniLastUseWeight = (1 - dist / SPAWNER_MAX_ENEMY_DIST) * 0.75 * SPAWNER_MAX_USE_WEIGHT;
-		else
-		{
-			m_iUniLastUseWeight = 0;
-			m_iUniLastDeathWeight *= 2;
-		}
 	}
+	else
+		m_iUniLastDeathWeight *= 2;
+
+	DevMsg("Spawntime is %f", pUniquePlayer->GetLastSpawnTime());
 
 	// Return a sum of our weight factors
-	return max(SPAWNER_DEFAULT_WEIGHT - m_iLastEnemyWeight - m_iLastUseWeight - m_iLastDeathWeight - m_iUniLastDeathWeight - m_iUniLastUseWeight, 0);
+	return clamp(m_iBaseDesirability - m_iLastEnemyWeight - m_iLastUseWeight - m_iLastDeathWeight - m_iUniLastDeathWeight - m_iUniLastUseWeight, 0, SPAWNER_DEFAULT_WEIGHT);
 }
 
 bool CGEPlayerSpawn::IsOccupied( void )
@@ -266,10 +264,9 @@ bool CGEPlayerSpawn::IsOccupied( void )
 	if ( !IsEnabled() )
 		return false;
 
-	// Disabled because of retooling the lastusetime variable.  Should be fixed when system is recoded.
 	// Quick check if we have been used very recently
-	//if ( gpGlobals->curtime < (m_fLastUseTime + 0.5f) )
-	//	return true;
+	if ( gpGlobals->curtime < (m_fLastUseTime + 0.5f) )
+		return true;
 
 	CBaseEntity *pList[32];
 	int count = UTIL_EntitiesInBox( pList, 32, GetAbsOrigin() + VEC_HULL_MIN, GetAbsOrigin() + VEC_HULL_MAX, 0 );
@@ -289,24 +286,24 @@ bool CGEPlayerSpawn::IsBotFriendly( void )
 
 void CGEPlayerSpawn::NotifyOnDeath( float dist )
 {
-	if ( dist < SPAWNER_MAX_DEATH_DIST )
-	{
-		// Disabled because of attempt to repurpose death system to stack up over longer timespan.
-		// Give a boost for rapid deaths
-		//float timeScale = RemapValClamped( gpGlobals->curtime - m_fLastDeathNotice, 0, 5.0f, 3.0f, 1.0f );
-		//m_fNearbyDeathMetric += Bias( RemapValClamped( dist, SPAWNER_MAX_ENEMY_DIST, 0, 0, 1.0f ), 0.8 ) * timeScale;
-		m_fNearbyDeathMetric += (1 - dist / SPAWNER_MAX_DEATH_DIST) * 0.30; // Death right on top of the spawn raises death motifier 30%
+	if (dist > SPAWNER_MAX_DEATH_DIST)
+		return;
 
-		//m_fLastDeathNotice = m_fLastDeathCalc = gpGlobals->curtime;
-	}
+	float boost = (1 - dist / SPAWNER_MAX_DEATH_DIST) * SPAWNER_DEATHBOOST_BASE;
+
+	if (gpGlobals->curtime > m_fDeathFadeTime)
+		m_fDeathFadeTime = gpGlobals->curtime + boost;
+	else
+		m_fDeathFadeTime = min(m_fDeathFadeTime + boost, gpGlobals->curtime + SPAWNER_DEATHFADE_LIMIT);
 }
 
 void CGEPlayerSpawn::NotifyOnUse( void )
 {
 	const CUtlVector<EHANDLE> *vSpawns = GERules()->GetSpawnersOfType(SPAWN_PLAYER);
 
-	Vector myPos = GetAbsOrigin();
+	m_fLastUseTime = gpGlobals->curtime;
 
+	// Find the spawn furthest from this one to get an idea of how far to spread the word when it gets used.
 	if (m_fMaxSpawnDist == 0)
 	{
 		float maxdist = 0.00;
@@ -320,8 +317,12 @@ void CGEPlayerSpawn::NotifyOnUse( void )
 				maxdist = dist;
 		}
 
+		DevMsg("Spawn Dist Calculated");
+
 		m_fMaxSpawnDist = sqrt(maxdist)*0.6; //rooting maxdist to correct Length2DSqr and multiplying by 3/5 to limit range.
 	}
+
+	Vector myPos = GetAbsOrigin();
 
 	for (int i = (vSpawns->Count() - 1); i >= 0; i--)
 	{
@@ -329,21 +330,16 @@ void CGEPlayerSpawn::NotifyOnUse( void )
 		Vector diff = pSpawn->GetAbsOrigin() - GetAbsOrigin();
 		float dist = diff.Length2D();
 		if (abs(diff.z) < 128)
-			pSpawn->SetLastUseTime((1 - dist / m_fMaxSpawnDist) * 15);
+			pSpawn->SetUseFadeTime((1 - dist / m_fMaxSpawnDist) * 15);
 	}
 }
 
-void CGEPlayerSpawn::SetLastUseTime(float usetime)
+void CGEPlayerSpawn::SetUseFadeTime(float usetime)
 {
-	float modtime = m_fLastUseTime - gpGlobals->curtime;
-
-	if (modtime + usetime > SPAWNER_LASTUSE_LIMIT)
-		usetime = SPAWNER_LASTUSE_LIMIT - modtime;
-
-	if (modtime > 0)
-		m_fLastUseTime += usetime;
+	if (gpGlobals->curtime > m_fUseFadeTime)
+		m_fUseFadeTime = gpGlobals->curtime + usetime;
 	else
-		m_fLastUseTime = gpGlobals->curtime + usetime;
+		m_fUseFadeTime = min(m_fUseFadeTime + usetime, gpGlobals->curtime + SPAWNER_USEFADE_LIMIT);
 }
 
 
@@ -361,10 +357,9 @@ void CGEPlayerSpawn::OnDisabled( void )
 void CGEPlayerSpawn::ResetTrackers( void )
 {
 	// Reset static counters
-	m_fLastDeathNotice	 = 0;
-	m_fLastDeathCalc	 = 0;
-	m_fNearbyDeathMetric = 0;
 	m_fLastUseTime		 = 0;
+	m_fUseFadeTime		 = 0;
+	m_fDeathFadeTime	 = 0;
 
 	// Reset Weights
 	m_iLastDeathWeight = m_iLastUseWeight = m_iLastEnemyWeight = 0;
@@ -448,6 +443,9 @@ void CGEPlayerSpawn::DEBUG_ShowOverlay( float duration )
 		// We are enabled, show our desirability and stats
 		Q_snprintf( tempstr, 64, "Desirability: %i", d );
 		EntityText( ++line, tempstr, duration );
+
+		Q_snprintf(tempstr, 64, "Base Desirability: %i", m_iBaseDesirability);
+		EntityText(++line, tempstr, duration);
 
 		if ( IsOccupied() )
 		{

@@ -47,12 +47,13 @@ public:
 private:
 	void ParseGameplayAffinity( void );
 	void ClearLoadouts( void );
-	void AdjustWeights(CUtlVector<CGELoadout*> &loadouts, CUtlVector<int> &weights);
+	bool AdjustWeights(CUtlVector<int> &groups, CUtlVector<int> &weights);
 
 	struct GameplaySet
 	{
 		CUtlVector<char*>	loadouts;
 		CUtlVector<int>		weights;
+		CUtlVector<int>		groups;
 	};
 
 	// Our loadout information

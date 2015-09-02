@@ -71,22 +71,22 @@ class C_GEGameplayEventListener { };
 #define AMMO_ROCKET_ICON		"rocket_pickup"
 #define AMMO_MOONRAKER_ICON		"moonraker_pickup"
 
-//Max Ammo Definitions
-const int AMMO_9MM_MAX			=	800;
-const int AMMO_RIFLE_MAX		=	400;
-const int AMMO_BUCKSHOT_MAX		=	100;
-const int AMMO_MAGNUM_MAX		=	200;
-const int AMMO_GOLDENGUN_MAX	=	100;
-const int AMMO_PROXIMITYMINE_MAX =	10;
-const int AMMO_TIMEDMINE_MAX	=	10;
-const int AMMO_REMOTEMINE_MAX	=	10;
-const int AMMO_TKNIFE_MAX		=	10;
-const int AMMO_GRENADE_MAX		=	12;
-const int AMMO_ROCKET_MAX		=	6;
-const int AMMO_SHELL_MAX		=	12;
+//Max Ammo Definitions - ALL / 2
+const int AMMO_9MM_MAX			=	400;
+const int AMMO_RIFLE_MAX		=	200;
+const int AMMO_BUCKSHOT_MAX		=	50;
+const int AMMO_MAGNUM_MAX		=	100;
+const int AMMO_GOLDENGUN_MAX	=	50;
+const int AMMO_PROXIMITYMINE_MAX =	5;
+const int AMMO_TIMEDMINE_MAX	=	5;
+const int AMMO_REMOTEMINE_MAX	=	5;
+const int AMMO_TKNIFE_MAX		=	5;
+const int AMMO_GRENADE_MAX		=	6;
+const int AMMO_ROCKET_MAX		=	3;
+const int AMMO_SHELL_MAX		=	6;
 const int AMMO_MOONRAKER_MAX	=	1;
 
-const int AMMO_9MM_CRATE			=	50;
+const int AMMO_9MM_CRATE			=	75;
 const int AMMO_RIFLE_CRATE			=	75;
 const int AMMO_BUCKSHOT_CRATE		=	20;
 const int AMMO_MAGNUM_CRATE			=	25;
@@ -183,20 +183,20 @@ static const GEWeaponInfo_t GEWeaponInfo[] =
 	{WEAPON_PP7,			"weapon_pp7",			AMMO_9MM,		"#GE_PP7",			5,		2	},
 	{WEAPON_PP7_SILENCED,	"weapon_pp7_silenced",	AMMO_9MM,		"#GE_PP7_SILENCED",	5,		2	},
 	{WEAPON_DD44,			"weapon_dd44",			AMMO_9MM,		"#GE_DD44",			10,		2	},
-	{ WEAPON_SILVERPP7,		"weapon_silver_pp7",	AMMO_MAGNUM,	"#GE_SilverPP7", 10,		7 },
-	{ WEAPON_GOLDENPP7,		"weapon_golden_pp7",	AMMO_GOLDENGUN, "#GE_GoldPP7", 8,		8 },
+	{WEAPON_SILVERPP7,		"weapon_silver_pp7",	AMMO_MAGNUM,	"#GE_SilverPP7",    10,		7   },
+	{WEAPON_GOLDENPP7,		"weapon_golden_pp7",	AMMO_GOLDENGUN, "#GE_GoldPP7",		8,		8   },
 	{WEAPON_COUGAR_MAGNUM,	"weapon_cmag",			AMMO_MAGNUM,	"#GE_CougarMagnum",	12,		5	},
 	{WEAPON_GOLDENGUN,		"weapon_golden_gun",	AMMO_GOLDENGUN,	"#GE_GoldenGun",	10,		8	},
 
-	{WEAPON_SHOTGUN,		"weapon_shotgun",		AMMO_BUCKSHOT,	"#GE_Shotgun",		12,		4	},
-	{WEAPON_AUTO_SHOTGUN,	"weapon_auto_shotgun",	AMMO_BUCKSHOT,	"#GE_AutoShotgun",	12,		6	},
+	{WEAPON_SHOTGUN,		"weapon_shotgun",		AMMO_BUCKSHOT,	"#GE_Shotgun",		12,		5	},
+	{WEAPON_AUTO_SHOTGUN,	"weapon_auto_shotgun",	AMMO_BUCKSHOT,	"#GE_AutoShotgun",	12,		7	},
 
 	{WEAPON_KF7,			"weapon_kf7",			AMMO_RIFLE,		"#GE_KF7Soviet",	10,		3	},
 	{WEAPON_KLOBB,			"weapon_klobb",			AMMO_9MM,		"#GE_Klobb",		10,		1	},
 	{WEAPON_ZMG,			"weapon_zmg",			AMMO_9MM,		"#GE_ZMG",			10,		4	},
 	{WEAPON_D5K,			"weapon_d5k",			AMMO_9MM,		"#GE_D5K",			5,		3	},
 	{WEAPON_D5K_SILENCED,	"weapon_d5k_silenced",	AMMO_9MM,		"#GE_D5K_SILENCED",	5,		3	},
-	{WEAPON_RCP90,			"weapon_rcp90",			AMMO_9MM,		"#GE_RCP90",		10,		7	},
+	{WEAPON_RCP90,			"weapon_rcp90",			AMMO_9MM,		"#GE_RCP90",		10,		6	},
 	{WEAPON_AR33,			"weapon_ar33",			AMMO_RIFLE,		"#GE_AR33",			10,		6	},
 	{WEAPON_PHANTOM,		"weapon_phantom",		AMMO_9MM,		"#GE_Phantom",		9,		5	},
 	{WEAPON_SNIPER_RIFLE,	"weapon_sniper_rifle",	AMMO_RIFLE,		"#GE_SniperRifle",	10,		4	},
@@ -206,7 +206,7 @@ static const GEWeaponInfo_t GEWeaponInfo[] =
 	{WEAPON_GRENADE_LAUNCHER, "weapon_grenade_launcher",	AMMO_SHELL,	"#GE_GrenadeLauncher",7,		8	},
 	{WEAPON_ROCKET_LAUNCHER,  "weapon_rocket_launcher",		AMMO_ROCKET,"#GE_RocketLauncher", 7,		7	},
 	
-	{WEAPON_MOONRAKER,	"weapon_moonraker",			AMMO_MOONRAKER,	"#GE_Moonraker",  10,		6	},
+	{WEAPON_MOONRAKER,	"weapon_moonraker",			AMMO_MOONRAKER,	"#GE_Moonraker",  10,		7	},
 
 	{WEAPON_SPAWNMAX,	NULL,						AMMO_NONE,			"",				  0,		-1	},
 

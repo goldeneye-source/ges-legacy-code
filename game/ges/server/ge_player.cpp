@@ -269,6 +269,7 @@ void CGEPlayer::PostThink( void )
 		StartInvul( 0.33f );
 	}
 	*/
+
 	// Clamp force on alive players to 1000
 	if ( m_iHealth > 0 && m_vDmgForceThisFrame.Length() > 1000.0f )
 	{
@@ -276,7 +277,14 @@ void CGEPlayer::PostThink( void )
 		m_vDmgForceThisFrame *= 1000.0f;
 	}
 
-	ApplyAbsVelocityImpulse( m_vDmgForceThisFrame );
+	// Check to see if we're below 300 velocity or if the force would slow us down
+	// This lets weapons like shotguns apply a single large push but prevents automatic weapons from stun locking someone.
+	// Some fancy vector projection stuff might be possible to cap out the speed you can go in one direction but still allow
+	// Players to propell you perpindicular to that direction, but chances are if you're taking that much push force you're already dead.
+	if (GetAbsVelocity().Length() < 300 || (GetAbsVelocity() + m_vDmgForceThisFrame).Length() < GetAbsVelocity().Length())
+		ApplyAbsVelocityImpulse( m_vDmgForceThisFrame );
+
+
 
 	// Reset our damage statistics
 	m_pCurrAttacker = NULL;
@@ -356,20 +364,18 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 		VectorAngles( dmgdir, angles);
 
 		// Scale the punch in the different directions. Prefer yaw(y) and negative pitch(x)
-		angles.y *= -0.030f;
-		angles.z *= 0.025f;
-		angles.x *= -0.0375f;
+		angles.y *= -0.015f;
+		angles.z *= 0.012f;
+		angles.x *= -0.0200f;
 
-		// Scale the punch again for testing
-		angles.y *= 0.3f;
-		angles.z *= 0.3f;
-		angles.x *= 0.3f;
+		// Apply viewpunch if we were hit hard enough
+		DevMsg("%d framedamage", m_iDmgTakenThisFrame);
 
-		float aimscale = IsInAimMode() ? 0.3f : 1.0f;
-
-		// Apply the scaled down view punch
-		ViewPunch( angles*0.6f*aimscale*(pow(0.5f,m_iViewPunchScale)) );
-		++m_iViewPunchScale;
+		if (m_iDmgTakenThisFrame > 120)
+		{
+			ViewPunch(angles*0.6f*(pow(0.5f, m_iViewPunchScale)));
+			++m_iViewPunchScale;
+		}
 
 		// Print this out when we get damage (developer 1 must be on)
 		float flFractionalDamage = m_DmgTake + m_DmgSave - floor( inputinfo.GetDamage() );
@@ -471,14 +477,16 @@ int CGEPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 		}
 	}
 
+	DevMsg("%f basedamage", inputInfo.GetBaseDamage());
+
+	// Scale push force based on damage, giving it a sort of parabolic curve.
+	force *= inputInfo.GetBaseDamage()/160;
+
 	// Limit our up/down force if this wasn't an explosion
 	if ( inputInfo.GetDamageType() &~ DMG_BLAST )
 		force.z = clamp( force.z, -250.0f, 250.0f );
 	else if ( m_iHealth > 0 )
 		force.z = clamp( force.z, -450.0f, 450.0f );
-
-	// Scale down pushforce for no-invuln testing.
-	force *= 0.4;
 
 	m_vDmgForceThisFrame += force;
 

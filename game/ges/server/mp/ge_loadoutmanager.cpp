@@ -188,6 +188,11 @@ void CGELoadoutManager::ParseGameplayAffinity( void )
 							pGameplaySet->weights.AddToTail( atoi(data[1]) );
 						else
 							pGameplaySet->weights.AddToTail( 500 );
+
+						if (data.Count() > 2)
+							pGameplaySet->groups.AddToTail(atoi(data[2]));
+						else
+							pGameplaySet->groups.AddToTail(0);
 					}
 				}
 
@@ -301,28 +306,62 @@ bool CGELoadoutManager::SpawnWeapons( void )
 		{
 			// We have a set, go through and find a random loadout from the set
 			const GameplaySet *set = m_GameplaySets[idx];
+			CUtlVector<int> weights, groups;
 
-			do {
-				char* const choice = GERandomWeighted<char* const,int>( set->loadouts.Base(), set->weights.Base(), set->loadouts.Count() );
-				pNewLoadout = GetLoadout( choice );
-			} while (set->loadouts.Count() > 1 && pNewLoadout == m_pCurrentLoadout); //TODO: Set up the group selector for this too.
+			weights = set->weights;
+			groups = set->groups;
+
+			if (AdjustWeights(groups, weights)) //Adjust the weights based on recently used groups, if no other groups use old method.
+			{
+				char* const choice = GERandomWeighted<char* const, int>(set->loadouts.Base(), weights.Base(), set->loadouts.Count());
+				pNewLoadout = GetLoadout(choice);
+
+				for (int i = 0; i < set->loadouts.Count(); i++)
+				{
+					if (choice == set->loadouts[i])
+					{
+						iNewGroup = set->groups[i];
+						break;
+					}
+				}
+			}
+			else
+			{
+				do {
+					char* const choice = GERandomWeighted<char* const, int>(set->loadouts.Base(), set->weights.Base(), set->loadouts.Count());
+					pNewLoadout = GetLoadout(choice);
+				} while (set->loadouts.Count() > 1 && pNewLoadout == m_pCurrentLoadout);
+
+				iNewGroup = m_iCurrentGroup[0]; //Make sure we know in the future that there are no groups besides this one.
+			}
 		}
 		else
 		{
 			// No set, choose from the global pool (weight != 0)
 			CUtlVector<CGELoadout*> loadouts;
-			CUtlVector<int> weights;
+			CUtlVector<int> weights, groups;
 
 			GetLoadouts( loadouts );
 
 			for (int i = 0; i < loadouts.Count(); i++)
 				weights.AddToTail(loadouts[i]->GetWeight());
 
-			AdjustWeights(loadouts, weights); //Adjust the weights to filter out recently used groups.
+			for (int i = 0; i < loadouts.Count(); i++)
+				groups.AddToTail(loadouts[i]->GetGroup());
 
-			do {
-				pNewLoadout = GERandomWeighted<CGELoadout*>( loadouts.Base(), weights.Base(), loadouts.Count() );
-			} while (m_Loadouts.Count() > 1 && pNewLoadout == m_pCurrentLoadout);
+			if (AdjustWeights(groups, weights)) //Adjust the weights based on recently used groups, if only one group then use old method.
+			{
+				pNewLoadout = GERandomWeighted<CGELoadout*>(loadouts.Base(), weights.Base(), loadouts.Count()); //Groups cannot repeat so no need to filter out redundant weapon sets.
+				iNewGroup = pNewLoadout->GetGroup();
+			}
+			else
+			{
+				do {
+					pNewLoadout = GERandomWeighted<CGELoadout*>(loadouts.Base(), weights.Base(), loadouts.Count());
+				} while (m_Loadouts.Count() > 1 && pNewLoadout == m_pCurrentLoadout);
+
+				iNewGroup = m_iCurrentGroup[0];
+			}
 		}
 	}
 	else
@@ -349,7 +388,6 @@ bool CGELoadoutManager::SpawnWeapons( void )
 
 	// Make it official
 	m_pCurrentLoadout = pNewLoadout;
-	iNewGroup = pNewLoadout->GetGroup();
 
 	// Shift group list over
 	for (int i = 2; i > 0; i--)
@@ -500,55 +538,67 @@ void CGELoadoutManager::GetWeaponLists( CUtlVector<int> &vWeaponIds, CUtlVector<
 	vWeaponWeights.CopyArray( sWeaponWeights.Base(), sWeaponWeights.Count() );
 }
 
+bool CGELoadoutManager::AdjustWeights(CUtlVector<int> &groups, CUtlVector<int> &weights)
+{
+	static CUtlVector<int> validgroups, validweights;
+	validgroups.RemoveAll();
+	validweights.RemoveAll();
+
+
+	// Check to make sure there's more than one group
+	for (int i = 0; i < groups.Count(); i++)
+	{
+		if (groups[i] != m_iCurrentGroup[0])
+		{
+			break;
+		}
+
+		if (i == groups.Count() - 1) //Hit the last loadout without finding a match. there's only one group so don't weight anything.
+			return false;
+	}
+
+
+	for (int i = 0; i < groups.Count(); i++)
+	{
+		if (groups[i] == m_iCurrentGroup[0])
+			weights[i] *= 0; // Sets in the previously used group have no chance of getting picked at all.
+		else if (groups[i] == m_iCurrentGroup[1])
+			weights[i] *= 0.4; // Sets in the group used two sets ago have 40 percent chance of getting picked.
+	}
+
+	return true; //Weight adjustment successful, let everyone know so they can celebrate
+}
+
+/*
 void CGELoadoutManager::AdjustWeights(CUtlVector<CGELoadout*> &loadouts, CUtlVector<int> &weights)
 {
 	static CUtlVector<int> validgroups, validweights;
 	validgroups.RemoveAll();
 	validweights.RemoveAll();
 
-	int desiredgroup = -1;
-	int groupweight = 0;
 
-	for (int g = 0; g < 4; g++)
+	// Check to make sure there's more than one group
+	for (int i = 0; i < loadouts.Count(); i++)
 	{
-		if (g != m_iCurrentGroup[0] && g != m_iCurrentGroup[1])
+		if (loadouts[i]->GetGroup() != m_iCurrentGroup[0])
 		{
-			groupweight = 0;
-
-			for (int i = 0; i < loadouts.Count(); i++)
-			{
-				if (loadouts[i]->GetGroup() == g)
-				{
-					groupweight += loadouts[i]->GetWeight();
-				}
-			}
-			if (groupweight > 0)
-			{
-				validgroups.AddToTail(g);
-				validweights.AddToTail(groupweight);
-			}
+			break;
 		}
+
+		if (i == loadouts.Count() - 1) //Hit the last loadout without finding a match. there's only one group so don't weight anything.
+			return;
 	}
 
-	// No recently unused valid groups exist, try to use the older recent group instead.
-	if (validgroups.Count() < 1)
-	{
-		if (m_iCurrentGroup[1] != -1)
-			validgroups.AddToTail(m_iCurrentGroup[1]);
-		else
-			return; //Either no valid groups exist or only one valid group exists, so give up on this whole group weighting idea.
-	}
-
-	desiredgroup = GERandomWeighted<int, int>(validgroups.Base(), validweights.Base(), validgroups.Count());
-
-	DevMsg("%d is desiredgroup", desiredgroup);
 
 	for (int i = 0; i < loadouts.Count(); i++)
 	{
-		if (loadouts[i]->GetGroup() != desiredgroup || loadouts[i]->GetGroup() == -1 )
-			weights[i] *= 0; // Adjust weights so loadouts not in the desired group won't get picked.  Ignore sets that have no group at all.
+		if (loadouts[i]->GetGroup() == m_iCurrentGroup[0])
+			weights[i] *= 0; // Sets in the previously used group have no chance of getting picked at all.
+		else if (loadouts[i]->GetGroup() == m_iCurrentGroup[1])
+			weights[i] *= 0.4; // Sets in the group used two sets ago have half chance of getting picked.
 	}
 }
+*/
 
 CON_COMMAND( ge_weaponset_reload, "Reloads the weaponset script files" )
 {

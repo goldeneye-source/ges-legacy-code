@@ -42,7 +42,7 @@ CGELoadout::~CGELoadout( void )
 void CGELoadout::Activate( void )
 {
 	int weapid = WEAPON_NONE;
-	int prevgroup = -1;
+	int prevgroup = 1;
 
 	// Load the weapons
 	CUtlVector<int> vWeaponList, vWeaponWeights, vWeaponLevels;
@@ -66,11 +66,6 @@ void CGELoadout::Activate( void )
 	{
 		weapid = m_vLoadedWeapons[i];
 
-		if (i > 0)
-			prevgroup = vWeaponLevels[m_vActiveWeapons[i - 1]];
-		else
-			prevgroup = 1;
-
 		// If we want a random weapon, make one up
 		if (weapid == WEAPON_RANDOM)
 			weapid = PickGroupWeapon(vWeaponList, vWeaponWeights, vWeaponLevels, prevgroup, 1);
@@ -88,6 +83,22 @@ void CGELoadout::Activate( void )
 		
 		// Set the weapon as active
 		m_vActiveWeapons[i] = weapid;
+
+		// Set the previous level to this level and increment it if this weapon has already shown up in the set.  Prevents weapon spam.
+		prevgroup = vWeaponLevels[weapid];
+
+
+		if (prevgroup < 8) //Don't increment if prevgroup is already as high as it can go
+		{
+			for (int g = 0; g < i; g++)
+			{
+				if (weapid == m_vActiveWeapons[g])
+				{
+					prevgroup++;
+					break;
+				}
+			}
+		}
 	}
 
 	// Print out the list for developers
@@ -213,7 +224,7 @@ int CGELoadout::PickGroupWeapon(CUtlVector<int> &weapons, CUtlVector<int> &weigh
 	seed = rand() % (14 - basegroup); //Advancing a level is less likley for higher tiers.
 
 	if (basegroup == -1)
-		desiredstrength = rand() % 8;
+		desiredstrength = (rand() % 8) + 1;
 	else if (seed < 6)
 		desiredstrength = basegroup;
 	else if (seed < 11  )

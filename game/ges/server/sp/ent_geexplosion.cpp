@@ -232,7 +232,7 @@ void CGE_Explosion::CreateInitialBlast( void )
 	te->SetSuppressHost( NULL );
 
 	CPASFilter filter( GetAbsOrigin() );
-	te->DynamicLight( filter, 0.0, &GetAbsOrigin(), 255, 156, 9, 1, m_flDamageRadius*2.5f, GE_EXP_DMG_TIME-0.5f, 40.0f, 1 );
+//	te->DynamicLight( filter, 0.0, &GetAbsOrigin(), 255, 156, 9, 1, m_flDamageRadius*2.5f, GE_EXP_DMG_TIME-0.5f, 40.0f, 1 );
 
 	te->SetSuppressHost( (CBaseEntity*)host );
 

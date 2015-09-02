@@ -801,6 +801,10 @@ CBaseEntity* CGEMPPlayer::EntSelectSpawnPoint()
 			int weight = pSpawn->GetDesirability( this );
 			if ( weight > bestweight )
 			{
+				//Shifts the weights down into the 1/8-1/2 range from the 1/2 - 1 range. 
+				//Spawns at the bottom are 1 / 4th as likely to be picked as spawns at the top.
+				weight -= bestweight * 0.75;
+
 				vSpawners.AddToTail( pSpawn );
 				vWeights.AddToTail( weight );
 

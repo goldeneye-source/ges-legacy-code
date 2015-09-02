@@ -107,7 +107,7 @@ void CGERocket::IgniteThink( void )
 
 	m_iseed1 = rand() % 100;
 	m_iseed2 = rand() % 100;
-	m_iseed3 = rand() % 6 + 4;
+	m_iseed3 = rand() % 3 + 5;
 
 	m_fthinktime = 0.1;
 

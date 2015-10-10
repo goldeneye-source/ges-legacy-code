@@ -120,8 +120,19 @@ public:
 	virtual float GetNextJumpTime()				{ return m_flNextJumpTime; }
 	virtual void  SetNextJumpTime( float time ) { m_flNextJumpTime = time; }
 
+	virtual float GetJumpPenalty()				{ return m_flJumpPenalty; }
+	virtual void  SetJumpPenalty(float time)	{ m_flJumpPenalty = time; }
+
 	virtual void  SetStartJumpZ( float val )	{ m_flStartJumpZ = val; }
 	virtual float GetStartJumpZ()				{ return m_flStartJumpZ; }
+
+	virtual float GetLastJumpTime()				{ return m_flLastJumpTime; }
+	virtual void  SetLastJumpTime(float time)	{ m_flLastJumpTime = time; }
+
+	virtual void  SetLastLandingVelocity(float vel)	{ m_flLastLandVelocity = vel; }
+	virtual float GetLastLandingVelocity()		{ return m_flLastLandVelocity; }
+
+	virtual void UpdateJumpPenalty();
 
 	virtual CBaseEntity	*GiveNamedItem( const char *szName, int iSubType = 0 );
 	virtual void  GiveDefaultItems();
@@ -157,6 +168,9 @@ protected:
 	// Used to throttle bunnyhopping
 	CNetworkVar( float,	m_flStartJumpZ );
 	CNetworkVar( float,	m_flNextJumpTime );
+	CNetworkVar( float, m_flLastJumpTime );
+	CNetworkVar( float, m_flJumpPenalty );
+	CNetworkVar( float, m_flLastLandVelocity);
 
 	char m_szCleanName[32];
 

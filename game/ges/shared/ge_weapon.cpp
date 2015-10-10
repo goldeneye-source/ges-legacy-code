@@ -190,6 +190,9 @@ void CGEWeapon::Drop( const Vector &vecVelocity )
 #endif
 
 	BaseClass::Drop( vecVelocity );
+
+	// Dropped weapons don't collide with eachother
+	SetCollisionGroup(COLLISION_GROUP_DROPPEDWEAPON);
 }
 
 void CGEWeapon::SetPickupTouch( void )
@@ -549,6 +552,11 @@ void CGEWeapon::SetEnableGlow( bool state )
 
 #endif
 
+void CGEWeapon::PreOwnerDeath()
+{
+	m_flAccuracyPenalty += GetAccShots(); //Max penalty for anything fired after death.
+}
+
 // Consolidate the fire preps into one function since all the custom primary attack functions have to do their own otherwise,
 // And updating them all every time it needs to be changed kind of sucks.
 void CGEWeapon::PrepareFireBullets(int number, CBaseCombatCharacter *pOperator, Vector vecShootOrigin, Vector vecShootDir, bool haveplayer, int tracerfreq)
@@ -557,7 +565,12 @@ void CGEWeapon::PrepareFireBullets(int number, CBaseCombatCharacter *pOperator, 
 
 	FireBulletsInfo_t info(number, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0);
 	info.m_iGaussFactor = GetGaussFactor(); //Calculates the gauss factor and adds it to the fire info.
-	info.m_iTracerFreq = tracerfreq; //How many bullets per tracer.
+
+	if (m_flAccuracyPenalty < 1.0)
+		tracerfreq = 1; //Always try to draw tracers on the first shot even though this doesn't seem to work
+	
+	info.m_iTracerFreq = tracerfreq; //Otherwise use the weapon's tracerfreq
+
 
 	if (haveplayer)
 		info.m_pAttacker = pOperator;
@@ -622,9 +635,17 @@ void CGEWeapon::UpdateAccPenalty()
 	// Reduce accuracy penalty based on time of last attack
 	float timeratio = (gpGlobals->curtime - m_flCoolDownTime) / GetAccFireRate();
 
-	m_flAccuracyPenalty -= timeratio*timeratio*timeratio; //Time squared so waiting longer yeilds much greater benefits.
+	m_flAccuracyPenalty -= timeratio*timeratio*timeratio; //Time cubed so waiting longer yeilds much greater benefits.
 	m_flAccuracyPenalty = max(m_flAccuracyPenalty, 0.0f);
 	m_flAccuracyPenalty = min(m_flAccuracyPenalty, (float)GetAccShots());
+}
+
+void CGEWeapon::AddAccPenalty(float numshots)
+{
+	UpdateAccPenalty(); //Because we're resetting the cooldown time we have to take off what should already be gone.
+
+	m_flAccuracyPenalty += numshots;
+	m_flCoolDownTime = gpGlobals->curtime;
 }
 
 int CGEWeapon::GetGaussFactor()

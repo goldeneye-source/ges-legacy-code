@@ -96,6 +96,12 @@ void pyToggleRoundTimer( bool state )
 	GEMPRules()->SetRoundTimerEnabled( state );
 }
 
+void pySetSpawnInvulnTime(float duration, bool canbreak)
+{
+	GEMPRules()->SetSpawnInvulnCanBreak(canbreak);
+	GEMPRules()->SetSpawnInvulnInterval(duration);
+}
+
 
 CTeam* pyGetTeam(int index)
 {
@@ -402,6 +408,8 @@ BOOST_PYTHON_MODULE(GEMPGameRules)
 	def("UnlockRound", pyUnlockRound);
 	def("IsRoundLocked", pyIsRoundLocked);
 	def("AllowRoundTimer", pyToggleRoundTimer);
+
+	def("SetSpawnInvulnTime", pySetSpawnInvulnTime);
 
 	def("DisableWeaponSpawns", pyDisableWeaponSpawns);
 	def("DisableAmmoSpawns", pyDisableAmmoSpawns);

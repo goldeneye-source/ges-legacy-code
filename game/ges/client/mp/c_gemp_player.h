@@ -36,6 +36,17 @@ public:
 	float GetNextJumpTime()				{ return m_flNextJumpTime; }
 	void SetNextJumpTime( float time )	{ m_flNextJumpTime = time; }
 
+	virtual float GetLastJumpTime()				{ return m_flLastJumpTime; }
+	virtual void  SetLastJumpTime(float time)	{ m_flLastJumpTime = time; }
+
+	virtual float GetJumpPenalty()				{ return m_flJumpPenalty; }
+	virtual void  SetJumpPenalty(float time)	{ m_flJumpPenalty = time; }
+	virtual void  AddJumpPenalty(float time)	{ m_flJumpPenalty += time; }
+
+	virtual void  SetLastLandingVelocity(float vel)	{ m_flLastLandVelocity = vel; }
+	virtual float  GetLastLandingVelocity()		{ return m_flLastLandVelocity; }
+
+
 	void SetStartJumpZ( float val )		{ m_flStartJumpZ=val; }
 	float GetStartJumpZ()				{ return m_flStartJumpZ; }
 
@@ -45,6 +56,9 @@ public:
 private:
 	float m_flStartJumpZ;
 	float m_flNextJumpTime;
+	float m_flJumpPenalty;
+	float m_flLastJumpTime;
+	float m_flLastLandVelocity;
 };
 
 C_GEMPPlayer *ToGEMPPlayer( CBaseEntity *pEntity );

@@ -11,6 +11,7 @@
 #include "cbase.h"
 #include "vcollide_parse.h"
 #include "c_ge_player.h"
+#include "c_gemp_player.h"
 #include "view.h"
 #include "takedamageinfo.h"
 #include "ge_gamerules.h"
@@ -165,7 +166,7 @@ void C_GEPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, f
 		}
 	}
 
-	BaseClass::CalcView( eyeOrigin, eyeAngles, zNear, zFar, fov );
+	BaseClass::CalcView( eyeOrigin, eyeAngles, zNear, zFar, fov);
 }
 
 bool C_GEPlayer::CanSetSoundMixer( void )

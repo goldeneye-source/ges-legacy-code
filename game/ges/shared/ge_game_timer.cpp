@@ -139,7 +139,24 @@ void CGEGameTimer::ChangeLength( float length_seconds )
 
 	// Find time diff and modify the end time
 	int time_diff = length_seconds - m_flLength;
-	m_flEndTime += time_diff;
+
+	DevMsg("%d is time difference \n", time_diff);
+	DevMsg("%f is endtime \n", (float)m_flEndTime);
+	DevMsg("%f is timer length \n", (float)m_flLength);
+	DevMsg("%f is entered length \n", length_seconds);
+	DevMsg("%f is computed offset \n", m_flEndTime - gpGlobals->curtime + (float)time_diff);
+
+	// If changing the time would result in negative time, just set the roundtime to the time it was changed to.
+	if (m_flEndTime - gpGlobals->curtime + time_diff > 0) // If the time to be adjusted to is greater than 0, go ahead and offset
+	{
+		m_flEndTime += time_diff;
+		m_flLength += time_diff;
+	}
+	else // Otherwise just directly set the time to the time entered to prevent nonsense.
+	{
+		m_flEndTime = gpGlobals->curtime + length_seconds;
+		m_flLength = length_seconds;
+	}
 
 	// If we were paused, put as back in that state
 	if ( was_paused )

@@ -71,22 +71,22 @@ class C_GEGameplayEventListener { };
 #define AMMO_ROCKET_ICON		"rocket_pickup"
 #define AMMO_MOONRAKER_ICON		"moonraker_pickup"
 
-//Max Ammo Definitions - ALL / 2
-const int AMMO_9MM_MAX			=	400;
-const int AMMO_RIFLE_MAX		=	200;
-const int AMMO_BUCKSHOT_MAX		=	50;
-const int AMMO_MAGNUM_MAX		=	100;
-const int AMMO_GOLDENGUN_MAX	=	50;
-const int AMMO_PROXIMITYMINE_MAX =	5;
-const int AMMO_TIMEDMINE_MAX	=	5;
-const int AMMO_REMOTEMINE_MAX	=	5;
-const int AMMO_TKNIFE_MAX		=	5;
-const int AMMO_GRENADE_MAX		=	6;
-const int AMMO_ROCKET_MAX		=	3;
-const int AMMO_SHELL_MAX		=	6;
+//Max Ammo Definitions
+const int AMMO_9MM_MAX			=	800;
+const int AMMO_RIFLE_MAX		=	400;
+const int AMMO_BUCKSHOT_MAX		=	100;
+const int AMMO_MAGNUM_MAX		=	200;
+const int AMMO_GOLDENGUN_MAX	=	100;
+const int AMMO_PROXIMITYMINE_MAX =	10;
+const int AMMO_TIMEDMINE_MAX	=	10;
+const int AMMO_REMOTEMINE_MAX	=	10;
+const int AMMO_TKNIFE_MAX		=	10;
+const int AMMO_GRENADE_MAX		=	12;
+const int AMMO_ROCKET_MAX		=	6;
+const int AMMO_SHELL_MAX		=	12;
 const int AMMO_MOONRAKER_MAX	=	1;
 
-const int AMMO_9MM_CRATE			=	75;
+const int AMMO_9MM_CRATE			=	50;
 const int AMMO_RIFLE_CRATE			=	75;
 const int AMMO_BUCKSHOT_CRATE		=	20;
 const int AMMO_MAGNUM_CRATE			=	25;
@@ -134,6 +134,7 @@ typedef enum GES_WEAPONS
 	WEAPON_ROCKET_LAUNCHER,
 
 	WEAPON_MOONRAKER,
+	WEAPON_KNIFE,
 
 	WEAPON_SPAWNMAX, // Don't spawn weapons in GEWeaponSpawner below this!
 
@@ -147,7 +148,6 @@ typedef enum GES_WEAPONS
 	WEAPON_RANDOM_MAX,
 
 	WEAPON_SLAPPERS,
-	WEAPON_KNIFE,
 
 	WEAPON_RANDOM,		// For weapon spawning system, weighted random weapon.
 	WEAPON_EXPLOSION,	// Generic explosion (not from any particular weapon)
@@ -189,7 +189,7 @@ static const GEWeaponInfo_t GEWeaponInfo[] =
 	{WEAPON_GOLDENGUN,		"weapon_golden_gun",	AMMO_GOLDENGUN,	"#GE_GoldenGun",	10,		8	},
 
 	{WEAPON_SHOTGUN,		"weapon_shotgun",		AMMO_BUCKSHOT,	"#GE_Shotgun",		12,		5	},
-	{WEAPON_AUTO_SHOTGUN,	"weapon_auto_shotgun",	AMMO_BUCKSHOT,	"#GE_AutoShotgun",	12,		7	},
+	{WEAPON_AUTO_SHOTGUN,	"weapon_auto_shotgun",	AMMO_BUCKSHOT,	"#GE_AutoShotgun",	10,		7	},
 
 	{WEAPON_KF7,			"weapon_kf7",			AMMO_RIFLE,		"#GE_KF7Soviet",	10,		3	},
 	{WEAPON_KLOBB,			"weapon_klobb",			AMMO_9MM,		"#GE_Klobb",		10,		1	},
@@ -207,20 +207,20 @@ static const GEWeaponInfo_t GEWeaponInfo[] =
 	{WEAPON_ROCKET_LAUNCHER,  "weapon_rocket_launcher",		AMMO_ROCKET,"#GE_RocketLauncher", 7,		7	},
 	
 	{WEAPON_MOONRAKER,	"weapon_moonraker",			AMMO_MOONRAKER,	"#GE_Moonraker",  10,		7	},
+	{WEAPON_KNIFE,		"weapon_knife",				AMMO_NONE,		"#GE_Knife",	  4,		1  },
 
 	{WEAPON_SPAWNMAX,	NULL,						AMMO_NONE,			"",				  0,		-1	},
 
 	// These spawn in ammo crates only
-	{WEAPON_TIMEDMINE,	"weapon_timedmine",			AMMO_TIMEDMINE,		"#GE_TimedMine",  8,		3	},
+	{WEAPON_TIMEDMINE,	"weapon_timedmine",			AMMO_TIMEDMINE,		"#GE_TimedMine",  6,		3	},
 	{WEAPON_REMOTEMINE, "weapon_remotemine",		AMMO_REMOTEMINE,	"#GE_RemoteMine", 10,		6	},
-	{WEAPON_PROXIMITYMINE, "weapon_proximitymine",	AMMO_PROXIMITYMINE,	"#GE_ProximityMine", 4,		5	},
+	{WEAPON_PROXIMITYMINE, "weapon_proximitymine",	AMMO_PROXIMITYMINE,	"#GE_ProximityMine", 1,		5	},
 	{WEAPON_GRENADE,	"weapon_grenade",			AMMO_GRENADE,		"#GE_Grenade",	  10,		4 },
 
 	{WEAPON_RANDOM_MAX,	NULL,						AMMO_NONE,			"",				0,		-1	},
 
 	// These are weapons that shouldn't spawn in the weapon spawners!
 	{WEAPON_SLAPPERS,	"weapon_slappers",			AMMO_NONE,		"#GE_Slapper",		0,		-1	},
-	{WEAPON_KNIFE,		"weapon_knife",				AMMO_NONE,		"#GE_Knife",		0,		-1	},
 
 	// For weapon spawning system only!
 	{WEAPON_RANDOM,		"weapon_random",			AMMO_NONE,		"",					0,		-1	},

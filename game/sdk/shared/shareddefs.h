@@ -321,8 +321,8 @@ enum PLAYER_ANIM
 #define PLAYER_FATAL_FALL_SPEED		1024 // approx 750 units sqrt( 2 * 700 * 700 )
 #define PLAYER_MAX_SAFE_FALL_SPEED	750 // approx 400 units sqrt( 2 * 700 * 400 )
 #define PLAYER_LAND_ON_FLOATING_OBJECT	200 // Can go another 200 units without getting hurt
-#define PLAYER_MIN_BOUNCE_SPEED		200 // WHY DID YOU TAKE OUT BOUNCE, VALVE???
-#define PLAYER_FALL_PUNCH_THRESHOLD (float)650 // won't punch player's screen/make scrape noise unless player falling at least this fast.
+#define PLAYER_MIN_BOUNCE_SPEED		300 // WHY DID YOU TAKE OUT BOUNCE, VALVE???
+#define PLAYER_FALL_PUNCH_THRESHOLD (float)120 // won't punch player's screen/make scrape noise unless player falling at least this fast.
 #define DAMAGE_FOR_FALL_SPEED		160.0f / ( PLAYER_FATAL_FALL_SPEED - PLAYER_MAX_SAFE_FALL_SPEED ) // damage per unit per second.
 #endif
 

@@ -110,6 +110,7 @@ void CGERocket::IgniteThink( void )
 	m_iseed3 = rand() % 3 + 5;
 
 	m_fthinktime = 0.1;
+	m_fFuseTime = gpGlobals->curtime + GE_ROCKET_FUSETIME / max(phys_timescale.GetFloat(), 0.01);
 
 	CreateSmokeTrail();
 
@@ -148,7 +149,7 @@ void CGERocket::AccelerateThink( void )
 
 void CGERocket::FlyThink( void )
 {
-	if ( gpGlobals->curtime > m_flSpawnTime + GE_ROCKET_FUSETIME )
+	if ( gpGlobals->curtime > m_fFuseTime )
 	{
 		Explode();
 		return;
@@ -160,11 +161,11 @@ void CGERocket::FlyThink( void )
 
 Vector CGERocket::CalPath(void)
 {
-	float lifetime = gpGlobals->curtime - m_flSpawnTime;
+	float timescale = phys_timescale.GetFloat();
+	float lifetime = (gpGlobals->curtime - m_flSpawnTime) * timescale;
 	Vector flypath = Vector(0, 0, 0);
 	float mult1 = 2.0;
 	float mult2 = 50.0 * m_iseed3;
-	float timescale = phys_timescale.GetFloat();
 
 	flypath = m_vForward * GE_ROCKET_MAXVEL * min(lifetime, 0.75);
 
@@ -195,7 +196,7 @@ Vector CGERocket::CalPath(void)
 
 	flypath *= timescale;
 
-	m_fthinktime = 0.05;
+	m_fthinktime = timescale > 0 ? (0.05 / timescale) : 1;
 
 	return flypath;
 }

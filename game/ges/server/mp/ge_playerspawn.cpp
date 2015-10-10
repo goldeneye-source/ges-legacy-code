@@ -152,18 +152,20 @@ int CGEPlayerSpawn::GetDesirability(CGEPlayer *pRequestor)
 		// even if it is possible dropping down is often a hassle and not always worth 
 		// it for a spawn kill.  If they are higher consider them further than that because going up
 		// is even harder.  Hopefully this doesn't cause too many problems around stairs.
-		if (diff.z > 128.0f)
+		float floorheight = GEMPRules()->GetMapFloorHeight();
+
+		if (diff.z > floorheight)
 			dist += 200;
-		else if (diff.z < -128.0f)
+		else if (diff.z < floorheight * -1)
 			dist += 300;
 
 		// If player is not in the PVS, check to see how we should treat them.
 		if (!CheckInPVS(pPlayer))
 		{
-			// If they aren't even on our level why do they deserve to be considered?
-			if (abs(diff.z) > 128.0f)
+			// If they aren't even on our floor and have no easy way of getting to us, ignore them.
+			if (abs(diff.z) > floorheight)
 				continue;
-			// If they are apply massive penalties for being outside PVS.
+			// If they are then still apply massive penalties for being outside PVS.
 			dist *= 2.00;
 			dist += 300;
 		}
@@ -200,7 +202,7 @@ int CGEPlayerSpawn::GetDesirability(CGEPlayer *pRequestor)
 		// If I am a DM spawn in teamplay, make spawn more desirable for teammates
 
 		if (onMyTeam)
-			threat *= -1;
+			threat *= -0.4;
 
 
 		// Finally, compare the calculated threat level to the highest one on record and
@@ -252,8 +254,6 @@ int CGEPlayerSpawn::GetDesirability(CGEPlayer *pRequestor)
 	}
 	else
 		m_iUniLastDeathWeight *= 2;
-
-	DevMsg("Spawntime is %f", pUniquePlayer->GetLastSpawnTime());
 
 	// Return a sum of our weight factors
 	return clamp(m_iBaseDesirability - m_iLastEnemyWeight - m_iLastUseWeight - m_iLastDeathWeight - m_iUniLastDeathWeight - m_iUniLastUseWeight, 0, SPAWNER_DEFAULT_WEIGHT);
@@ -316,8 +316,6 @@ void CGEPlayerSpawn::NotifyOnUse( void )
 			if (dist > maxdist)
 				maxdist = dist;
 		}
-
-		DevMsg("Spawn Dist Calculated");
 
 		m_fMaxSpawnDist = sqrt(maxdist)*0.6; //rooting maxdist to correct Length2DSqr and multiplying by 3/5 to limit range.
 	}

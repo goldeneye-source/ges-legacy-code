@@ -165,10 +165,12 @@ int CGEArmorVest::CalcSpawnProgress()
 		}
 	}
 
+	// Don't stand right on top of the armor spawn, loser.
+	if (closestlength < 4096)
+		return 4;
 
-	// Ticks up at 4 points at minimum and 10 points at maximum.  Linear falloff.
-	return (int)min((sqrt(closestlength)) / 84 + 4, 10);
-
+	// Ticks up at 6 points at minimum and 10 points at maximum.  Linear falloff.
+	return (int)min((sqrt(closestlength)) / 126 + 6, 10);
 }
 
 void CGEArmorVest::OnEnabled( void )

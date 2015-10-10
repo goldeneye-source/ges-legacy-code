@@ -610,15 +610,18 @@ void CGERadar::DrawIconOnRadar( CGERadarContact *contact, Color col )
 
 	int width, height;
 
+	float floorheight = GEMPRules()->GetMapFloorHeight();
+	DevMsg("Radar thinks floorheight is %f \n", floorheight);
+
 	// Get the correct icon for this type of contact
 	CHudTexture *icon = NULL;
 
 	if ( contact->m_Icon )
 	{
 		// We have a custom icon!
-		if ( z_delta > 125.0f && contact->m_IconAbove )
+		if (z_delta > floorheight && contact->m_IconAbove)
 			icon = contact->m_IconAbove;
-		else if ( z_delta < -125.0f && contact->m_IconBelow )
+		else if (z_delta < floorheight * -1 && contact->m_IconBelow)
 			icon = contact->m_IconBelow;
 		else
 			icon = contact->m_Icon;
@@ -628,9 +631,9 @@ void CGERadar::DrawIconOnRadar( CGERadarContact *contact, Color col )
 	}
 	else if ( contact->m_iType == RADAR_TYPE_TOKEN )
 	{
-		if ( z_delta > 125.0f )
+		if ( z_delta > floorheight )
 			icon = m_IconTokenAbove;
-		else if ( z_delta < -125.0f )
+		else if ( z_delta < floorheight * -1 )
 			icon = m_IconTokenBelow;
 		else
 			icon = m_IconToken;
@@ -640,9 +643,9 @@ void CGERadar::DrawIconOnRadar( CGERadarContact *contact, Color col )
 	}
 	else
 	{
-		if ( z_delta > 125.0f )
+		if ( z_delta > floorheight )
 			icon = m_IconBlipAbove;
-		else if ( z_delta < -125.0f )
+		else if ( z_delta < floorheight * -1 )
 			icon = m_IconBlipBelow;
 		else
 			icon = m_IconBlip;

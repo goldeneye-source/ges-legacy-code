@@ -68,6 +68,7 @@ public:
 	virtual bool	Reload();
 	virtual void	DryFire();
 	virtual void	PrepareFireBullets(int number, CBaseCombatCharacter *pOperator, Vector vecShootOrigin, Vector vecShootDir, bool haveplayer, int tracerfreq = 1);
+	virtual void	PreOwnerDeath(); //Fired when owner dies but before anything else.
 
 #ifdef GAME_DLL
 	virtual void	Spawn();
@@ -101,6 +102,7 @@ public:
 	virtual int		GetDamageCap(void) { return GetGEWpnData().m_iDamageCap; };
 
 	virtual float	GetMaxPenetrationDepth( void ) { return GetGEWpnData().m_flMaxPenetration; };
+	virtual void	AddAccPenalty(float numshots);
 	virtual void	UpdateAccPenalty( void );
 
 	// Fixes for NPC's

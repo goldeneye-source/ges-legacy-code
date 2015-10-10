@@ -56,6 +56,7 @@ private:
 	int m_iseed2;
 	int m_iseed3;
 	float m_fthinktime;
+	float m_fFuseTime;
 
 	float m_flSpawnTime;
 	CHandle<SmokeTrail> m_hSmokeTrail;

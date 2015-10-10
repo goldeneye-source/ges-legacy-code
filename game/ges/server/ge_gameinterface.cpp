@@ -95,7 +95,7 @@ static const char *s_PreserveEnts[] =
 	"env_sun",
 	"env_wind",
 	"env_fog_controller",
-	"func_brush",
+//	"func_brush",
 	"func_wall",
 	"func_illusionary",
 	"infodecal",
@@ -119,7 +119,7 @@ static const char *s_PreserveEnts[] =
 	"predicted_viewmodel",
 	"worldspawn",
 	"point_devshot_camera",
-	"func_door",
+//	"func_door",
 	"phys_lengthconstraint",
 //	"func_physbox",
 	//GE Specific Ones

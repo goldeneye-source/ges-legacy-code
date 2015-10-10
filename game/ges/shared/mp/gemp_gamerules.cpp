@@ -111,7 +111,7 @@ void GERoundTime_Callback( IConVar *var, const char *pOldString, float flOldValu
 	static bool in_func = false;
 	if ( in_func || !GEMPRules() )
 		return;
-	
+
 	// Guard against recursion
 	in_func = true;
 	// Grab the desired round time
@@ -138,8 +138,8 @@ void GERoundCount_Callback( IConVar *var, const char *pOldString, float flOldVal
 	ConVar *cVar = static_cast<ConVar*>(var);
 	int num_rounds = cVar->GetInt();
 
-	// If we have less than 0 ignore this functionality (ie, use ge_roundtime exclusively)
-	if ( num_rounds <= 0 ) {
+	// If numrounds is 0 then ignore this and use ge_roundtime
+	if (num_rounds <= 0) {
 		return;
 	} else if ( num_rounds == 1 ) {
 		// Set our round time to the match time since we only want 1 round
@@ -272,11 +272,13 @@ BEGIN_NETWORK_TABLE_NOBASE( CGEMPRules, DT_GEMPRules )
 #ifdef CLIENT_DLL
 	RecvPropBool( RECVINFO( m_bTeamPlayDesired ) ),
 	RecvPropInt( RECVINFO( m_iTeamplayMode ) ),
+	RecvPropFloat(RECVINFO(m_flMapFloorHeight)),
 	RecvPropEHandle( RECVINFO( m_hMatchTimer ) ),
 	RecvPropEHandle( RECVINFO( m_hRoundTimer ) ),
 #else
 	SendPropBool( SENDINFO( m_bTeamPlayDesired ) ),
 	SendPropInt( SENDINFO( m_iTeamplayMode ) ),
+	SendPropFloat( SENDINFO( m_flMapFloorHeight )),
 	SendPropEHandle( SENDINFO( m_hMatchTimer ) ),
 	SendPropEHandle( SENDINFO( m_hRoundTimer ) ),
 #endif
@@ -371,6 +373,11 @@ CGEMPRules::CGEMPRules()
 	m_flChangeLevelTime		= 0;
 	m_flNextBotCheck		= 0;
 	m_flNextIntermissionCheck = 0;
+
+	m_flSpawnInvulnDuration = 2.0;
+	m_bSpawnInvulnCanBreak = true;
+
+	m_flMapFloorHeight = 125.0;
 
 	m_szNextLevel[0] = '\0';
 	m_szGameDesc[0] = '\0';
@@ -608,7 +615,7 @@ bool CGEMPRules::WeaponShouldRespawn( const char *classname )
 {
 	if ( Q_stristr( classname, "mine" ) || 
 		 !Q_stricmp( classname, "weapon_grenade" ) || 
-		 !Q_stricmp( classname, "weapon_knife" ) )
+		 !Q_stricmp( classname, "weapon_knife_throwing" ) )
 		return false;
 
 	return m_bEnableWeaponSpawns;
@@ -985,7 +992,8 @@ void CGEMPRules::HandleTimeLimitChange()
 	ChangeMatchTimer( mp_timelimit.GetInt() * 60.0f );
 
 	// Recalculate our round times based on the new map time
-	GERoundCount_Callback( &ge_roundcount, ge_roundcount.GetString(), ge_roundcount.GetFloat() );
+	if (mp_timelimit.GetInt() > 0)
+		GERoundCount_Callback( &ge_roundcount, ge_roundcount.GetString(), ge_roundcount.GetFloat() );
 }
 
 void CGEMPRules::SetupChangeLevel( const char *next_level /*= NULL*/ )
@@ -1174,7 +1182,7 @@ void CGEMPRules::ChangeRoundTimer( float new_time_sec )
 			int sec = (int)( 60 * (min - (int)min) );
 			Q_snprintf( szMinSec, 8, "%d:%02d", (int)min, sec );
 
-			// If we don't have enough time left in the round append the difference
+			// Tell the everyone that we've extended or shortened the round.
 			if ( new_time_sec > m_hRoundTimer->GetLength() )
 				Q_strncpy( szDir, "#Extended", 16 );
 			else
@@ -1204,6 +1212,27 @@ void CGEMPRules::StopRoundTimer()
 	Assert( m_hRoundTimer.Get() != NULL );
 	UTIL_ClientPrintAll( HUD_PRINTTALK, "#GES_RoundTime_Disabled" );
 	m_hRoundTimer->Stop();
+}
+
+void CGEMPRules::SetSpawnInvulnInterval(float duration)
+{
+	m_flSpawnInvulnDuration = duration;
+}
+
+
+void CGEMPRules::SetSpawnInvulnCanBreak(bool canbreak)
+{
+	m_bSpawnInvulnCanBreak = canbreak;
+}
+
+float CGEMPRules::GetSpawnInvulnInterval()
+{
+	return m_flSpawnInvulnDuration;
+}
+
+bool CGEMPRules::GetSpawnInvulnCanBreak()
+{
+	return m_bSpawnInvulnCanBreak;
 }
 
 void CGEMPRules::SetTeamplay( bool state, bool force /*= false*/ )
@@ -1550,6 +1579,16 @@ bool CGEMPRules::OnPlayerSay(CBasePlayer* player, const char* text)
 }
 
 #endif // GAME_DLL
+
+void CGEMPRules::SetMapFloorHeight(float height)
+{
+	m_flMapFloorHeight = height;
+}
+
+float CGEMPRules::GetMapFloorHeight()
+{
+	return m_flMapFloorHeight;
+}
 
 // Match Timer Functions
 bool CGEMPRules::IsMatchTimeRunning()

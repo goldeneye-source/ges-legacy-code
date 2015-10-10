@@ -54,7 +54,7 @@ public:
 	void		AddViewKick( void );
 	void		SecondaryAttack( void );
 
-	void		Drop( const Vector &vecVelocity );
+//	void		Drop( const Vector &vecVelocity );
 
 	virtual GEWeaponID GetWeaponID( void ) const { return WEAPON_KNIFE; }
 
@@ -224,12 +224,12 @@ void CWeaponKnife::SwitchToThrowing()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CWeaponKnife::Drop( const Vector &vecVelocity )
-{
-#ifndef CLIENT_DLL
-	UTIL_Remove( this );
-#endif
-}
+//void CWeaponKnife::Drop( const Vector &vecVelocity )
+//{
+//#ifndef CLIENT_DLL
+//	UTIL_Remove( this );
+//#endif
+//}
 
 void CWeaponKnife::ImpactEffect( trace_t &traceHit )
 {

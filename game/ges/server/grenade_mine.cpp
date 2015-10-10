@@ -184,12 +184,8 @@ void CGEMine::MineThink( void )
 		for ( CEntitySphereQuery sphere( vecMinePos, GetDamageRadius() ); 
 				( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
 		{
-			UTIL_TraceLine( vecMinePos, pEntity->GetAbsOrigin(), MASK_SHOT_HULL, this, COLLISION_GROUP_DEBRIS, &tr );
-			// If we can't see this entity, ignore it
-			if ( tr.fraction != 1.0 )
+			if (pEntity->IsWorld() || pEntity == this || pEntity == this->GetParent())
 				continue;
-
-			const char *className = pEntity->GetClassname();
 
 			// Filter out undesirable entities
 			if ( pEntity->IsPlayer() )
@@ -198,30 +194,57 @@ void CGEMine::MineThink( void )
 				// Don't let teammates explode their team's proxy mines
 				if ( !GERules()->FPlayerCanTakeDamage( pPlayer, (CBasePlayer*)GetThrower() ) || pPlayer->IsObserver() )
 					continue;
-			}
-			else if ( !pEntity->IsNPC() && !Q_strnicmp( className, "npc_", 4 ) )
-			{
-				if ( !Q_stricmp( className, "npc_tknife" ) && !((CGETKnife*)pEntity)->IsInAir() )
-					continue;
-				else if ( !Q_strnicmp( className, "npc_mine", 8 ) && !((CGEMine*)pEntity)->IsInAir() )
-					continue;
-				else if ( !Q_stricmp( className, "npc_grenade" ) && !((CGEGrenade*)pEntity)->IsInAir() )
-					continue;
-				else if ( !Q_stricmp( className, "npc_shell" ) )
-					continue;
-				else if ( !Q_stricmp( className, "npc_rocket" ) )
-					continue;
+
+				// Trace to the player's eyes, then their feet, then their midsection for a more robust detection code.
+
+				UTIL_TraceLine(vecMinePos, pPlayer->EyePosition(), MASK_SHOT_HULL, this, COLLISION_GROUP_DEBRIS, &tr);
+				if (tr.fraction != 1.0)
+				{
+					UTIL_TraceLine(vecMinePos, pEntity->GetAbsOrigin(), MASK_SHOT_HULL, this, COLLISION_GROUP_DEBRIS, &tr);
+					if (tr.fraction != 1.0)
+					{
+						UTIL_TraceLine(vecMinePos, pEntity->GetAbsOrigin() + 32, MASK_SHOT_HULL, this, COLLISION_GROUP_DEBRIS, &tr);
+						if (tr.fraction != 1.0)
+							continue;
+					}
+				}
 			}
 			else
-				continue;
+			{
+				if (!pEntity->IsSolid())
+					continue;
+
+				// Some non-player entity, so just do a single check to the origin
+				UTIL_TraceLine(vecMinePos, pEntity->GetAbsOrigin(), MASK_SHOT_HULL, this, COLLISION_GROUP_DEBRIS, &tr);
+				if (tr.fraction != 1.0)
+					continue;
+			}
 
 			// Distance to the target
 			dist = (tr.endpos - vecMinePos).Length();
 
-			// Explode if we are in range
-			if( dist <= range )
+			Vector entvel, minevel;
+
+			entvel = pEntity->GetAbsVelocity();
+			minevel = Vector(0, 0, 0);
+
+			if (entvel.Length() == 0 && pEntity->VPhysicsGetObject())
+				pEntity->VPhysicsGetObject()->GetVelocity(&entvel, NULL);
+
+			if (GetParent())
+			{
+				if (GetParent()->GetAbsVelocity() == 0 && GetParent()->VPhysicsGetObject())
+					pEntity->VPhysicsGetObject()->GetVelocity(&minevel, NULL);
+				else
+					minevel = GetParent()->GetAbsVelocity();
+			}
+
+
+			// Explode if we are in range and the object is moving fast enough
+			if (dist <= range && (entvel - minevel).Length() > 150)
 			{
 				// Emit the beep sound
+				DevMsg("Triggered on %s, which was moving %f \n", pEntity->GetClassname(), entvel.Length());
 				EmitSound("Mine.Beep");
 				g_EventQueue.AddEvent( this, "Explode", MINE_PROXYDELAY, GetThrower(), this );
 			}
@@ -336,12 +359,14 @@ bool CGEMine::AlignToSurf( CBaseEntity *pSurface )
 				VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, false );
 				SetMoveType( MOVETYPE_VPHYSICS );
 				FollowEntity( pEntity, false );
+				SetAbsVelocity(Vector(0, 0, 0));
 			}
 			else
 			{
 				SetMoveType( MOVETYPE_NONE );
 				IPhysicsObject *pObject = VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, false );
 				pObject->EnableMotion( false );
+				SetAbsVelocity( Vector(0, 0, 0) );
 				AddSolidFlags( FSOLID_NOT_SOLID );
 			}
 

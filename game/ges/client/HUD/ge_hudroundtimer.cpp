@@ -89,12 +89,10 @@ void CGEHudRoundTimer::Think()
 	// Default is to show "--:--"
 	float timeleft = 0;
 
-	// Extract a time to use, clamp to the minimum between the match and round timers
-	if ( GEMPRules()->IsRoundTimeRunning() && GEMPRules()->IsMatchTimeRunning() )
-		timeleft = min( GEMPRules()->GetRoundTimeRemaining(), GEMPRules()->GetMatchTimeRemaining() );
-	else if ( GEMPRules()->IsRoundTimeRunning() )
-		timeleft = GEMPRules()->GetRoundTimeRemaining();
-	else if ( cl_ge_show_matchtime.GetBool() && GEMPRules()->IsMatchTimeRunning() )
+	// Figure out if we should use the round time or the map time.
+	if (GEMPRules()->IsRoundTimeRunning())
+		timeleft = GEMPRules()->GetRoundTimeRemaining(); //Rounds always finish even when match time runs out.
+	else if (GEMPRules()->IsMatchTimeRunning())
 		timeleft = GEMPRules()->GetMatchTimeRemaining();
 
 	// Check if we have time to display

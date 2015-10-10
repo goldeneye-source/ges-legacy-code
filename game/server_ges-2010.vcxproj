@@ -485,6 +485,7 @@
     </ClCompile>
     <ClCompile Include="ges\server\ge_recipientfilter.cpp" />
     <ClCompile Include="ges\shared\ge_webrequest.cpp" />
+    <ClCompile Include="ge_door.cpp" />
     <ClCompile Include="sdk\server\hl2\npc_bullseye.cpp" />
     <ClCompile Include="sdk\server\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

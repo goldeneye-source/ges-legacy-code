@@ -45,8 +45,7 @@ public:
 		m_fMaxRange1 = 8000;
 
 #ifdef CLIENT_DLL
-		// Hard coded since Valve sucks
-		m_iLastZoomOffset = -80;
+		m_iLastZoomOffset = -50;
 #endif
 	}
 
@@ -99,7 +98,7 @@ public:
 		// Reset the last zoom change
 		if (BaseClass::Holster(pSwitchingTo))
 		{
-			m_iLastZoomOffset = GetGEWpnData().m_iZoomOffset;
+//			m_iLastZoomOffset = GetGEWpnData().m_iZoomOffset;
 			return true;
 		}
 

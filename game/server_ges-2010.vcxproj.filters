@@ -1767,6 +1767,9 @@
     <ClCompile Include="ges\shared\ge_game_timer.cpp">
       <Filter>GES\Entities</Filter>
     </ClCompile>
+    <ClCompile Include="ge_door.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sdk\server\plasma.h">

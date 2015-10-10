@@ -81,6 +81,11 @@ public:
 	void SetRoundTimerPaused( bool state );
 	void StopRoundTimer();
 	
+	void SetSpawnInvulnInterval(float duration);
+	void SetSpawnInvulnCanBreak(bool canbreak);
+	float GetSpawnInvulnInterval();
+	bool GetSpawnInvulnCanBreak();
+
 	float FlArmorRespawnTime( CItem *pItem );
 
 	bool AmmoShouldRespawn();
@@ -152,6 +157,9 @@ public:
 	bool IsTeamplay();
 	bool IsIntermission();
 
+	void SetMapFloorHeight(float height);
+	float GetMapFloorHeight();
+
 	// ------------------------------
 	// Server Only -- Inherited Functions
 #ifdef GAME_DLL
@@ -208,6 +216,9 @@ private:
 	float m_flNextIntermissionCheck;
 	float m_flChangeLevelTime;
 
+	float m_flSpawnInvulnDuration;
+	bool m_bSpawnInvulnCanBreak;
+
 	float m_flNextBotCheck;
 	CUtlVector<EHANDLE> m_vBotList;
 
@@ -229,6 +240,7 @@ private:
 	int   m_iNumInRoundPlayers;
 #endif
 
+	CNetworkVar( float, m_flMapFloorHeight );
 	CNetworkVar( bool,	m_bTeamPlayDesired );
 	CNetworkVar( int,	m_iTeamplayMode );
 

@@ -86,7 +86,8 @@ public:
 
 	// Custom damage tracking function
 	virtual void Event_DamagedOther( CGEPlayer *pOther, int dmgTaken, const CTakeDamageInfo &inputInfo );
-	
+	virtual void PlayHitsound(int dmgTaken);
+
 	// -------------------------------------------------
 
 	// Redfine this to ensure when we call this function we set the weapons to loadup on the right VM
@@ -125,6 +126,7 @@ public:
 	virtual void FinishClientPutInServer();
 	virtual void Event_Killed( const CTakeDamageInfo &info );
 	virtual void DropAllTokens();
+	virtual void DropTopWeapons();
 
 	virtual void SetPlayerModel( void );
 	virtual void SetPlayerModel( const char* szCharName, int iCharSkin = 0, bool bNoSelOverride = false );

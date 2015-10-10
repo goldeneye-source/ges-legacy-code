@@ -140,6 +140,7 @@ void CWeaponMoonraker::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr
 		iEntIndex = entindex();
 	}
 
+	// Limit this to server side so two laser bolts don't get drawn
 	int iAttachment = GetTracerAttachment();
 	UTIL_ParticleTracer( "tracer_laser", vNewSrc, tr.endpos, iEntIndex, iAttachment, false );
 }

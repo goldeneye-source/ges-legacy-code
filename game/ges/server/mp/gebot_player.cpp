@@ -401,7 +401,7 @@ void CGEBotPlayer::SetPlayerModel( const char* szCharName, int iCharSkin /*=0*/,
 void CGEBotPlayer::FireBullets( const FireBulletsInfo_t &info )
 {
 	// We never fire bullets, this is just to disable spawn invuln when we shoot essentially
-	if ( m_bInSpawnInvul && !IsObserver() )
+	if ( m_bInSpawnInvul && !IsObserver() && GEMPRules()->GetSpawnInvulnCanBreak() )
 		StopInvul();
 }
 

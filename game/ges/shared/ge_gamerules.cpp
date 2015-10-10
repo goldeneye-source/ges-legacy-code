@@ -61,8 +61,8 @@ static CViewVectors g_GEViewVectors(
 	Vector( 12,  12,  72 ),	  //m_vHullMax
 							  
 	Vector(-12, -12, 0 ),	  //m_vDuckHullMin
-	Vector( 12,  12,  36 ),	  //m_vDuckHullMax
-	Vector( 0, 0, 28 ),		  //m_vDuckView
+	Vector( 12,  12,  44 ),	  //m_vDuckHullMax
+	Vector( 0, 0, 36 ),		  //m_vDuckView
 							  
 	Vector(-10, -10, -10 ),	  //m_vObsHullMin
 	Vector( 10,  10,  10 ),	  //m_vObsHullMax
@@ -1053,7 +1053,7 @@ bool CGERules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		// swap so that lowest is always first
 		swap(collisionGroup0,collisionGroup1);
 	}
-	
+
 	//Don't stand on COLLISION_GROUP_WEAPON
 	if( (collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ||
 		 collisionGroup0 == COLLISION_GROUP_PLAYER ||
@@ -1062,7 +1062,20 @@ bool CGERules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	{
 		return false;
 	}
-	
+
+	// Dropped weapons shouldn't block players, or collide with other weapons.
+	if (collisionGroup1 == COLLISION_GROUP_DROPPEDWEAPON)
+	{
+		if (collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ||
+			collisionGroup0 == COLLISION_GROUP_PLAYER ||
+			collisionGroup0 == COLLISION_GROUP_NPC ||
+			collisionGroup0 == COLLISION_GROUP_DROPPEDWEAPON ||
+			collisionGroup0 == COLLISION_GROUP_WEAPON)
+		{
+			return false;
+		}
+	}
+
 	// Mines shouldn't collide with weapons, debris, players, NPCs, or projectiles
 	if ( collisionGroup1 == COLLISION_GROUP_MINE )
 	{

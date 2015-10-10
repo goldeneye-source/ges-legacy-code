@@ -24,6 +24,10 @@ public:
 	void InputGetPlayerCount( inputdata_t &inputdata );
 	void InputGetRoundCount( inputdata_t &inputdata );
 
+	void Spawn();
+
+	float m_fFloorHeight = 125.0f;
+
 	COutputInt m_outPlayerCount;
 	COutputInt m_outRoundCount;
 	COutputEvent m_outTeamplayOn;
@@ -35,6 +39,9 @@ public:
 LINK_ENTITY_TO_CLASS( ge_gameplayinfo, CGEGameplayInfo );
 
 BEGIN_DATADESC( CGEGameplayInfo )
+	// Parameters
+	DEFINE_KEYFIELD( m_fFloorHeight, FIELD_FLOAT, "FloorHeight"),
+
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_VOID, "GetPlayerCount", InputGetPlayerCount ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "GetRoundCount", InputGetRoundCount ),
@@ -47,6 +54,17 @@ BEGIN_DATADESC( CGEGameplayInfo )
 	DEFINE_OUTPUT( m_outRoundStart, "RoundStart"),
 	DEFINE_OUTPUT( m_outRoundEnd, "RoundEnd"),
 END_DATADESC()
+
+void CGEGameplayInfo::Spawn(void)
+{
+	BaseClass::Spawn();
+
+	GEMPRules()->SetMapFloorHeight(m_fFloorHeight);
+
+	DevMsg("Set Map Floorheight to %f \n", m_fFloorHeight);
+
+	DevMsg("Reading Floorheight as %f \n", GEMPRules()->GetMapFloorHeight());
+}
 
 // Called BEFORE players spawn
 void CGEGameplayInfo::OnGameplayEvent( GPEvent event )
@@ -67,6 +85,12 @@ void CGEGameplayInfo::OnGameplayEvent( GPEvent event )
 
 		// Call round start output
 		m_outRoundStart.FireOutput( this, this );
+
+		GEMPRules()->SetMapFloorHeight(m_fFloorHeight);
+
+		DevMsg("Set Map Floorheight to %f \n", m_fFloorHeight);
+
+		DevMsg("Reading Floorheight as %f \n", GEMPRules()->GetMapFloorHeight());
 	}
 	else if ( event == ROUND_END )
 	{

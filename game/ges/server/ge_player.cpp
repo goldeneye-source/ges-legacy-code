@@ -59,6 +59,8 @@ END_DATADESC()
 #pragma warning( disable : 4355 )
 #endif
 
+ConVar ge_weapondroplimit("ge_weapondroplimit", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Cap on the number of weapons a player can drop on death in addition to their active one.");
+
 CGEPlayer::CGEPlayer()
 {
 	m_iAimModeState = AIM_NONE;
@@ -90,6 +92,9 @@ void CGEPlayer::Precache( void )
 	PrecacheParticleSystem( "ge_impact_add" );
 	PrecacheModel( "models/VGUI/bloodanimation.mdl" );
 	PrecacheScriptSound( "GEPlayer.HitOther" );
+	PrecacheScriptSound( "GEPlayer.HitOtherHead" );
+	PrecacheScriptSound( "GEPlayer.HitOtherLimb" );
+	PrecacheScriptSound( "GEPlayer.HitOtherInvuln" );
 #if 0
 	PrecacheScriptSound( "GEPlayer.HitPainMale" );
 	PrecacheScriptSound( "GEPlayer.HitPainFemale" );
@@ -100,10 +105,16 @@ void CGEPlayer::Precache( void )
 
 bool CGEPlayer::AddArmor( int amount )
 {
-	if ( ArmorValue() < GetMaxArmor() )
+	// If player can't carry any more armor or the vest is a half vest and the player has more than half armor, return false.
+	if (ArmorValue() < GetMaxArmor() && !(amount < MAX_ARMOR && ArmorValue() >= MAX_ARMOR / 2))
 	{
-		GEStats()->Event_PickedArmor( this, min( GetMaxArmor() - ArmorValue(), amount ) );
-		IncrementArmorValue( amount, GetMaxArmor() );
+		GEStats()->Event_PickedArmor(this, min(GetMaxArmor() - ArmorValue(), amount));
+
+		// Use a different cap depending on which armor it is.
+		if (amount < MAX_ARMOR)
+			IncrementArmorValue(amount, GetMaxArmor()/2);
+		else
+			IncrementArmorValue( amount, GetMaxArmor() );
 
 		CPASAttenuationFilter filter( this, "ArmorVest.Pickup" );
 		EmitSound( filter, entindex(), "ArmorVest.Pickup" );
@@ -432,7 +443,7 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 	}
 	else
 	{
-		DevMsg( "%s's invulnerability blocked that hit!\n", GetPlayerName() );
+		DevMsg("%s's invulnerability blocked that hit!\n", GetPlayerName());
 	}
 
 	return dmg;
@@ -576,6 +587,8 @@ void CGEPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vec
 			SetLastHitGroup( HITGROUP_GENERIC );
 		}
 
+		float predamage = info.GetDamage();
+
 		// Since we scaled our damage, now check to see if we did enough damage to override the invuln
 		// if we didn't we set us back to invuln (pending we actually were in it previously)
 //		if ( info.GetAttacker() != m_pLastAttacker && info.GetDamage() > m_iPrevDmgTaken )
@@ -584,6 +597,27 @@ void CGEPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vec
 			info.SetDamage(CalcInvul(info.GetDamage(), ToBasePlayer(info.GetAttacker())));
 		else if ( m_pLastAttacker )
 			m_takedamage = DAMAGE_NO;
+
+		if (info.GetDamage() == 0)
+		{
+			if (!ToGEPlayer(info.GetAttacker())->IsBotPlayer())
+				ToGEPlayer(info.GetAttacker())->PlayHitsound(0);
+
+			// Upset accuracy based on how many half gauges of life would have been lost. 
+			// More substancial than you'd think because of the exponential nature of the accuracy recovery
+			CBaseEntity *pInflictor;
+			pInflictor = GetActiveWeapon();
+
+			if (pInflictor)
+			{
+				CGEWeapon *pOurWeapon = ToGEWeapon((CBaseCombatWeapon*)pInflictor);
+
+				if (pOurWeapon)
+				{
+					pOurWeapon->AddAccPenalty(predamage / 80);
+				}
+			}
+		}
 
 		BaseClass::TraceAttack( info, vecDir, ptr );
 	}
@@ -619,12 +653,7 @@ void CGEPlayer::Event_DamagedOther( CGEPlayer *pOther, int dmgTaken, const CTake
 		int noSound = atoi( engine->GetClientConVarValue( entindex(), "cl_ge_nohitsound" ) );
 		if ( !m_bSentHitSoundThisFrame && (inputInfo.GetDamageType() & DMG_BULLET) == DMG_BULLET && noSound == 0 )
 		{
-			float playAt = gpGlobals->curtime - (g_pPlayerResource->GetPing(entindex()) / 1000) + GE_HITOTHER_DELAY;
-			CSingleUserRecipientFilter filter( this );
-			filter.MakeReliable();
-			EmitSound( filter, entindex(), "GEPlayer.HitOther", 0, playAt );
-
-			m_bSentHitSoundThisFrame = true;
+			PlayHitsound(dmgTaken);
 		}
 	}
 	
@@ -647,8 +676,15 @@ void CGEPlayer::Event_Killed( const CTakeDamageInfo &info )
 		}
 	}
 
+
+
+	// Let the weapon know that the player has died, this is used for stuff like grenades.
+	if (GetActiveWeapon() && ToGEWeapon(GetActiveWeapon()))
+		ToGEWeapon(GetActiveWeapon())->PreOwnerDeath();
+
 	KnockOffHat();
 	DropAllTokens();
+	DropTopWeapons();
 
 	BaseClass::Event_Killed( info );
 }
@@ -668,6 +704,67 @@ void CGEPlayer::DropAllTokens()
 			if ( GEMPRules()->GetTokenManager()->IsValidToken( pWeapon->GetClassname() ) )
 				Weapon_Drop( pWeapon );
 		}
+	}
+}
+
+static int weaponstrengthSort(CGEWeapon * const *a, CGEWeapon * const *b)
+{
+	int IDa = (*a)->GetWeaponID();
+	int IDb = (*b)->GetWeaponID();
+
+	if (GEWeaponInfo[IDa].strength > GEWeaponInfo[IDb].strength)
+		return -1;
+	else if (GEWeaponInfo[IDa].strength == GEWeaponInfo[IDb].strength)
+		return 0;
+	else return 1;
+}
+
+void CGEPlayer::DropTopWeapons()
+{
+	CUtlVector<CGEWeapon*> topWeapons;
+
+	// Scan the player's held weapons and drop the top 2 in addition to the active one.
+	for (int i = 0; i < MAX_WEAPONS; i++)
+	{
+		CBaseCombatWeapon *pWeapon = GetWeapon(i);
+		if (!pWeapon)
+			continue;
+
+		// We drop the active weapon by default so don't worry about it.
+		if (GetActiveWeapon() == pWeapon)
+			continue;
+
+		CGEWeapon *pGEWeapon = ToGEWeapon(pWeapon);
+		if (!pGEWeapon)
+			continue;
+
+		// If we don't have any ammo for this weapon, we might as well not have it at all.
+		if (!HasAnyAmmoOfType(pGEWeapon->GetPrimaryAmmoType()))
+			continue;
+
+		// Weapons with strength lower than 1 do not have pickups and thus should not be dropped.
+		if (GEWeaponInfo[pGEWeapon->GetWeaponID()].strength < 1)
+			continue;
+
+		topWeapons.AddToTail(pGEWeapon);
+	}
+
+	topWeapons.Sort(weaponstrengthSort);
+
+	// Determine how many weapons to drop
+	int droplength;
+
+	if (topWeapons.Count() > ge_weapondroplimit.GetInt())
+		droplength = ge_weapondroplimit.GetInt();
+	else
+		droplength = topWeapons.Count();
+
+	// Drop the strongest weapons the player has with variable force and direction
+	for (int i = 0; i < droplength; i++)
+	{
+		Vector forcevector = Vector((rand() % 150) - 75, (rand() % 150) - 75, rand() % 200) + GetAbsVelocity()/2;
+
+		Weapon_Drop(topWeapons[i], NULL, &forcevector);
 	}
 }
 
@@ -809,6 +906,9 @@ void CGEPlayer::StartInvul( float time )
 
 bool CGEPlayer::CheckInvul(CBasePlayer *pAttacker)
 {
+	if (m_bInSpawnInvul)
+		return false;
+
 	int totaldamage = 0;
 
 	if (m_justhit)
@@ -843,6 +943,9 @@ bool CGEPlayer::CheckInvul(CBasePlayer *pAttacker)
 
 int CGEPlayer::CalcInvul(int damage, CBasePlayer *pAttacker)
 {
+	if (m_bInSpawnInvul)
+		return 0;
+
 	DevMsg("%s took %d damage...\n", GetPlayerName(), damage);
 
 	float lowtime = gpGlobals->curtime - INVULN_PERIOD;
@@ -914,6 +1017,27 @@ int CGEPlayer::CalcInvul(int damage, CBasePlayer *pAttacker)
 	DevMsg("...Which became %d damage after invuln calcs!\n", damage);
 
 	return damage;
+}
+
+void CGEPlayer::PlayHitsound(int dmgTaken)
+{
+	float playAt = gpGlobals->curtime - (g_pPlayerResource->GetPing(entindex()) / 1000) + GE_HITOTHER_DELAY;
+	CSingleUserRecipientFilter filter(this);
+	filter.MakeReliable();
+
+	float damageratio = dmgTaken / ToGEWeapon(GetActiveWeapon())->GetWeaponDamage();
+	
+
+	if (damageratio < 0.1)
+		EmitSound(filter, entindex(), "GEPlayer.HitOtherInvuln", 0, playAt);
+	else if (damageratio < 0.3)
+		EmitSound(filter, entindex(), "GEPlayer.HitOtherLimb", 0, playAt);
+	else if (damageratio < 0.8)
+		EmitSound(filter, entindex(), "GEPlayer.HitOther", 0, playAt);
+	else
+		EmitSound(filter, entindex(), "GEPlayer.HitOtherHead", 0, playAt);
+
+	m_bSentHitSoundThisFrame = true;
 }
 
 void CGEPlayer::StopInvul( void )

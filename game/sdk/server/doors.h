@@ -81,6 +81,17 @@ public:
 
 	virtual bool IsRotatingDoor() { return false; }
 	virtual bool ShouldSavePhysics();
+#ifdef GE_DLL
+	// used to selectivly override defaults
+	virtual void DoorTouch( CBaseEntity *pOther );
+
+	// local functions
+	virtual int DoorActivate( );
+	virtual void DoorGoUp(void);
+	virtual void DoorGoDown(void);
+	virtual void DoorHitTop(void);
+	virtual void DoorHitBottom(void);
+#else
 	// used to selectivly override defaults
 	void DoorTouch( CBaseEntity *pOther );
 
@@ -90,17 +101,26 @@ public:
 	void DoorGoDown( void );
 	void DoorHitTop( void );
 	void DoorHitBottom( void );
+#endif
 	void UpdateAreaPortals( bool isOpen );
 	void Unlock( void );
 	void Lock( void );
 	int GetDoorMovementGroup( CBaseDoor *pDoorList[], int listMax );
 
 	// Input handlers
+#ifdef GE_DLL
+	virtual void InputClose( inputdata_t &inputdata );
+	virtual void InputLock(inputdata_t &inputdata);
+	virtual void InputOpen(inputdata_t &inputdata);
+	virtual void InputToggle(inputdata_t &inputdata);
+	virtual void InputUnlock(inputdata_t &inputdata);
+#else
 	void InputClose( inputdata_t &inputdata );
-	void InputLock( inputdata_t &inputdata );
-	void InputOpen( inputdata_t &inputdata );
-	void InputToggle( inputdata_t &inputdata );
-	void InputUnlock( inputdata_t &inputdata );
+	void InputLock(inputdata_t &inputdata);
+	void InputOpen(inputdata_t &inputdata);
+	void InputToggle(inputdata_t &inputdata);
+	void InputUnlock(inputdata_t &inputdata);
+#endif
 	void InputSetSpeed( inputdata_t &inputdata );
 
 	Vector m_vecMoveDir;		// The direction of motion for linear moving doors.

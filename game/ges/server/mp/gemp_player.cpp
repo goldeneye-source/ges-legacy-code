@@ -44,6 +44,9 @@ LINK_ENTITY_TO_CLASS( mp_player, CGEMPPlayer );
 IMPLEMENT_SERVERCLASS_ST(CGEMPPlayer, DT_GEMP_Player)
 	SendPropFloat( SENDINFO( m_flStartJumpZ ) ),
 	SendPropFloat( SENDINFO( m_flNextJumpTime ) ),
+	SendPropFloat( SENDINFO( m_flLastJumpTime )),
+	SendPropFloat( SENDINFO( m_flJumpPenalty )),
+	SendPropFloat( SENDINFO( m_flLastLandVelocity)),
 END_SEND_TABLE()
 
 BEGIN_DATADESC( CGEMPPlayer )
@@ -207,6 +210,17 @@ int CGEMPPlayer::GetCampingPercent()
 		return (int)RemapValClamped( m_flCampingTime, RADAR_MIN_CAMP_TIME, RADAR_MAX_CAMP_TIME, 0, 50.0f );
 	
 	return 0;
+}
+
+void CGEMPPlayer::UpdateJumpPenalty()
+{
+	// Check our penalty time decay
+	if (m_flJumpPenalty > 0 && GetGroundEntity() != NULL)
+	{
+		//dt * 2000/x
+		m_flJumpPenalty -= gpGlobals->frametime* (2000 / m_flJumpPenalty);
+		m_flJumpPenalty = max(m_flJumpPenalty, 0.0f);
+	}
 }
 
 void CGEMPPlayer::PickDefaultSpawnTeam()
@@ -390,15 +404,18 @@ void CGEMPPlayer::Spawn()
 		m_flLastMoveTime = gpGlobals->curtime;
 		m_flNextCampCheck = gpGlobals->curtime;
 
-		// Give use two seconds of invuln time
-		StartInvul( 2.0f );
+		// Give us the invuln time defined by the gameplay
+		StartInvul( GEMPRules()->GetSpawnInvulnInterval() );
 		m_bInSpawnInvul = true;
 
 		SetMaxSpeed(GE_NORM_SPEED);
 		m_Local.m_bDucked = false;
 		SetPlayerUnderwater(false);
 		m_flStartJumpZ = 0.0f;
-		m_flNextJumpTime = 0.0f;
+		m_flNextJumpTime = 1.0f;
+		m_flLastJumpTime = 0.0f;
+		m_flJumpPenalty = 0.0f;
+		m_flLastLandVelocity = 0.0f;
 
 		pl.deadflag = false;
 		RemoveSolidFlags( FSOLID_NOT_SOLID );
@@ -1216,6 +1233,8 @@ void CGEMPPlayer::PreThink()
 		Hints()->Update();
 	}
 
+	//UpdateJumpPenalty();
+
 	BaseClass::PreThink();
 }
 
@@ -1456,12 +1475,13 @@ bool CGEMPPlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 		return false;
 
 	bool ret = BaseClass::BumpWeapon(pWeapon);
-	if ( !ret && (GERules()->ShouldForcePickup(this, pWeapon) || pGEWeapon->GetWeaponID() == WEAPON_MOONRAKER) )
+	if (!ret && (GERules()->ShouldForcePickup(this, pWeapon) || ((pGEWeapon->GetWeaponID() == WEAPON_MOONRAKER || pGEWeapon->GetWeaponID() == WEAPON_KNIFE) && IsAllowedToPickupWeapons()) ))
 	{
 		// If we didn't pick it up and the game rules say we should have anyway remove it from the world
 		pWeapon->SetOwner( NULL );
 		pWeapon->SetOwnerEntity( NULL );
 		UTIL_Remove(pWeapon);
+		EmitSound("BaseCombatCharacter.AmmoPickup");
 	}
 	else if ( ret )
 	{

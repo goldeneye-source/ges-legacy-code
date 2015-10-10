@@ -37,6 +37,7 @@
 #include "engine/IEngineSound.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 #include "particle_parse.h"
+#include "gemp_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -225,7 +226,7 @@ void CGEPlayer::FireBullets( const FireBulletsInfo_t &info )
 #ifdef GAME_DLL
 	// If we were invulnerable on spawn, well its cancelled now
 	// also, this shot counts for 0 damage!
-	if ( m_bInSpawnInvul && !IsObserver() )
+	if (m_bInSpawnInvul && !IsObserver() && GEMPRules()->GetSpawnInvulnCanBreak())
 	{
 //		modinfo.m_iPlayerDamage = modinfo.m_iDamage = 0;
 		StopInvul();

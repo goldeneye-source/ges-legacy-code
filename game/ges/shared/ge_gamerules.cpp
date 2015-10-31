@@ -364,17 +364,32 @@ bool CGERules::FShouldSwitchWeapon( CBasePlayer *pPlayer, CBaseCombatWeapon *pWe
 		if ( ToGEPlayer(pPlayer)->IsInAimMode() )
 			return false;
 
-		int myweapid = ToGEWeapon(pPlayer->GetActiveWeapon())->GetWeaponID();
+		CGEWeapon *myweap = ToGEWeapon(pPlayer->GetActiveWeapon());
+		int myweapid = myweap->GetWeaponID();
 		int weapid	 = ToGEWeapon(pWeapon)->GetWeaponID();
 
-		// We don't want to switch off of explosives if we explicitly had them out
+		// Don't switch if we fired our weapon recently.  
+		// Might be a dinky way of doing this, last shot fired time may be more intuitive but this will scale to weapon fire rates at least.
+		if (myweap->GetAccPenalty() > 0)
+			return false;
+
+		
+		// Never switch if we have explosives out
 		if ( myweapid == WEAPON_GRENADE_LAUNCHER || myweapid == WEAPON_ROCKET_LAUNCHER || myweapid == WEAPON_GRENADE ||
 			 myweapid == WEAPON_REMOTEMINE || myweapid == WEAPON_PROXIMITYMINE || myweapid == WEAPON_TIMEDMINE )
 		{
-			// Although we want to switch to a more desirable explosive!
-			if ( weapid != WEAPON_ROCKET_LAUNCHER && weapid != WEAPON_GRENADE_LAUNCHER )
-				return false;
+			return false;
+		} 
+		
+		// Also never automatically switch to explosives
+		if (weapid == WEAPON_GRENADE_LAUNCHER || weapid == WEAPON_ROCKET_LAUNCHER || weapid == WEAPON_GRENADE ||
+			weapid == WEAPON_REMOTEMINE || weapid == WEAPON_PROXIMITYMINE || weapid == WEAPON_TIMEDMINE)
+		{
+			return false;
 		}
+
+		
+
 	}
 
 	// Use the MultiplayerGameRules to sort out the rest

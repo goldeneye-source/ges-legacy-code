@@ -107,7 +107,7 @@ void CGEWeaponAutomatic::PrimaryAttack( void )
 	pPlayer->FireBullets( info );
 	*/
 
-	PrepareFireBullets(iBulletsToFire, pPlayer, pPlayer->Weapon_ShootPosition(), pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES), true, 2);
+	PrepareFireBullets(iBulletsToFire, pPlayer, pPlayer->Weapon_ShootPosition(), pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES), true);
 
 	// Record our shots
 	RecordShotFired( iBulletsToFire );

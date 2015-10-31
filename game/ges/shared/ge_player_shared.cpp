@@ -264,8 +264,6 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 
 		if ( pWeapon )
 		{
-			// Setup our tracers as defined in the weapon's script file
-			modinfo.m_iTracerFreq = pWeapon->GetTracerFreq();
 			if ( !(modinfo.m_nFlags & FIRE_BULLETS_PENETRATED_SHOT) )
 				// Only take the weapon's damage if this is the first shot
 				modinfo.m_iDamage = pWeapon->GetGEWpnData().m_iDamage;

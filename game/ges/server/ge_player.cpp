@@ -28,8 +28,10 @@
 #include "grenade_gebase.h"
 #include "ent_hat.h"
 #include "gemp_gamerules.h"
+#include "ge_radarresource.h"
 
 #include "ge_player.h"
+#include "gemp_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -65,6 +67,7 @@ CGEPlayer::CGEPlayer()
 {
 	m_iAimModeState = AIM_NONE;
 	m_bInSpawnInvul = false;
+	m_bInSpawnCloak = false;
 
 	m_pHints = new CHintSystem;
 	m_pHints->Init( this, 2, NULL );
@@ -73,6 +76,7 @@ CGEPlayer::CGEPlayer()
 	m_flDamageMultiplier = 1.0f;
 	m_flSpeedMultiplier = 1.0f;
 	m_flEndInvulTime = 0.0f;
+	m_flEndCloakTime = 0.0f;
 
 	m_iCharIndex = m_iSkinIndex = -1;
 
@@ -244,6 +248,10 @@ void CGEPlayer::PreThink( void )
 	if ( m_takedamage == DAMAGE_NO && m_flEndInvulTime < gpGlobals->curtime && !IsObserver() )
 		StopInvul();
 
+	// Cloak checks
+	if ( m_bInSpawnCloak && m_flEndCloakTime < gpGlobals->curtime && !IsObserver() )
+		m_bInSpawnCloak = false;
+
 	if ( GetObserverMode() > OBS_MODE_FREEZECAM )
 	{
 		CheckObserverSettings();	// do this each frame
@@ -308,12 +316,31 @@ void CGEPlayer::CheatImpulseCommands( int iImpulse )
 {
 	switch ( iImpulse )
 	{
-		case 101:
+		case 28:
+		{
+			if (sv_cheats->GetBool())
 			{
-				if( sv_cheats->GetBool() )
-					GiveAllItems();
+				// Give ourselves a radar color based on our steam ID.
+				// This is good for discussion during tests
+
+				int steamID = GetSteamIDAsUInt64();
+				int first3 = Floor2Int(steamID / 100000);
+				int mid3 = Floor2Int((steamID % 1000000) / 1000);
+				int last3 = steamID % 1000;
+
+				// Shifted green and blue because HAHAHA I GET TO BE DESATURATED CYAN, LOSERS!
+				Color col(first3 % 255, (mid3 + 230) % 255, (last3 + 170) % 255, 255);
+				g_pRadarResource->AddRadarContact(this, RADAR_TYPE_PLAYER, false, "", col);
 			}
-			break;
+		}
+		break;
+
+		case 101:
+		{
+			if( sv_cheats->GetBool() )
+				GiveAllItems();
+		}
+		break;
 
 		default:
 			BaseClass::CheatImpulseCommands( iImpulse );
@@ -593,10 +620,10 @@ void CGEPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vec
 		// if we didn't we set us back to invuln (pending we actually were in it previously)
 //		if ( info.GetAttacker() != m_pLastAttacker && info.GetDamage() > m_iPrevDmgTaken )
 //			info.SetDamage( info.GetDamage() - m_iPrevDmgTaken );
-		if (ToBasePlayer(info.GetAttacker()))
-			info.SetDamage(CalcInvul(info.GetDamage(), ToBasePlayer(info.GetAttacker())));
-		else if ( m_pLastAttacker )
-			m_takedamage = DAMAGE_NO;
+		if ( pGEPlayer )
+			info.SetDamage(CalcInvul(info.GetDamage(), pGEPlayer));
+		//else if ( m_pLastAttacker )
+		//	m_takedamage = DAMAGE_NO;
 
 		if (info.GetDamage() == 0)
 		{
@@ -941,7 +968,7 @@ bool CGEPlayer::CheckInvul(CBasePlayer *pAttacker)
 		return true;
 }
 
-int CGEPlayer::CalcInvul(int damage, CBasePlayer *pAttacker)
+int CGEPlayer::CalcInvul(int damage, CGEPlayer *pAttacker)
 {
 	if (m_bInSpawnInvul)
 		return 0;
@@ -987,6 +1014,8 @@ int CGEPlayer::CalcInvul(int damage, CBasePlayer *pAttacker)
 	if (!pWeapon)
 		return damage;
 
+	float damagecap = pAttacker->GetDamageMultiplier() * pWeapon->GetDamageCap();
+
 	// Calculate the damage taken in the last invuln period.
 	int totaldamage = 0;
 
@@ -996,7 +1025,7 @@ int CGEPlayer::CalcInvul(int damage, CBasePlayer *pAttacker)
 	}
 
 	// If we've hit the cap already, give up.
-	if (totaldamage >= pWeapon->GetDamageCap())
+	if (totaldamage >= damagecap)
 	{
 		m_takedamage = DAMAGE_NO;
 		return 0;
@@ -1004,7 +1033,7 @@ int CGEPlayer::CalcInvul(int damage, CBasePlayer *pAttacker)
 	
 	//Otherwise it's time to add the entry to the list and announce the target has been hit.
 
-	damage = min(damage, pWeapon->GetDamageCap() - totaldamage);
+	damage = min(damage, damagecap - totaldamage);
 
 	m_iAttackListTimes[emptyid] = gpGlobals->curtime;
 	m_iAttackList[emptyid] = damage;
@@ -1012,7 +1041,7 @@ int CGEPlayer::CalcInvul(int damage, CBasePlayer *pAttacker)
 	m_takedamage = DAMAGE_YES;
 	m_justhit = true;
 
-	DevMsg("...damage cap is %d...", pWeapon->GetDamageCap());
+	DevMsg("...damage cap is %d...", damagecap);
 	DevMsg("...total damage is %d...", totaldamage);
 	DevMsg("...Which became %d damage after invuln calcs!\n", damage);
 
@@ -1137,7 +1166,6 @@ void CGEPlayer::GiveNamedWeapon(const char* ident, int ammoCount, bool stripAmmo
 	{
 		RemoveAmmo( pWeapon->GetDefaultClip1(), pWeapon->m_iPrimaryAmmoType );
 	}
-
 }
 
 void CGEPlayer::StripAllWeapons()

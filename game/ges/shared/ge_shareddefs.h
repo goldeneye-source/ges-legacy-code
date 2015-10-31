@@ -532,9 +532,13 @@ T GERandom(const T limit = T(1.0))
    tm myTime;
    VCRHook_LocalTime( &myTime );
 
-   srand( myTime.tm_sec + myTime.tm_min + myTime.tm_hour );
-   seeded = true;
+//   srand( myTime.tm_sec + myTime.tm_min + myTime.tm_hour );
 
+   // Trying new formula to cut down on redundant seed values and hopefully stop so many repeating selections.
+   // This really should have a randomly chosen initial value but i can't figure out a seamless way of doing it right now.
+   srand( myTime.tm_sec + myTime.tm_min * 60 + myTime.tm_hour * 3600 );
+   seeded = true;
+   
    return GERandom<T>(limit);
 }
 

@@ -83,7 +83,6 @@ void CGEArmorVest::Materialize(void)
 	// May cause issues, create seperate loop if so.
 
 	m_iSpawnpoints += CalcSpawnProgress();
-	DevMsg("Armor progress is %d out of %d\n", m_iSpawnpoints, m_iSpawnpointsgoal);
 
 	if (m_iSpawnpointsgoal < m_iSpawnpoints)
 	{

@@ -368,6 +368,16 @@ void CGEMPPlayer::Spawn()
 			return;
 		}
 
+		// Don't do this next bit if this is the player's first spawn, and thus they haven't died yet.
+		// It would be better to do this based on roundtime however, since doing it by deaths shortchanges players who join late.
+		// We have to do it before GiveDefaultItems so that weaponsets like rocket arena don't apply the cloak to nearly full strength players.
+
+		if (GetRoundDeaths() > 0)
+		{
+			m_bInSpawnCloak = true;
+			m_flEndCloakTime = gpGlobals->curtime + 5.0;
+		}
+
 		RemoveAllItems(true);
 		GiveDefaultItems();
 		GiveHat();
@@ -407,6 +417,7 @@ void CGEMPPlayer::Spawn()
 		// Give us the invuln time defined by the gameplay
 		StartInvul( GEMPRules()->GetSpawnInvulnInterval() );
 		m_bInSpawnInvul = true;
+		
 
 		SetMaxSpeed(GE_NORM_SPEED);
 		m_Local.m_bDucked = false;
@@ -1565,7 +1576,7 @@ void CGEMPPlayer::FinishClientPutInServer()
 	// Add ourselves to the radar resource (we will never be removed unless we disconnect)
 	Color col(0,0,0,0);
 	g_pRadarResource->AddRadarContact( this, RADAR_TYPE_PLAYER, false, "", col );
-
+	
 	// notify other clients of player joining the game
 	UTIL_ClientPrintAll( HUD_PRINTNOTIFY, "#Game_connected", sName[0] != 0 ? sName : "<unconnected>" );
 

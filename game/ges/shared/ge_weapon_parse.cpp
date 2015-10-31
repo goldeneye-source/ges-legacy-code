@@ -30,7 +30,7 @@ void CGEWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 	BaseClass::Parse( pKeyValuesData, szWeaponName );
 
 	m_iDamage		= pKeyValuesData->GetInt( "Damage", 42 );
-	m_iDamageCap	= pKeyValuesData->GetInt( "Damage_Cap", 80);
+	m_iDamageCap	= pKeyValuesData->GetInt( "Damage_Cap", 320);
 	m_iAmmoIcon		= pKeyValuesData->GetInt( "ammo_icon", -1 );
 
 	m_flFireDelay	= pKeyValuesData->GetFloat( "fire_delay", 0.0f );
@@ -48,11 +48,11 @@ void CGEWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 	m_flMinNPCRange = pKeyValuesData->GetInt( "min_npc_range", 24 );
 	m_flMinNPCRange = pKeyValuesData->GetInt( "max_npc_range", 2000 );
 
-	m_flGaussFactor = pKeyValuesData->GetInt("gauss", 10);
-	m_flGaussPenalty = pKeyValuesData->GetInt("gauss_penalty", 6);
+	m_flGaussFactor = pKeyValuesData->GetInt("gauss", 2);
+	m_flGaussPenalty = pKeyValuesData->GetInt("gauss_penalty", 1);
 
-	m_flAimBonus = pKeyValuesData->GetFloat("aim_bonus", 1.0f);
-	m_flJumpPenalty = pKeyValuesData->GetFloat("jump_penalty", 2.0f);
+	m_flAimBonus = pKeyValuesData->GetFloat("aim_bonus", 0.0f);
+	m_flJumpPenalty = pKeyValuesData->GetFloat("jump_penalty", 1.0f);
 
 	// Disabled for testing purposes.
 	KeyValues *pKickData = pKeyValuesData->FindKey( "Kickback" );

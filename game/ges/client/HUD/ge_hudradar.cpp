@@ -353,6 +353,11 @@ void CGERadar::OnThink( void )
 					continue;
 			}
 
+			// DO LATER:
+			// Don't show contacts the gamerules say we shouldn't.
+
+
+
 			// Never add a contact that is out of range initially or set to not draw on the radar (don't include campers!)
 			if ( !g_RR->GetAlwaysVisible(i) && !IsContactCamping(iEntSerial) && !IsContactInRange(g_RR->GetOrigin(i)) )
 				continue;
@@ -611,7 +616,6 @@ void CGERadar::DrawIconOnRadar( CGERadarContact *contact, Color col )
 	int width, height;
 
 	float floorheight = GEMPRules()->GetMapFloorHeight();
-	DevMsg("Radar thinks floorheight is %f \n", floorheight);
 
 	// Get the correct icon for this type of contact
 	CHudTexture *icon = NULL;

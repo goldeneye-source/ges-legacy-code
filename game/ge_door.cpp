@@ -38,6 +38,7 @@ public:
 
 	float m_flacceltime; // Time it takes the door to accelerate to max speed
 	float m_flAccelSpeed; // Overrides acceltime when used.  Speed that the door accelerates per second.
+	float m_flMinSpeed; // Minimum speed the door will travel when decelerating.
 	int m_iUseLimit; // How many times the door can be activated mid-motion before denying any further inputs.
 	string_t m_sPartner; // Name of the door that opens and closes with this one
 	CGEDoor *m_pPartnerEnt; // Actual entity that opens and closes with this one
@@ -55,6 +56,9 @@ public:
 	void InputClose(inputdata_t &inputdata);
 	void InputOpen(inputdata_t &inputdata);
 	void InputToggle(inputdata_t &inputdata);
+
+	COutputEvent m_FirstClose;		// Triggered only on the initial close input.
+	COutputEvent m_FirstOpen;		// Triggered only on the initial open input.
 
 private:
 	float m_flTargetDist; //Distance the door must move to reach the goal posistion
@@ -78,8 +82,11 @@ BEGIN_DATADESC(CGEDoor)
 
 DEFINE_KEYFIELD(m_flacceltime, FIELD_FLOAT, "AccelerationTime"),
 DEFINE_KEYFIELD(m_flAccelSpeed, FIELD_FLOAT, "AccelerationSpeed"),
+DEFINE_KEYFIELD(m_flMinSpeed, FIELD_FLOAT, "MinimumSpeed"),
 DEFINE_KEYFIELD(m_iUseLimit, FIELD_INTEGER, "UseLimit"),
 DEFINE_KEYFIELD(m_sPartner, FIELD_STRING, "PartnerDoor"),
+DEFINE_OUTPUT(m_FirstOpen, "OnFirstOpen"),
+DEFINE_OUTPUT(m_FirstClose, "OnFirstClose"),
 
 END_DATADESC()
 
@@ -95,6 +102,7 @@ CGEDoor::CGEDoor()
 	// Set these values here incase they were not assigned by the mapper somehow.
 	m_flacceltime = 1;
 	m_iUseLimit = 3;
+	m_flMinSpeed = 5;
 
 	m_flAccelSpeed = 0;
 	m_flDeccelDist = 0;
@@ -133,6 +141,8 @@ void CGEDoor::CalcMovementValues(Vector startpos, Vector endpos)
 		moveAngle = m_angFinalDest - GetLocalAngles();
 		traveldistance = moveAngle.Length();
 		m_angAccelDir = moveAngle / traveldistance;
+		m_vecFinalDest = GetLocalOrigin();
+		speed = angvelocity.Length();
 
 		travelmetric = (angvelocity.x + angvelocity.y + angvelocity.z)*(moveAngle.x + moveAngle.y + moveAngle.z);
 	}
@@ -141,6 +151,7 @@ void CGEDoor::CalcMovementValues(Vector startpos, Vector endpos)
 		traveldistance = travelvector.Length();
 		m_vecAccelDir = travelvector / traveldistance;
 		m_vecFinalDest = endpos;
+		speed = velocity.Length();
 
 		travelmetric = (velocity.x + velocity.y + velocity.z)*(travelvector.x + travelvector.y + travelvector.z);
 	}
@@ -151,9 +162,15 @@ void CGEDoor::CalcMovementValues(Vector startpos, Vector endpos)
 	//We are currently traveling in the opposite direction, meaning we will actually start accelerating toward the endpos from further away than expected.
 	if (travelmetric < 0)
 	{
-		speed = velocity.Length();
 		traveldistance += speed*speed / (2 * m_flAccelSpeed * DOOR_DECCELBOOST);
 		DevMsg("Moving in opposite direction, new traveldistance calculated to be %f \n", traveldistance);
+	}
+	else if (travelmetric > 0)
+	{
+		// Even if moving in the same direction we can add to travel distance because we can pretend
+		// the door started moving at 0 velocity from a posistion past the true posistion.
+		traveldistance += speed*speed / (2 * m_flAccelSpeed); //No deccelboost this time though
+		DevMsg("Moving in same direction, new traveldistance calculated to be %f \n", traveldistance);
 	}
 
 
@@ -223,6 +240,9 @@ void CGEDoor::DoorGoUp(void)
 		}
 	}
 
+	if (m_toggle_state != TS_GOING_DOWN && m_toggle_state != TS_GOING_UP)
+		m_FirstOpen.FireOutput(this, this);
+
 	m_toggle_state = TS_GOING_UP;
 
 	if (IsRotatingDoor())
@@ -266,20 +286,18 @@ void CGEDoor::DoorGoUp(void)
 
 		// The function will detect that this is a rotating door and use m_angFinalDest to calculate the angles, so we just pass null paramters to it here.
 		CalcMovementValues(Vector(0, 0, 0), Vector(0, 0, 0));
-//		AngularMove(m_vecAngle2*sign, m_flSpeed);
+		m_movementType = 2;
 	}
 	else
 	{
 		CalcMovementValues(GetLocalOrigin(), m_vecPosition2);
+		m_movementType = 1;
 	}
 
-	m_movementType = 1;
-	SetMoveDoneTime((m_flacceltime + m_flTargetDist / m_flSpeed) * 2); //This has to be greater than 0 or the door won't move.  Just set it to a time that will always be longer than the movetime.
+	SetMoveDoneTime((m_flacceltime + m_flTargetDist / m_flSpeed) * 5); //This has to be greater than 0 or the door won't move.  Just set it to a time that will always be longer than the movetime.
 
 	SetThink(&CGEDoor::MoveThink);
-
-	if (GetNextThink() < gpGlobals->curtime)
-		SetNextThink(gpGlobals->curtime + DOOR_THINKTIME);
+	MoveThink();
 
 	//Fire our open ouput
 	m_OnOpen.FireOutput(this, this);
@@ -296,22 +314,27 @@ void CGEDoor::DoorGoDown(void)
 		}
 	}
 
+	if (m_toggle_state != TS_GOING_DOWN && m_toggle_state != TS_GOING_UP)
+		m_FirstClose.FireOutput(this, this);
+
 	m_toggle_state = TS_GOING_DOWN;
 
 	if (IsRotatingDoor())
 	{
 		m_angFinalDest = m_vecAngle1;
+		m_movementType = 2;
 		CalcMovementValues(Vector(0, 0, 0), Vector(0, 0, 0));
 	}
 	else
+	{
+		m_movementType = 1;
 		CalcMovementValues(GetLocalOrigin(), m_vecPosition1);
+	}
 
-	m_movementType = 1;
-	SetMoveDoneTime((m_flacceltime + m_flTargetDist / m_flSpeed) * 2);
+	SetMoveDoneTime((m_flacceltime + m_flTargetDist / m_flSpeed) * 5);
 
 	SetThink(&CGEDoor::MoveThink);
-	if (GetNextThink() < gpGlobals->curtime)
-		SetNextThink(gpGlobals->curtime + DOOR_THINKTIME);
+	MoveThink();
 
 	//Fire our closed output
 	m_OnClose.FireOutput(this, this);
@@ -364,7 +387,7 @@ void CGEDoor::MoveThink(void)
 	}
 
 	if (remainingdist < m_flDeccelDist) //DeccelDist should always be checked first because it can sometimes overlap with acceltime.
-		framespeed = max(framespeed - accelspeed *calctime, 2); //Cap it to make sure the door doesn't start accelerating in the other direction.
+		framespeed = max(framespeed - accelspeed *calctime, m_flMinSpeed); //Cap it to make sure the door doesn't start accelerating in the other direction or get stuck.
 	else
 		framespeed = min(framespeed + accelspeed *calctime, m_flSpeed); //Cap it so the door will move at max speed once it hits it.
 
@@ -383,31 +406,25 @@ void CGEDoor::MoveThink(void)
 		{
 			SetLocalAngularVelocity( QAngle(0, 0, 0) );
 			SetLocalAngles(m_angFinalDest);
-			m_movementType = 0;
-			SetMoveDoneTime(-1);
-			m_flLastMoveCalc = 0;
-			m_iCurrentUses = 0;
 		}
 		else
 		{
 			SetLocalVelocity(0);
 			SetLocalOrigin(m_vecFinalDest);
-			m_movementType = 0;
-			SetMoveDoneTime(-1);
-			m_flLastMoveCalc = 0;
-			m_iCurrentUses = 0;
 		}
 
+		m_movementType = 0;
+		SetMoveDoneTime(-1);
+		m_flLastMoveCalc = 0;
+		m_iCurrentUses = 0;
 
 		if (m_toggle_state == TS_GOING_DOWN)
 		{
 			DoorHitBottom();
-			DevMsg("Door hit bottom!");
 		}
 		else
 		{
 			DoorHitTop();
-			DevMsg("Door hit top!");
 		}
 	}
 }
@@ -437,6 +454,9 @@ void CGEDoor::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useTyp
 
 	m_pLastActivator = pActivator;
 	m_iCurrentUses += 1;
+
+	if (m_pPartnerEnt)
+		m_pPartnerEnt->m_iCurrentUses += 1;
 
 	if (m_bLocked)
 		m_OnLockedUse.FireOutput(pActivator, pCaller);

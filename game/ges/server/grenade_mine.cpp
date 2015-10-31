@@ -262,6 +262,7 @@ endOfThink:
 
 void CGEMine::MineTouch( CBaseEntity *pOther )
 {
+
 	if ( !pOther->IsSolid() )
 		return;
 	
@@ -273,7 +274,7 @@ void CGEMine::MineTouch( CBaseEntity *pOther )
 
 	if( !m_bInAir )
 		return;
-
+	
 	//If we can't align it properly, must have barely touched it, let it continue.
 	if( !AlignToSurf( pOther ) )
 		return;

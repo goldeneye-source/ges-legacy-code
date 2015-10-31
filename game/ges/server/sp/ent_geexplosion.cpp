@@ -153,12 +153,27 @@ void CGE_Explosion::Activate()
 // Create a HL2 Generic Blast to start off the fireworks. This does NO DAMAGE and doesn't display smoke.
 void CGE_Explosion::CreateInitialBlast( void )
 {
-	trace_t		tr;
+	trace_t		tr, tr2;
 	Vector vecAbsOrigin = GetAbsOrigin();
 	int contents = UTIL_PointContents ( vecAbsOrigin );
+	Vector dirs[5] = { Vector(0, 0, 48), Vector(0, 48, 0), Vector(0, -48, 0), Vector(48, 0, 0), Vector(-48, 0, 0) };
 
-	// Don't hit anything that isn't the world
-	UTIL_TraceLine( vecAbsOrigin, vecAbsOrigin + Vector ( 0, 0, -64 ), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
+
+	// Trace along each axis to determine closest surface so explosion decals can also appear on walls and ceilings.
+
+	// Start with a straight down trace, only colliding with the world.  Slightly longer so that the floor is favored when explosions hit corners.
+	UTIL_TraceLine(vecAbsOrigin, vecAbsOrigin + Vector(0, 0, -64), MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr);
+
+	// Run through each direction comparing each trace length to the current longest in order to find the shortest one.
+	// Then use that one for the rest of the code.
+
+	for (int i = 0; i < 5; i++)
+	{
+		UTIL_TraceLine(vecAbsOrigin, vecAbsOrigin + dirs[i], MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr2);
+
+		if (tr2.fraction < tr.fraction)
+			tr = tr2;
+	}
 
 	if ( tr.fraction != 1.0 )
 	{

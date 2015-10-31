@@ -30,29 +30,29 @@ class CGEWeapon;
 class CGEPlayer : public CHL2MP_Player
 {
 public:
-	DECLARE_CLASS( CGEPlayer, CHL2MP_Player );
+	DECLARE_CLASS(CGEPlayer, CHL2MP_Player);
 
 	CGEPlayer();
-	~CGEPlayer( void );
+	~CGEPlayer(void);
 
 
-	static CGEPlayer *CreatePlayer( const char *className, edict_t *ed )
+	static CGEPlayer *CreatePlayer(const char *className, edict_t *ed)
 	{
 		CGEPlayer::s_PlayerEdict = ed;
 
-		if ( Q_strcmp(className, "player") == 0 )
-			return (CGEPlayer*)CreateEntityByName( "mp_player" );
+		if (Q_strcmp(className, "player") == 0)
+			return (CGEPlayer*)CreateEntityByName("mp_player");
 		else
-			return (CGEPlayer*)CreateEntityByName( className );
+			return (CGEPlayer*)CreateEntityByName(className);
 	}
 
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
 
-	virtual void Precache( void );
-	virtual void PrecacheFootStepSounds( void ) { };
+	virtual void Precache(void);
+	virtual void PrecacheFootStepSounds(void) { };
 
-	virtual void InitialSpawn( void );
+	virtual void InitialSpawn(void);
 	virtual void Spawn();
 
 	// -------------------------------------------------
@@ -60,8 +60,9 @@ public:
 	// -------------------------------------------------
 
 	//This will return true if the player is 'fully' in AimMode
-	void ResetAimMode( bool forced=false );
+	void ResetAimMode(bool forced = false);
 	bool IsInAimMode();
+	bool IsRadarCloaked()					{ return m_bInSpawnCloak; }
 	bool AddArmor( int amount );
 	bool CheckInPVS(CBasePlayer *player);
 
@@ -159,7 +160,7 @@ protected:
 	void StartInvul( float time );
 	void StopInvul( void );
 
-	int CalcInvul(int damage, CBasePlayer *pAttacker);
+	int CalcInvul(int damage, CGEPlayer *pAttacker);
 	bool CheckInvul(CBasePlayer *pAttacker);
 
 	void SetCharIndex(int index){m_iCharIndex = index;}
@@ -180,6 +181,8 @@ protected:
 	// Invulnerability variables
 	float		m_flEndInvulTime;
 	bool		m_bInSpawnInvul;
+	float		m_flEndCloakTime;
+	bool		m_bInSpawnCloak;
 	int			m_iViewPunchScale;
 	int			m_iDmgTakenThisFrame;
 	Vector		m_vDmgForceThisFrame;

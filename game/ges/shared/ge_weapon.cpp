@@ -559,14 +559,15 @@ void CGEWeapon::PreOwnerDeath()
 
 // Consolidate the fire preps into one function since all the custom primary attack functions have to do their own otherwise,
 // And updating them all every time it needs to be changed kind of sucks.
-void CGEWeapon::PrepareFireBullets(int number, CBaseCombatCharacter *pOperator, Vector vecShootOrigin, Vector vecShootDir, bool haveplayer, int tracerfreq)
+void CGEWeapon::PrepareFireBullets(int number, CBaseCombatCharacter *pOperator, Vector vecShootOrigin, Vector vecShootDir, bool haveplayer)
 {
 	UpdateAccPenalty(); //Update the penalty before doing any of this nonsense, as it affects both gauss factor and spread cone.
 
+	int tracerfreq = GetTracerFreq();
 	FireBulletsInfo_t info(number, vecShootOrigin, vecShootDir, GetBulletSpread(), MAX_TRACE_LENGTH, m_iPrimaryAmmoType, 0);
 	info.m_iGaussFactor = GetGaussFactor(); //Calculates the gauss factor and adds it to the fire info.
 
-	if (m_flAccuracyPenalty < 1.0)
+	if (m_flAccuracyPenalty < 1.0 && tracerfreq > 0)
 		tracerfreq = 1; //Always try to draw tracers on the first shot even though this doesn't seem to work
 	
 	info.m_iTracerFreq = tracerfreq; //Otherwise use the weapon's tracerfreq

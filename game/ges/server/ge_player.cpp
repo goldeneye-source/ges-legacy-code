@@ -202,7 +202,7 @@ int CGEPlayer::GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound )
 	if( amt > 0 )
 	{
 		GEStats()->Event_PickedAmmo( this, amt );
-
+		
 		// If we picked up mines or grenades and the player doesn't already have them give them a weapon!
 		char *name = GetAmmoDef()->GetAmmoOfIndex(nAmmoIndex)->pName;
 
@@ -572,10 +572,56 @@ void CGEPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vec
 		// If we want hitlocation dmg and we have a weapon to refer to do it!
 		if ( doTrace && pWeapon )
 		{
-			// Set the last part where we got hit
-			SetLastHitGroup( ptr->hitgroup );
+			// See if we would have hit a more sensitive area if this one hadn't blocked the shot.
+			// Used to prevent nonsense like attacking from the side and certain animations causing
+			// nearly all shots that would have been chest hits to be limb hits
 
-			switch ( ptr->hitgroup )
+			trace_t tr2;
+			Vector tracedist = ptr->endpos - ptr->startpos;
+			Vector tracedir = tracedist / tracedist.Length();
+			Vector lastendpos = ptr->endpos;
+			int newhitgroup = ptr->hitgroup;
+
+			if (ptr->endpos != ptr->startpos)
+			{
+				// Do a series of traces through the player to see if we can hit anything better than the starting hitgroup.
+				for (int i = 0; i < 8; i++)
+				{
+					// Headshots are the best hits so abort the loop if we got one.
+					if (newhitgroup == HITGROUP_HEAD)
+						break;
+
+					UTIL_TraceLine(lastendpos, lastendpos + (tracedir * 2), MASK_ALL, NULL, COLLISION_GROUP_NONE, &tr2);
+
+					// Adjust the starting point of the next trace so it keeps going through the player.
+					lastendpos = lastendpos + (tracedir * 3);
+
+					// If we didn't hit anything or we what we did hit wasn't the player, don't worry about finding a hitgroup.
+					if (tr2.fraction >= 1.0f || tr2.m_pEnt != ptr->m_pEnt)
+					{
+						if (tr2.fraction >= 1.0f)
+							DevMsg("We missed because of no hit.\n");
+
+						else if (tr2.m_pEnt != ptr->m_pEnt)
+							DevMsg("We missed because of entity mismatch.\n");
+
+						continue;
+					}
+
+					DevMsg("Hit group %d on retrace\n", tr2.hitgroup);
+
+					// Lower hitgroup IDs are almost always better.  0 is the default hitgroup though so ignore that one.
+					if (tr2.hitgroup > 0 && tr2.hitgroup < newhitgroup)
+					{
+						newhitgroup = tr2.hitgroup;
+						DevMsg("group %d is better than group %d, replacing! \n", tr2.hitgroup, newhitgroup);
+					}
+				}
+			}
+			// Set the last part where we got hit
+			SetLastHitGroup( newhitgroup );
+
+			switch ( newhitgroup )
 			{
 			case HITGROUP_GENERIC:
 				break;
@@ -750,7 +796,7 @@ void CGEPlayer::DropTopWeapons()
 {
 	CUtlVector<CGEWeapon*> topWeapons;
 
-	// Scan the player's held weapons and drop the top 2 in addition to the active one.
+	// Scan the player's held weapons and build a list of those eligible to be dropped.
 	for (int i = 0; i < MAX_WEAPONS; i++)
 	{
 		CBaseCombatWeapon *pWeapon = GetWeapon(i);
@@ -776,6 +822,7 @@ void CGEPlayer::DropTopWeapons()
 		topWeapons.AddToTail(pGEWeapon);
 	}
 
+	// Sort that list based on weaponstrengths, so the first ones dropped are the strongest.
 	topWeapons.Sort(weaponstrengthSort);
 
 	// Determine how many weapons to drop

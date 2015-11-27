@@ -46,9 +46,14 @@ public:
 	virtual void  SetLastLandingVelocity(float vel)	{ m_flLastLandVelocity = vel; }
 	virtual float  GetLastLandingVelocity()		{ return m_flLastLandVelocity; }
 
-
 	void SetStartJumpZ( float val )		{ m_flStartJumpZ=val; }
 	float GetStartJumpZ()				{ return m_flStartJumpZ; }
+
+	virtual float GetRunStartTime()					{ return m_flRunTime; }
+	virtual void  SetRunStartTime(float time)		{ m_flRunTime = time; }
+
+	virtual int   GetRunCode()					{ return m_flRunCode; }
+	virtual void  SetRunCode(float code)		{ m_flRunCode = code; }
 
 	// Observer calcs overrides for bots
 	virtual Vector GetChaseCamViewOffset( CBaseEntity *target );
@@ -59,6 +64,8 @@ private:
 	float m_flJumpPenalty;
 	float m_flLastJumpTime;
 	float m_flLastLandVelocity;
+	float m_flRunTime;
+	int m_flRunCode;
 };
 
 C_GEMPPlayer *ToGEMPPlayer( CBaseEntity *pEntity );

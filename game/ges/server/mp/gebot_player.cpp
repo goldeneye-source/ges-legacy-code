@@ -581,8 +581,8 @@ void CGEBotPlayer::GiveDefaultItems( void )
 			pGivenWeapon = m_pNPC->GiveNamedItem( WeaponIDToAlias(wID) );
 		}
 
-		if (ge_startarmed.GetInt() >= 2)
-			pGivenWeapon = m_pNPC->GiveNamedItem("weapon_knife");
+		//if (ge_startarmed.GetInt() >= 2)
+		//	pGivenWeapon = m_pNPC->GiveNamedItem("weapon_knife");
 	} 
 	else
 	{
@@ -590,8 +590,16 @@ void CGEBotPlayer::GiveDefaultItems( void )
 		pGivenWeapon = m_pNPC->GiveNamedItem( "weapon_knife" );
 	}
 
+	// Switch to the best given weapon
 	if ( pGivenWeapon )
-		m_pNPC->Weapon_Switch( (CBaseCombatWeapon*) pGivenWeapon );
+	{
+		m_pNPC->Weapon_Switch((CBaseCombatWeapon*)pGivenWeapon);
+
+		CGEWeapon *pGivenGEWeapon = ToGEWeapon((CBaseCombatWeapon*)pGivenWeapon);
+
+		if (pGivenGEWeapon && GetStrengthOfWeapon(pGivenGEWeapon->GetWeaponID()) > 4)
+			m_bInSpawnCloak = false;
+	}
 }
 
 CBaseCombatWeapon *CGEBotPlayer::GetActiveWeapon()

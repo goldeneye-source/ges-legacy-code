@@ -639,12 +639,21 @@ void CBaseEntity::HandleBulletPenetration( CBaseCombatWeapon *pWeapon, const Fir
 	trace_t	passTrace;
 	// Re-trace as if the bullet had passed right through
 	UTIL_TraceLine( testPos, tr.endpos, MASK_SHOT, pTraceFilter, &passTrace );
-	
-	// If we didn't make it through, we are done
-	if ( passTrace.startsolid || passTrace.fraction == 1.0f )
-		return;
 
 	float depth = info.m_flPenetrateDepth * (1.0 - passTrace.fraction);
+
+	// If we didn't make it through, we will do a very short range bullet refire to make sure we hit whatever we ended up in.
+	// Setting the penetrate depth to 0 here will kill the next refire attempt.
+	if (passTrace.startsolid || passTrace.fraction == 1.0f)
+	{
+		if (passTrace.DidHitNonWorldEntity() && passTrace.m_pEnt != tr.m_pEnt)
+			refireInfo.m_flPenetrateDepth = 0;
+		else // If we ended up inside the world or the entity we hit with the first trace there's no point in hitting it again.
+			return;
+	}
+	else
+		refireInfo.m_flPenetrateDepth = info.m_flPenetrateDepth - depth;
+
 
 	// If surface is thick enough, impact the other side (will look like an exit effect)
 	if (depth/depthmult > 4)
@@ -678,14 +687,13 @@ void CBaseEntity::HandleBulletPenetration( CBaseCombatWeapon *pWeapon, const Fir
 	refireInfo.m_iShots			= 1;
 	refireInfo.m_vecSrc			= passTrace.endpos;
 	refireInfo.m_vecDirShooting = vecDir;
+	refireInfo.m_flDistance		= info.m_flDistance*(1.0f - tr.fraction);
 	refireInfo.m_vecSpread		= vec3_origin;
-	refireInfo.m_flDistance		= info.m_flDistance*( 1.0f - tr.fraction );
 	refireInfo.m_iAmmoType		= info.m_iAmmoType;
 	refireInfo.m_iTracerFreq	= info.m_iTracerFreq;
 	refireInfo.m_iDamage		= info.m_iDamage;
 	refireInfo.m_pAttacker		= info.m_pAttacker ? info.m_pAttacker : this;
 	refireInfo.m_nFlags			= info.m_nFlags | FIRE_BULLETS_PENETRATED_SHOT;
-	refireInfo.m_flPenetrateDepth = info.m_flPenetrateDepth - depth;
 
 	// Refire the shot from the other side of the object
 	FireBullets( refireInfo );

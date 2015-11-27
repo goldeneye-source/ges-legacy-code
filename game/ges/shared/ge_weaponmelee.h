@@ -48,6 +48,7 @@ public:
 
 	virtual float	GetRange( void )								{ return 32.0f; }
 	virtual	float	GetDamageForActivity( Activity hitActivity )	{ return GetGEWpnData().m_iDamage; }
+	virtual bool	DamageWorld()									{ return true; }
 
 protected:
 	virtual	void	ImpactEffect( trace_t &trace );

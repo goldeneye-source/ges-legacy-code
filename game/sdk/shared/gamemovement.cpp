@@ -1845,11 +1845,17 @@ void CGameMovement::Accelerate( Vector& wishdir, float wishspeed, float accel )
 	if ( !CanAccelerate() )
 		return;
 
+#ifdef GE_DLL
+	// See if we are changing direction a bit
+	// currentspeed = mv->m_vecVelocity.Dot(wishdir);
+	// Enable the below line to disable wall run speed increase
+	currentspeed = sqrt( DotProduct(mv->m_vecVelocity, mv->m_vecVelocity) );
+#else
 	// See if we are changing direction a bit
 	currentspeed = mv->m_vecVelocity.Dot(wishdir);
 	// Enable the below line to disable wall run speed increase
-	//currentspeed = sqrt( DotProduct(mv->m_vecVelocity, mv->m_vecVelocity) );
-
+	// currentspeed = sqrt(DotProduct(mv->m_vecVelocity, mv->m_vecVelocity));
+#endif
 	// Reduce wishspeed by the amount of veer.
 	addspeed = wishspeed - currentspeed;
 
@@ -1934,7 +1940,7 @@ void CGameMovement::WalkMove( void )
 
 	fmove = mv->m_flForwardMove * (1 - max(jumppenalty - 20, 0) / 160);
 	smove = mv->m_flSideMove * (1 - max(jumppenalty - 20, 0) / 160);
-
+	
 	#else
 	// Copy movement amounts
 	fmove = mv->m_flForwardMove;
@@ -1972,21 +1978,110 @@ void CGameMovement::WalkMove( void )
 
 	VectorCopy (wishvel, wishdir);   // Determine maginitude of speed of move
 	wishspeed = VectorNormalize(wishdir);
+	
+#ifdef GE_DLL
+	// Diagonal Strafing
+
+	// First check if we are still running in the same direction.
+
+	int fcode, scode, newcode;
+
+	fcode = scode = 0;
+
+	if (fmove > 0)
+		fcode = 2;
+	else if (fmove < 0)
+		fcode = 1;
+
+	if (smove > 0)
+		scode = 2;
+	else if (smove < 0)
+		scode = 1;
+
+	// Base 3 number where scode is the second digit and fcode is the first.
+	newcode = scode * 3 + fcode;
+
+	Vector2D curmove2D = mv->m_vecVelocity.AsVector2D();
+	Vector2D wishmove2D = wishdir.AsVector2D();
+	Vector2DNormalize(curmove2D);
+	float turndot = curmove2D.Dot(wishmove2D);
+
+	// Tried to turn too quickly or went into aimmode.
+	if (turndot < 0.5 || ((CGEMPPlayer*)player)->IsInAimMode()) // 30 degree difference between movedir and wishdir.  This means higher friction equates to faster turning.
+	{
+		((CGEMPPlayer*)player)->SetRunStartTime(gpGlobals->curtime);
+	}
+
+	float strafeboost = 1.0;
+	int prevcode = ((CGEMPPlayer*)player)->GetRunCode();
+	float runtime = gpGlobals->curtime - ((CGEMPPlayer*)player)->GetRunStartTime();
+
+	int pfcode, pscode;
+
+	pfcode = prevcode % 3;
+	pscode = (prevcode - pfcode)/3;
+
+	bool prevstrafe = (pfcode * pscode != 0);
+	bool newstrafe = (fcode * scode != 0);
+
+	if (prevcode != newcode) // We changed directions
+	{
+		if (newstrafe)
+		{
+			if (prevstrafe) // Continuing a strafe
+				((CGEMPPlayer*)player)->SetRunStartTime(gpGlobals->curtime - clamp(runtime, 0, 1.5));
+			else // Just started strafing
+				((CGEMPPlayer*)player)->SetRunStartTime(gpGlobals->curtime - clamp(runtime * -2, 0, 1.5));
+		}
+		else // Not strafing
+		{
+			if (prevstrafe) // Stopped strafing
+				((CGEMPPlayer*)player)->SetRunStartTime(gpGlobals->curtime + clamp(runtime / 2, 0, 0.75)); //Timer is half the length so decays twice as fast.
+			// We don't need to update for non-strafe to non-strafe.
+		}
+
+		((CGEMPPlayer*)player)->SetRunCode(newcode);
+	}
+	
+	if (fcode * scode == 0)
+		runtime = min(runtime, 0); //Don't let runtime become positive when not strafing.  Otherwise acceleration is possible.
+
+	if (runtime >= 0)
+		strafeboost = clamp(runtime * 0.4 + 0.8, 1, 1.4);
+	else
+		strafeboost = clamp(runtime * -0.8 + 0.8, 1, 1.4); //The decay timer is only half the length so the formula needs to be adjusted for that.
 
 	//
 	// Clamp to server defined max speed
 	//
+
 	if ((wishspeed != 0.0f) && (wishspeed > mv->m_flMaxSpeed))
 	{
-		VectorScale (wishvel, mv->m_flMaxSpeed/wishspeed, wishvel);
+		VectorScale(wishvel, mv->m_flMaxSpeed / wishspeed, wishvel);
 		wishspeed = mv->m_flMaxSpeed;
 	}
 
 	// Set pmove velocity
 	mv->m_vecVelocity[2] = 0;
-	Accelerate ( wishdir, wishspeed, sv_accelerate.GetFloat() );
+	Accelerate( wishdir, wishspeed * strafeboost, sv_accelerate.GetFloat() );
 	mv->m_vecVelocity[2] = 0;
+#else
 
+	//
+	// Clamp to server defined max speed
+	//
+
+	if ((wishspeed != 0.0f) && (wishspeed > mv->m_flMaxSpeed))
+	{
+		VectorScale(wishvel, mv->m_flMaxSpeed / wishspeed, wishvel);
+		wishspeed = mv->m_flMaxSpeed;
+	}
+
+	// Set pmove velocity
+	mv->m_vecVelocity[2] = 0;
+	Accelerate(wishdir, wishspeed, sv_accelerate.GetFloat());
+	mv->m_vecVelocity[2] = 0;
+#endif
 	// Add in any base velocity to the current velocity.
 	VectorAdd (mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );
 
@@ -2007,6 +2102,10 @@ void CGameMovement::WalkMove( void )
 
 	// first try moving directly to the next spot
 	TracePlayerBBox( mv->GetAbsOrigin(), dest, PlayerSolidMask(), player->GetCollisionGroup(), pm );
+
+#ifdef GE_DLL
+	Vector hitnorm = pm.plane.normal;
+#endif
 
 	// If we made it all the way, then copy trace end as new player position.
 	mv->m_outWishVel += wishdir * wishspeed;
@@ -2038,6 +2137,17 @@ void CGameMovement::WalkMove( void )
 	}
 
 	StepMove( dest, pm );
+	
+#ifdef GE_DLL
+	if (mv->m_outStepHeight == 0) // We hit a wall or some other obstruction
+	{
+		Vector2D hitnorm2D = hitnorm.AsVector2D();
+		Vector2DNormalize(hitnorm2D);
+
+		if (hitnorm2D.Dot(wishmove2D) < -0.35) // We hit it more than a 20 degree angle, kill strafe run.
+			((CGEMPPlayer*)player)->SetRunStartTime(gpGlobals->curtime);
+	}
+#endif
 
 	// Now pull the base velocity back out.   Base velocity is set if you are on a moving object, like a conveyor (or maybe another monster?)
 	VectorSubtract( mv->m_vecVelocity, player->GetBaseVelocity(), mv->m_vecVelocity );

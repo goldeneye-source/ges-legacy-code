@@ -32,6 +32,8 @@ IMPLEMENT_CLIENTCLASS_DT(C_GEMPPlayer, DT_GEMP_Player, CGEMPPlayer)
 	RecvPropFloat( RECVINFO( m_flLastJumpTime )),
 	RecvPropFloat( RECVINFO( m_flJumpPenalty )),
 	RecvPropFloat( RECVINFO( m_flLastLandVelocity )),
+	RecvPropFloat( RECVINFO( m_flRunTime )),
+	RecvPropInt(  RECVINFO(m_flRunCode)),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_GEMPPlayer )
@@ -40,6 +42,8 @@ BEGIN_PREDICTION_DATA( C_GEMPPlayer )
 	DEFINE_PRED_FIELD( m_flLastJumpTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
 	DEFINE_PRED_FIELD( m_flJumpPenalty, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
 	DEFINE_PRED_FIELD( m_flLastLandVelocity, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD( m_flRunTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD(m_flRunCode, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
 END_PREDICTION_DATA()
 
 void SpawnBlood (Vector vecSpot, const Vector &vecDir, int bloodColor, float flDamage);
@@ -51,6 +55,8 @@ C_GEMPPlayer::C_GEMPPlayer()
 	m_flLastJumpTime = 0;
 	m_flJumpPenalty = 0;
 	m_flLastLandVelocity = 0;
+	m_flRunTime = 0;
+	m_flRunCode = 0;
 }
 
 void C_GEMPPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )

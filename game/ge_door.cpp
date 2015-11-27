@@ -49,6 +49,7 @@ public:
 	void DoorGoUp();
 	void DoorGoDown();
 	void Blocked(CBaseEntity *pOther);
+	bool CheckUse(CBaseEntity *pActivator);
 	int DoorActivate();
 	virtual void MoveThink();
 	void CalcMovementValues(Vector startpos, Vector endpos);
@@ -56,6 +57,7 @@ public:
 	void InputClose(inputdata_t &inputdata);
 	void InputOpen(inputdata_t &inputdata);
 	void InputToggle(inputdata_t &inputdata);
+	void InputForceToggle(inputdata_t &inputdata);
 
 	COutputEvent m_FirstClose;		// Triggered only on the initial close input.
 	COutputEvent m_FirstOpen;		// Triggered only on the initial open input.
@@ -85,6 +87,7 @@ DEFINE_KEYFIELD(m_flAccelSpeed, FIELD_FLOAT, "AccelerationSpeed"),
 DEFINE_KEYFIELD(m_flMinSpeed, FIELD_FLOAT, "MinimumSpeed"),
 DEFINE_KEYFIELD(m_iUseLimit, FIELD_INTEGER, "UseLimit"),
 DEFINE_KEYFIELD(m_sPartner, FIELD_STRING, "PartnerDoor"),
+DEFINE_INPUTFUNC(FIELD_VOID, "ForceToggle", InputForceToggle),
 DEFINE_OUTPUT(m_FirstOpen, "OnFirstOpen"),
 DEFINE_OUTPUT(m_FirstClose, "OnFirstClose"),
 
@@ -444,13 +447,34 @@ void CGEDoor::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useTyp
 	if (m_hActivator != NULL && m_hActivator->IsPlayer() && HasSpawnFlags(SF_DOOR_PUSE) == false)
 		return;
 
-	// If the door has been used more than allowed, ignore the input.
-	if (m_iCurrentUses >= m_iUseLimit)
+	// Check how many times the door has been used, and increment the counter if it still has uses left.
+	if (!CheckUse(pActivator))
 		return;
 
-	// Don't let another person instantly close the door after it gets opened.
-	if (m_pLastActivator != pActivator && gpGlobals->curtime - m_flStartMoveTime < 0.5)
-		return;
+	if (m_bLocked)
+		m_OnLockedUse.FireOutput(pActivator, pCaller);
+	else
+		DoorActivate();
+}
+
+// Used to check if the door has been used too many times. Will return false if it has.
+bool CGEDoor::CheckUse(CBaseEntity *pActivator)
+{
+	// If the uselimit is 0 or lower then just ignore it.
+	if (m_iUseLimit < 1)
+		return true;
+
+	// If the door has been used more than allowed, ignore the input.
+	if (m_iCurrentUses >= m_iUseLimit)
+		return false;
+
+	// Don't let someone instantly close the door after it gets opened.
+	if (gpGlobals->curtime - m_flStartMoveTime < 0.15)
+		return false;
+
+	// Don't let another person quickly close the door after it gets opened.
+	if (m_pLastActivator != pActivator && gpGlobals->curtime - m_flStartMoveTime < 1.0)
+		return false;
 
 	m_pLastActivator = pActivator;
 	m_iCurrentUses += 1;
@@ -458,10 +482,7 @@ void CGEDoor::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useTyp
 	if (m_pPartnerEnt)
 		m_pPartnerEnt->m_iCurrentUses += 1;
 
-	if (m_bLocked)
-		m_OnLockedUse.FireOutput(pActivator, pCaller);
-	else
-		DoorActivate();
+	return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -521,6 +542,27 @@ void CGEDoor::InputToggle(inputdata_t &inputdata)
 	if (m_bLocked)
 		return;
 
+	// Toggle will also check uses because mappers like to have door controling buttons that could also be abused.
+	if (!CheckUse(inputdata.pActivator))
+		return;
+	
+	if (m_toggle_state == TS_AT_BOTTOM || m_toggle_state == TS_GOING_DOWN)
+	{
+		DoorGoUp();
+		if (m_pPartnerEnt)
+			m_pPartnerEnt->DoorGoUp();
+	}
+	else
+	{
+		DoorGoDown();
+		if (m_pPartnerEnt)
+			m_pPartnerEnt->DoorGoDown();
+	}
+}
+
+// Just the toggle input but ignores the uselimit and locked conditions.
+void CGEDoor::InputForceToggle(inputdata_t &inputdata)
+{
 	if (m_toggle_state == TS_AT_BOTTOM || m_toggle_state == TS_GOING_DOWN)
 	{
 		DoorGoUp();

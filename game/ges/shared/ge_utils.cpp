@@ -829,6 +829,14 @@ int GetRandWeightForWeapon( int id )
 
 	return GEWeaponInfo[id].randweight;
 }
+
+int GetStrengthOfWeapon(int id)
+{
+	if ((id < 0) || (id >= WEAPON_MAX))
+		return 0;
+
+	return GEWeaponInfo[id].strength;
+}
 // End weapon helper functions
 
 #ifdef GAME_DLL

@@ -46,7 +46,9 @@ IMPLEMENT_SERVERCLASS_ST(CGEMPPlayer, DT_GEMP_Player)
 	SendPropFloat( SENDINFO( m_flNextJumpTime ) ),
 	SendPropFloat( SENDINFO( m_flLastJumpTime )),
 	SendPropFloat( SENDINFO( m_flJumpPenalty )),
-	SendPropFloat( SENDINFO( m_flLastLandVelocity)),
+	SendPropFloat( SENDINFO( m_flLastLandVelocity )),
+	SendPropFloat( SENDINFO( m_flRunTime )),
+	SendPropInt( SENDINFO( m_flRunCode )),
 END_SEND_TABLE()
 
 BEGIN_DATADESC( CGEMPPlayer )
@@ -427,6 +429,9 @@ void CGEMPPlayer::Spawn()
 		m_flLastJumpTime = 0.0f;
 		m_flJumpPenalty = 0.0f;
 		m_flLastLandVelocity = 0.0f;
+
+		m_flRunTime = 0;
+		m_flRunCode = 0;
 
 		pl.deadflag = false;
 		RemoveSolidFlags( FSOLID_NOT_SOLID );
@@ -978,8 +983,15 @@ void CGEMPPlayer::GiveDefaultItems()
 	}
 
 	// Switch to the best given weapon
-	if ( pGivenWeapon )
-		Weapon_Switch( (CBaseCombatWeapon*) pGivenWeapon );
+	if (pGivenWeapon)
+	{
+		Weapon_Switch((CBaseCombatWeapon*)pGivenWeapon);
+
+		CGEWeapon *pGivenGEWeapon = ToGEWeapon((CBaseCombatWeapon*)pGivenWeapon);
+
+		if (pGivenGEWeapon && GetStrengthOfWeapon(pGivenGEWeapon->GetWeaponID()) > 4)
+			m_bInSpawnCloak = false;
+	}
 }
 
 void CGEMPPlayer::SetPlayerName( const char *name )
@@ -1498,8 +1510,12 @@ bool CGEMPPlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 	{
 		// Tell plugins what we picked up
 		NotifyPickup( pWeapon->GetClassname(), 0 );
-	}
 
+		// Kill radar invisibility if this weapon is too powerful.
+		if (GetStrengthOfWeapon(pGEWeapon->GetWeaponID()) > 4)
+			m_bInSpawnCloak = false;
+	}
+	
 	return ret;
 }
 

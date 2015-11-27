@@ -53,6 +53,7 @@ public:
 	virtual GEWeaponID GetWeaponID( void ) const { return WEAPON_SLAPPERS; }
 
 	float		GetRange( void )		{	return	SLAPPER_RANGE;	}
+	bool		DamageWorld()			{	return	false;			}
 
 	void		AddViewKick( void );
 	void		SecondaryAttack( void )	{	return;	}

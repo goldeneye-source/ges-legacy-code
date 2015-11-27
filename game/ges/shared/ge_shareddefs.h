@@ -201,13 +201,13 @@ static const GEWeaponInfo_t GEWeaponInfo[] =
 	{WEAPON_PHANTOM,		"weapon_phantom",		AMMO_9MM,		"#GE_Phantom",		9,		5	},
 	{WEAPON_SNIPER_RIFLE,	"weapon_sniper_rifle",	AMMO_RIFLE,		"#GE_SniperRifle",	10,		4	},
 
-	{WEAPON_KNIFE_THROWING, "weapon_knife_throwing",AMMO_TKNIFE,	"#GE_ThrowingKnife",12,		3	},
+	{WEAPON_KNIFE_THROWING, "weapon_knife_throwing",AMMO_TKNIFE,	"#GE_ThrowingKnife",12,		4	},
 
 	{WEAPON_GRENADE_LAUNCHER, "weapon_grenade_launcher",	AMMO_SHELL,	"#GE_GrenadeLauncher",7,		8	},
 	{WEAPON_ROCKET_LAUNCHER,  "weapon_rocket_launcher",		AMMO_ROCKET,"#GE_RocketLauncher", 7,		7	},
 	
 	{WEAPON_MOONRAKER,	"weapon_moonraker",			AMMO_MOONRAKER,	"#GE_Moonraker",  10,		7	},
-	{WEAPON_KNIFE,		"weapon_knife",				AMMO_NONE,		"#GE_Knife",	  4,		1  },
+	{WEAPON_KNIFE,		"weapon_knife",				AMMO_NONE,		"#GE_Knife",	  4,		3  },
 
 	{WEAPON_SPAWNMAX,	NULL,						AMMO_NONE,			"",				  0,		-1	},
 
@@ -276,6 +276,7 @@ extern int AliasToWeaponID( const char *alias );
 extern const char *GetAmmoForWeapon( int id );
 extern const char *GetWeaponPrintName( int id );
 extern int GetRandWeightForWeapon( int id );
+extern int GetStrengthOfWeapon(int id);
 
 // Team colors for the GE Teams
 static Color COLOR_JANUS	( 238,  54,  54, 255 );

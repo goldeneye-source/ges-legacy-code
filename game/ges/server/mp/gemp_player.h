@@ -134,6 +134,12 @@ public:
 
 	virtual void UpdateJumpPenalty();
 
+	virtual float GetRunStartTime()					{ return m_flRunTime; }
+	virtual void  SetRunStartTime(float time)		{ m_flRunTime = time; }
+	
+	virtual int   GetRunCode()					{ return m_flRunCode; }
+	virtual void  SetRunCode(float code)		{ m_flRunCode = code; }
+
 	virtual CBaseEntity	*GiveNamedItem( const char *szName, int iSubType = 0 );
 	virtual void  GiveDefaultItems();
 	virtual bool  ClientCommand( const CCommand &args );
@@ -171,6 +177,9 @@ protected:
 	CNetworkVar( float, m_flLastJumpTime );
 	CNetworkVar( float, m_flJumpPenalty );
 	CNetworkVar( float, m_flLastLandVelocity);
+
+	CNetworkVar( float, m_flRunTime );
+	CNetworkVar( int, m_flRunCode );
 
 	char m_szCleanName[32];
 

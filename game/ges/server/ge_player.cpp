@@ -267,28 +267,6 @@ void CGEPlayer::PostThink( void )
 {
 	BaseClass::PostThink();
 
-	// Don't apply invuln if the damage was caused by us
-/*	if ( m_iDmgTakenThisFrame > 0 && m_pCurrAttacker != this )
-	if (ToBasePlayer(m_pCurrAttacker) && CheckInvul(ToBasePlayer(m_pCurrAttacker)))
-	{
-		// Record our attacker for inter-invuln attacks
-		m_pLastAttacker = m_pCurrAttacker;
-		m_iPrevDmgTaken = m_iDmgTakenThisFrame;
-
-		// Give us some invuln and a little bonus if we are hurting
-		float flTime = 0.62f; //0.667f;
-		if ( GetHealth() < (GetMaxHealth() / 2) )
-			flTime += 0.006f * (((float)GetMaxHealth() / 2.0f) - GetHealth());
-		
-		StartInvul( flTime );
-	}
-	else if ( m_pCurrAttacker == this )
-	{
-		// If we hurt ourselves give us half the normal invuln time
-		StartInvul( 0.33f );
-	}
-	*/
-
 	// Clamp force on alive players to 1000
 	if ( m_iHealth > 0 && m_vDmgForceThisFrame.Length() > 1000.0f )
 	{
@@ -302,8 +280,6 @@ void CGEPlayer::PostThink( void )
 	// Players to propell you perpindicular to that direction, but chances are if you're taking that much push force you're already dead.
 	if (GetAbsVelocity().Length() < 300 || (GetAbsVelocity() + m_vDmgForceThisFrame).Length() < GetAbsVelocity().Length())
 		ApplyAbsVelocityImpulse( m_vDmgForceThisFrame );
-
-
 
 	// Reset our damage statistics
 	m_pCurrAttacker = NULL;
@@ -373,6 +349,8 @@ bool CGEPlayer::ShouldRunRateLimitedCommand( const CCommand &args )
 
 int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 {
+
+	DevMsg("++ONTAKEDAMAGE CALLED!++\n");
 	// Reset invulnerability if we take world or self damage
 
 	if ( inputinfo.GetAttacker()->IsWorld() || inputinfo.GetAttacker() == this || Q_stristr("trigger_", inputinfo.GetAttacker()->GetClassname()) )
@@ -380,8 +358,10 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 
 	int dmg = BaseClass::OnTakeDamage(inputinfo);
 
-	// Did we accumulate more damage?
-	if (CheckInvul(ToBasePlayer(inputinfo.GetAttacker())))
+	DevMsg("++DMG IS %d", dmg);
+
+	// Did we actually take damage?
+	if (dmg > 0)
 	{
 		// Record our attacker
 		m_pCurrAttacker = inputinfo.GetAttacker();
@@ -473,6 +453,8 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 		DevMsg("%s's invulnerability blocked that hit!\n", GetPlayerName());
 	}
 
+	DevMsg("++ONTAKEDAMAGE FINISHED!++\n");
+
 	return dmg;
 }
 
@@ -491,6 +473,7 @@ bool CGEPlayer::CheckInPVS(CBasePlayer *player)
 extern float DamageForce( const Vector &size, float damage );
 int CGEPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 {
+	DevMsg("++TAKEDAMAGE ALIVE CALLED!++\n");
 	CBaseEntity * attacker = inputInfo.GetAttacker();
 	if ( !attacker )
 		return 0;
@@ -528,28 +511,20 @@ int CGEPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 
 	m_vDmgForceThisFrame += force;
 
+	DevMsg("++BASE TAKEDAMAGE ALIVE CALLED!++\n");
 	return BaseClass::OnTakeDamage_Alive( inputInfo );
 }
 
-
+// This gets called first, then ontakedamage, which can trigger ontakedamage_alive when the baseclass is called.
 void CGEPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr )
 {
+	DevMsg("++TRACE ATTACK CALLED!++\n");
+
 	CTakeDamageInfo info = inputInfo;
 	bool doTrace = false;
-	// World or self damage removes our invuln status (and it doesn't get reapplied!)
-	// VC: If a DIFFERENT attacker gets to us during our invuln period we will *test* to see if they inflict MORE damage than
-	//     our previous attacker and we will apply the difference of the damages and reapply invuln
+
 	if ( info.GetAttacker()->IsWorld() || info.GetAttacker() == this )
 		StopInvul();
-	else if ( m_pLastAttacker && m_pLastAttacker != info.GetAttacker() )
-		m_takedamage = DAMAGE_YES;
-
-	// Can't damage players not in your PVS.
-	CBasePlayer *pAttacker = ToBasePlayer(info.GetAttacker());
-
-	if (pAttacker && !CheckInPVS(pAttacker) && !ToGEPlayer(pAttacker)->CheckInPVS(this) && info.GetDamageType() != DMG_BLAST)
-		m_takedamage = DAMAGE_NO;
-
 
 	if ( m_takedamage != DAMAGE_NO )
 	{
@@ -613,8 +588,8 @@ void CGEPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vec
 					// Lower hitgroup IDs are almost always better.  0 is the default hitgroup though so ignore that one.
 					if (tr2.hitgroup > 0 && tr2.hitgroup < newhitgroup)
 					{
-						newhitgroup = tr2.hitgroup;
 						DevMsg("group %d is better than group %d, replacing! \n", tr2.hitgroup, newhitgroup);
+						newhitgroup = tr2.hitgroup;
 					}
 				}
 			}
@@ -662,14 +637,18 @@ void CGEPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vec
 
 		float predamage = info.GetDamage();
 
-		// Since we scaled our damage, now check to see if we did enough damage to override the invuln
-		// if we didn't we set us back to invuln (pending we actually were in it previously)
-//		if ( info.GetAttacker() != m_pLastAttacker && info.GetDamage() > m_iPrevDmgTaken )
-//			info.SetDamage( info.GetDamage() - m_iPrevDmgTaken );
-		if ( pGEPlayer )
-			info.SetDamage(CalcInvul(info.GetDamage(), pGEPlayer));
-		//else if ( m_pLastAttacker )
-		//	m_takedamage = DAMAGE_NO;
+		CBaseCombatWeapon *pAttackerWep = NULL;
+
+		if (info.GetWeapon())
+			pAttackerWep = (CBaseCombatWeapon*)info.GetWeapon();
+
+		if (pGEPlayer && pAttackerWep)
+			info.SetDamage( CalcInvul(info.GetDamage(), pGEPlayer, pAttackerWep) );
+		else
+		{
+			Msg("No attacker or attacker wep, BAD BAD BAD");
+			info.SetDamage(info.GetDamage());
+		}
 
 		if (info.GetDamage() == 0)
 		{
@@ -691,9 +670,10 @@ void CGEPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vec
 				}
 			}
 		}
-
+		DevMsg("++BASE TRACE ATTACK CALLED!++\n");
 		BaseClass::TraceAttack( info, vecDir, ptr );
 	}
+	DevMsg("++TRACE ATTACK FINISHED!++\n");
 }
 
 void CGEPlayer::HurtSound( const CTakeDamageInfo &info )
@@ -978,8 +958,10 @@ void CGEPlayer::StartInvul( float time )
 	m_flEndInvulTime = gpGlobals->curtime + time;
 }
 
-bool CGEPlayer::CheckInvul(CBasePlayer *pAttacker)
+bool CGEPlayer::CheckInvul(CBasePlayer *pAttacker, CBaseCombatWeapon *pWeapon)
 {
+	DevMsg("++CHECK INVULN CALLED!++\n");
+
 	if (m_bInSpawnInvul)
 		return false;
 
@@ -993,15 +975,15 @@ bool CGEPlayer::CheckInvul(CBasePlayer *pAttacker)
 	if (!pAttacker)
 		return true;
 
-	CBaseEntity *pInflictor;
-	pInflictor = pAttacker->GetActiveWeapon();
+	CGEPlayer *pGEAttacker;
+	pGEAttacker = ToGEPlayer(pAttacker);
 
-	if (!pInflictor)
+	if (!pGEAttacker)
 		return true;
 
-	CGEWeapon *pWeapon = ToGEWeapon((CBaseCombatWeapon*)pInflictor);
+	CGEWeapon *pGEWeapon = ToGEWeapon(pWeapon);
 
-	if (!pWeapon)
+	if (!pGEWeapon)
 		return true;
 
 	for (int i = 0; i < 16; i++)
@@ -1009,14 +991,18 @@ bool CGEPlayer::CheckInvul(CBasePlayer *pAttacker)
 		totaldamage += m_iAttackList[i];
 	}
 
-	if (totaldamage >= pWeapon->GetDamageCap())
+	DevMsg("++CHECK INVULN HIT END!++\n");
+
+	if (totaldamage >= pGEWeapon->GetDamageCap() * pGEAttacker->GetDamageMultiplier())
 		return false;
 	else
 		return true;
 }
 
-int CGEPlayer::CalcInvul(int damage, CGEPlayer *pAttacker)
+int CGEPlayer::CalcInvul(int damage, CGEPlayer *pAttacker, CBaseCombatWeapon *pWeapon)
 {
+	DevMsg("++CALCINVUL CALLED!++\n");
+
 	if (m_bInSpawnInvul)
 		return 0;
 
@@ -1048,20 +1034,14 @@ int CGEPlayer::CalcInvul(int damage, CGEPlayer *pAttacker)
 	if (!pAttacker)
 		return damage;
 
-	CBaseEntity *pInflictor;
+	CGEWeapon *pGEWeapon;
 
+	pGEWeapon = ToGEWeapon(pWeapon);
 
-	pInflictor = pAttacker->GetActiveWeapon();
-
-	if (!pInflictor)
+	if (!pGEWeapon)
 		return damage;
 
-	CGEWeapon *pWeapon = ToGEWeapon((CBaseCombatWeapon*)pInflictor);
-
-	if (!pWeapon)
-		return damage;
-
-	float damagecap = pAttacker->GetDamageMultiplier() * pWeapon->GetDamageCap();
+	float damagecap = pAttacker->GetDamageMultiplier() * pGEWeapon->GetDamageCap();
 
 	// Calculate the damage taken in the last invuln period.
 	int totaldamage = 0;
@@ -1088,9 +1068,10 @@ int CGEPlayer::CalcInvul(int damage, CGEPlayer *pAttacker)
 	m_takedamage = DAMAGE_YES;
 	m_justhit = true;
 
-	DevMsg("...damage cap is %d...", damagecap);
+	DevMsg("...damage cap is %f...", damagecap);
 	DevMsg("...total damage is %d...", totaldamage);
 	DevMsg("...Which became %d damage after invuln calcs!\n", damage);
+	DevMsg("++CALC INVULN FINISHED!++\n");
 
 	return damage;
 }

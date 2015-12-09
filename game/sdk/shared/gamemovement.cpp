@@ -2232,6 +2232,12 @@ void CGameMovement::FullWalkMove( )
 				//DevMsg("Added extra penalty, jumppenalty is now %f \n", ((CGEMPPlayer*)player)->GetJumpPenalty());
 			}
 
+			// Make sure we don't continue a strafe run after loosing a bunch of speed to something in midair.
+			// Appears twice, here it takes into account jumps with very short falls and the other one takes into account
+			// falls without any preceeding jump.  At some point I should add a "OnLanded" function or something.
+			if (player->GetAbsVelocity().Length2D() < GE_NORM_SPEED)
+				((CGEMPPlayer*)player)->SetRunStartTime(gpGlobals->curtime);
+
 			// Make sure we don't use crouched hit boxes on landing
 			player->m_Local.m_bInDuckJump = false;
 		}
@@ -4086,6 +4092,10 @@ void CGameMovement::CheckFalling( void )
 			{
 				((CGEMPPlayer*)player)->SetLastJumpTime(gpGlobals->curtime);
 			}
+
+			// Make sure we don't continue a strafe run after loosing a bunch of speed to something in midair.
+			if (player->GetAbsVelocity().Length2D() < GE_NORM_SPEED)
+				((CGEMPPlayer*)player)->SetRunStartTime(gpGlobals->curtime);
 			#endif
 
 			if ( player->m_Local.m_flFallVelocity > PLAYER_MAX_SAFE_FALL_SPEED )

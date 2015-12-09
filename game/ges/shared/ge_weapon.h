@@ -135,6 +135,7 @@ public:
 
 	virtual bool	CanBeSilenced( void ) { return false; };
 	virtual bool	IsSilenced() { return m_bSilenced; };
+	virtual bool	IsShotgun() { return false; };
 	virtual void	ToggleSilencer( bool doanim = true );
 	virtual void	SetAlwaysSilenced( bool set ) { m_bIsAlwaysSilent = set; };
 	virtual bool	IsAlwaysSilenced() { return m_bIsAlwaysSilent; };

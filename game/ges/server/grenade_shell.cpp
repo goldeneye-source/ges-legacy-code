@@ -142,9 +142,20 @@ void CGEShell::PlayerTouch( CBaseEntity *pOther )
 	if ( myteam >= FIRST_GAME_TEAM && pOther->GetTeamNumber() == myteam && !friendlyfire.GetBool() )
 		return;
 
-	// Always explode immediately upon hitting another player
+	// Always explode immediately upon hitting another player, and kill them instantly.
 	if ( pOther->IsPlayer() || pOther->IsNPC() )
+	{
 		SetNextThink( gpGlobals->curtime );
+
+		Vector playercenter = pOther->GetAbsOrigin() + Vector(0, 0, 38);
+		Vector impactforce = playercenter - GetAbsOrigin();
+		VectorNormalize(impactforce);
+
+		impactforce *= 1000;
+
+		CTakeDamageInfo shellinfo(this, GetThrower(), impactforce, GetAbsOrigin(), 398.0f, DMG_BLAST);
+		pOther->TakeDamage(shellinfo);
+	}
 }
 
 // This function is in replacement of "Touch" since we are using the VPhysics

@@ -87,7 +87,7 @@ public:
 
 	// Custom damage tracking function
 	virtual void Event_DamagedOther( CGEPlayer *pOther, int dmgTaken, const CTakeDamageInfo &inputInfo );
-	virtual void PlayHitsound(int dmgTaken);
+	virtual void PlayHitsound(int dmgTaken, int dmgtype);
 
 	// -------------------------------------------------
 
@@ -160,8 +160,7 @@ protected:
 	void StartInvul( float time );
 	void StopInvul( void );
 
-	int CalcInvul(int damage, CGEPlayer *pAttacker);
-	bool CheckInvul(CBasePlayer *pAttacker);
+	int CalcInvul(int damage, CGEPlayer *pAttacker, CGEWeapon *pWeapon);
 
 	void SetCharIndex(int index){m_iCharIndex = index;}
 
@@ -191,7 +190,6 @@ protected:
 	CBaseEntity *m_pCurrAttacker;
 	int			m_iAttackList [16];
 	float		m_iAttackListTimes [16];
-	bool		m_justhit; //shoddy fix for now
 
 	// This lets us rate limit the commands the players can execute so they don't overflow things like reliable buffers.
 	CUtlDict<float,int>	m_RateLimitLastCommandTimes;

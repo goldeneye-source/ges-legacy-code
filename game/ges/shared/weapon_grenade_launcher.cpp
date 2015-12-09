@@ -260,6 +260,7 @@ void CGEWeaponGrenadeLauncher::LaunchGrenade( void )
 	{
 		pShell->SetThrower( pOwner );
 		pShell->SetOwnerEntity( pOwner );
+		pShell->SetSourceWeapon(this);
 		pShell->SetVelocity( vecThrow, NULL );
 
 		pShell->SetDamage( GetGEWpnData().m_iDamage );

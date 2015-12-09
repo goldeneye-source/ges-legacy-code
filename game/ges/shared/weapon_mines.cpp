@@ -207,6 +207,7 @@ void CGEWeaponMine::ThrowMine( void )
 
 	pMine->SetThrower( pOwner );
 	pMine->SetOwnerEntity( pOwner );
+	pMine->SetSourceWeapon(this);
 	pMine->ApplyAbsVelocityImpulse( vecThrow );
 	pMine->SetLocalAngularVelocity( QAngle(450,0,0) );
 	pMine->SetMineType( GetWeaponID() );

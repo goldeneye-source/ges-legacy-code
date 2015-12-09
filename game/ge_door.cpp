@@ -40,14 +40,20 @@ public:
 	float m_flAccelSpeed; // Overrides acceltime when used.  Speed that the door accelerates per second.
 	float m_flMinSpeed; // Minimum speed the door will travel when decelerating.
 	int m_iUseLimit; // How many times the door can be activated mid-motion before denying any further inputs.
+	float m_flTriggerThreshold; // Fraction of total movedistance that triggers an output when passed.
 	string_t m_sPartner; // Name of the door that opens and closes with this one
-	CGEDoor *m_pPartnerEnt; // Actual entity that opens and closes with this one
+	CUtlVector<CGEDoor*> m_pPartnerEnts; // List of pointers to door entities that open and close with this one
+
 
 	void Spawn();
 	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 	void SetPartner(string_t newPartner);
+	CGEDoor *GetPartner();
+	void BuildPartnerList();
 	void DoorGoUp();
 	void DoorGoDown();
+	void DoorGroupGoUp( bool triggerself );
+	void DoorGroupGoDown( bool triggerself );
 	void Blocked(CBaseEntity *pOther);
 	bool CheckUse(CBaseEntity *pActivator);
 	int DoorActivate();
@@ -61,6 +67,9 @@ public:
 
 	COutputEvent m_FirstClose;		// Triggered only on the initial close input.
 	COutputEvent m_FirstOpen;		// Triggered only on the initial open input.
+	COutputEvent m_PassThreshold;	// Whenever the door passes the threshold one way or the other.
+	COutputEvent m_FarThreshold;	// When the door goes past the threshold
+	COutputEvent m_NearThreshold;	// When the door comes back
 
 private:
 	float m_flTargetDist; //Distance the door must move to reach the goal posistion
@@ -70,12 +79,17 @@ private:
 
 	float m_flLastMoveCalc; //Time that the door last moved
 
+	float m_flTriggerDistance; //Distance the door needs to be within its destination to fire the output.
+	bool m_bPassedThreshold; //Did we pass trigger threshold and fire the output?
+
 	CBaseEntity *m_pLastActivator; //Last person to use the door.  This is used to prevent stuff like someone standing on the other side of a door and closing it every time it gets opened effectively shutting anyone else out.
 	float m_flStartMoveTime; // Time that the current movecycle was started.  Used to check if the door can be closed by someone other than the one who opened it.
 	int m_iCurrentUses; // How many times the door has been used this movecycle.
 
 	QAngle m_angFinalDest; // For rotating doors:  Angle the door is moving to.
 	QAngle m_angAccelDir; // For rotating doors:  Angle the door accelerates on.
+
+	Vector m_vecGroupCenter; // Center of the door and all its partners, used for calculating rotating door move direction.
 };
 
 LINK_ENTITY_TO_CLASS(func_ge_door, CGEDoor);
@@ -85,11 +99,15 @@ BEGIN_DATADESC(CGEDoor)
 DEFINE_KEYFIELD(m_flacceltime, FIELD_FLOAT, "AccelerationTime"),
 DEFINE_KEYFIELD(m_flAccelSpeed, FIELD_FLOAT, "AccelerationSpeed"),
 DEFINE_KEYFIELD(m_flMinSpeed, FIELD_FLOAT, "MinimumSpeed"),
+DEFINE_KEYFIELD(m_flTriggerThreshold, FIELD_FLOAT, "TriggerThreshold"),
 DEFINE_KEYFIELD(m_iUseLimit, FIELD_INTEGER, "UseLimit"),
 DEFINE_KEYFIELD(m_sPartner, FIELD_STRING, "PartnerDoor"),
 DEFINE_INPUTFUNC(FIELD_VOID, "ForceToggle", InputForceToggle),
 DEFINE_OUTPUT(m_FirstOpen, "OnFirstOpen"),
 DEFINE_OUTPUT(m_FirstClose, "OnFirstClose"),
+DEFINE_OUTPUT(m_PassThreshold, "OnCrossThreshold"),
+DEFINE_OUTPUT(m_FarThreshold, "OnCrossToThresholdFarSide"),
+DEFINE_OUTPUT(m_NearThreshold, "OnCrossToThresholdNearSide"),
 
 END_DATADESC()
 
@@ -98,12 +116,13 @@ END_DATADESC()
 #define DOOR_THINKTIME 0.01f
 
 // Boost to the doors accel speed when it's changing direction
-#define DOOR_DECCELBOOST 1.15f
+#define DOOR_DECCELBOOST 1.1f
 
 CGEDoor::CGEDoor()
 {
 	// Set these values here incase they were not assigned by the mapper somehow.
 	m_flacceltime = 1;
+	m_flTriggerThreshold = 0.5;
 	m_iUseLimit = 3;
 	m_flMinSpeed = 5;
 
@@ -115,7 +134,7 @@ CGEDoor::CGEDoor()
 void CGEDoor::Spawn(void)
 {
 	BaseClass::Spawn();
-	SetPartner(m_sPartner);
+	BuildPartnerList();
 
 	//Calculate kinematic constants essential for acceleration
 	if (m_flAccelSpeed == 0)
@@ -123,15 +142,23 @@ void CGEDoor::Spawn(void)
 	else
 		m_flacceltime = m_flSpeed / m_flAccelSpeed; //but if the user sets speed then that will be used instead.
 
+	if (!IsRotatingDoor())
+		m_flMoveDistance = (m_vecPosition2 - m_vecPosition1).Length();
+
+
+	m_flTriggerDistance = m_flMoveDistance * (1 - m_flTriggerThreshold);
+
+
 	m_flStartMoveTime = 0;
 	m_flLastMoveCalc = 0;
 	m_pLastActivator = 0;
 	m_iCurrentUses = 0;
+	m_bPassedThreshold = false;
 }
 
 void CGEDoor::CalcMovementValues(Vector startpos, Vector endpos)
 {
-	float traveldistance,  travelmetric, speed;
+	float traveldistance, travelmetric, speed;
 
 	Vector travelvector = endpos - startpos;
 	Vector velocity = GetLocalVelocity();
@@ -166,16 +193,13 @@ void CGEDoor::CalcMovementValues(Vector startpos, Vector endpos)
 	if (travelmetric < 0)
 	{
 		traveldistance += speed*speed / (2 * m_flAccelSpeed * DOOR_DECCELBOOST);
-		DevMsg("Moving in opposite direction, new traveldistance calculated to be %f \n", traveldistance);
 	}
 	else if (travelmetric > 0)
 	{
 		// Even if moving in the same direction we can add to travel distance because we can pretend
 		// the door started moving at 0 velocity from a posistion past the true posistion.
 		traveldistance += speed*speed / (2 * m_flAccelSpeed); //No deccelboost this time though
-		DevMsg("Moving in same direction, new traveldistance calculated to be %f \n", traveldistance);
 	}
-
 
 	if (m_flDeccelDist > traveldistance / 2)
 	{
@@ -192,14 +216,53 @@ void CGEDoor::CalcMovementValues(Vector startpos, Vector endpos)
 
 void CGEDoor::SetPartner(string_t newPartner)
 {
-	CBaseEntity *pPartner = gEntList.FindEntityByName(NULL, newPartner, NULL);
+	m_sPartner = newPartner;
+	
+	BuildPartnerList();
+}
 
-	if (newPartner != NULL_STRING && pPartner == NULL)
-		Msg("Entity %s(%s) has bad partner %s\n", STRING(m_iClassname), GetDebugName(), STRING(newPartner));
-	else if (pPartner != NULL && Q_stricmp(pPartner->GetClassname(), "CGEDoor"))
-		m_pPartnerEnt = static_cast<CGEDoor*>(pPartner);
-	else
-		Msg("Entity %s(%s) tried to adopt partner %s but they are not a ge_door!\n", STRING(m_iClassname), GetDebugName(), STRING(newPartner));
+CGEDoor *CGEDoor::GetPartner()
+{
+	string_t newPartner = m_sPartner;
+	CGEDoor *partnerEnt = NULL;
+
+	if (newPartner != NULL_STRING) // Make sure the mapper assigned a partner.
+	{
+		CBaseEntity *pPartner = gEntList.FindEntityByName(NULL, newPartner, NULL);
+
+		if (pPartner == NULL)
+			Msg("Entity %s(%s) has bad partner entity %s\n", STRING(GetEntityName()), GetDebugName(), STRING(newPartner));
+		else if (pPartner != NULL && Q_stricmp(pPartner->GetClassname(), "CGEDoor"))
+			partnerEnt = static_cast<CGEDoor*>(pPartner); //Actually return a partner ent.
+		else
+			Msg("Entity %s(%s) tried to adopt partner %s but they are not a ge_door!\n", STRING(GetEntityName()), GetDebugName(), STRING(newPartner));
+	}
+	return partnerEnt;
+}
+
+void CGEDoor::BuildPartnerList()
+{
+	m_pPartnerEnts.RemoveAll();
+	CGEDoor *curdoor = this;
+
+	for (int i = 0; i < 128; i++)
+	{ 
+		curdoor = curdoor->GetPartner();
+		if (curdoor != NULL && curdoor != this && !m_pPartnerEnts.HasElement(curdoor))
+			m_pPartnerEnts.AddToTail(curdoor);
+		else
+			break;
+	}
+
+	
+	DevMsg("Partnerlist count for door is %d \n", m_pPartnerEnts.Count());
+
+	Vector totalpos = GetAbsOrigin();
+
+	for (int i = 0; i < m_pPartnerEnts.Count(); i++)
+		totalpos += m_pPartnerEnts[i]->GetAbsOrigin();
+
+	m_vecGroupCenter = totalpos / (m_pPartnerEnts.Count() + 1);
 }
 
 //-----------------------------------------------------------------------------
@@ -208,22 +271,36 @@ void CGEDoor::SetPartner(string_t newPartner)
 //-----------------------------------------------------------------------------
 int CGEDoor::DoorActivate()
 {
-	if (m_toggle_state == TS_AT_TOP || m_toggle_state == TS_GOING_UP)
-	{
-		// door should close
-		DoorGoDown();
-		if (m_pPartnerEnt)
-			m_pPartnerEnt->DoorGoDown();
-	}
-	else
-	{
-		// open door
-		DoorGoUp();
-		if (m_pPartnerEnt)
-			m_pPartnerEnt->DoorGoUp();
-	}
+	if (m_toggle_state == TS_AT_TOP || m_toggle_state == TS_GOING_UP) // door should close
+		DoorGroupGoDown( true );
+	else // open door
+		DoorGroupGoUp( true );
 
 	return 1;
+}
+
+void CGEDoor::DoorGroupGoUp( bool triggerself )
+{
+	if (triggerself)
+		DoorGoUp();
+
+	for (int i = 0; i < m_pPartnerEnts.Count(); i++)
+	{
+		m_pPartnerEnts[i]->m_hActivator = m_hActivator;
+		m_pPartnerEnts[i]->DoorGoUp();
+	}
+}
+
+void CGEDoor::DoorGroupGoDown( bool triggerself )
+{
+	if (triggerself)
+		DoorGoDown();
+
+	for (int i = 0; i < m_pPartnerEnts.Count(); i++)
+	{
+		m_pPartnerEnts[i]->m_hActivator = m_hActivator;
+		m_pPartnerEnts[i]->DoorGoDown();
+	}
 }
 
 void CGEDoor::DoorGoUp(void)
@@ -272,10 +349,17 @@ void CGEDoor::DoorGoUp(void)
 				Vector nearestPoint;
 				Vector activatorToNearestPoint = GetAbsOrigin() - m_hActivator->GetAbsOrigin();
 				activatorToNearestPoint.z = 0;
+				VectorNormalize(activatorToNearestPoint);
 
 				Vector activatorToOrigin;
-				AngleVectors(m_hActivator->EyeAngles(), &activatorToOrigin);
+
+				if (GetAbsOrigin() == m_vecGroupCenter)
+					AngleVectors(m_hActivator->EyeAngles(), &activatorToOrigin);
+				else
+					activatorToOrigin = m_vecGroupCenter - m_hActivator->GetAbsOrigin();
+
 				activatorToOrigin.z = 0;
+				VectorNormalize(activatorToOrigin);
 
 				Vector cross = activatorToOrigin.Cross(activatorToNearestPoint);
 
@@ -347,7 +431,7 @@ void CGEDoor::MoveThink(void)
 {
 	Vector framevelocity, remainingvector;
 	QAngle frameangularvelocity, remainingangle;
-	float framespeed, remainingdist, directionmetric, speedmetric;
+	float framespeed, remainingdist, directionmetric, speedmetric, threshdist;
 
 	// The velocity and destinations of rotating doors come from different places
 	if (IsRotatingDoor())
@@ -389,8 +473,31 @@ void CGEDoor::MoveThink(void)
 		accelspeed *= DOOR_DECCELBOOST; //Give accelspeed a slight boost so the door can change directions a bit faster.
 	}
 
+
+	// Calculate distance to threshold
+	if (m_toggle_state == TS_GOING_DOWN)
+		threshdist = m_flMoveDistance - remainingdist;
+	else
+		threshdist = remainingdist;
+
+	// Fire output when door passes threshold
+	if ((threshdist < m_flTriggerDistance && !m_bPassedThreshold) || (threshdist > m_flTriggerDistance && m_bPassedThreshold))
+	{
+		m_PassThreshold.FireOutput(this, this);
+
+		if (m_bPassedThreshold)
+			m_NearThreshold.FireOutput(this, this);
+		else
+			m_FarThreshold.FireOutput(this, this);
+
+		m_bPassedThreshold = !m_bPassedThreshold;
+	}
+
+
+	// Now calculate our speed for the next interval.
+
 	if (remainingdist < m_flDeccelDist) //DeccelDist should always be checked first because it can sometimes overlap with acceltime.
-		framespeed = max(framespeed - accelspeed *calctime, m_flMinSpeed); //Cap it to make sure the door doesn't start accelerating in the other direction or get stuck.
+		framespeed = max(sqrt(2 * remainingdist * accelspeed), m_flMinSpeed); //Cap it to make sure the door doesn't start accelerating in the other direction or get stuck.
 	else
 		framespeed = min(framespeed + accelspeed *calctime, m_flSpeed); //Cap it so the door will move at max speed once it hits it.
 
@@ -479,8 +586,8 @@ bool CGEDoor::CheckUse(CBaseEntity *pActivator)
 	m_pLastActivator = pActivator;
 	m_iCurrentUses += 1;
 
-	if (m_pPartnerEnt)
-		m_pPartnerEnt->m_iCurrentUses += 1;
+	for (int i = 0; i < m_pPartnerEnts.Count(); i++)
+		m_pPartnerEnts[i]->m_iCurrentUses += 1;
 
 	return true;
 }
@@ -494,21 +601,18 @@ void CGEDoor::Blocked(CBaseEntity *pOther)
 	SetLocalVelocity(0);
 	SetLocalAngularVelocity(QAngle(0, 0, 0));
 
-	if (m_pPartnerEnt)
+	for (int i = 0; i < m_pPartnerEnts.Count(); i++)
 	{
-		m_pPartnerEnt->SetLocalVelocity(0);
-		m_pPartnerEnt->SetLocalAngularVelocity(QAngle(0, 0, 0));
+		m_pPartnerEnts[i]->SetLocalVelocity(0);
+		m_pPartnerEnts[i]->SetLocalAngularVelocity(QAngle(0, 0, 0));
 	}
 
 	BaseClass::Blocked(pOther);
 
-	if (m_pPartnerEnt)
-	{
-		if (m_toggle_state == TS_AT_TOP || m_toggle_state == TS_GOING_UP)
-			m_pPartnerEnt->DoorGoUp();
-		else
-			m_pPartnerEnt->DoorGoDown();
-	}
+	if (m_toggle_state == TS_AT_TOP || m_toggle_state == TS_GOING_UP)
+		DoorGroupGoUp( false );
+	else
+		DoorGroupGoDown(false);
 }
 
 void CGEDoor::InputOpen(inputdata_t &inputdata)
@@ -520,19 +624,15 @@ void CGEDoor::InputOpen(inputdata_t &inputdata)
 			return;
 
 		// Play door unlock sounds.
-		DoorGoUp();
-		if (m_pPartnerEnt)
-			m_pPartnerEnt->DoorGoUp();
+		DoorGroupGoUp(true);
 	}
 }
 
 void CGEDoor::InputClose(inputdata_t &inputdata)
 {
-	if (m_toggle_state != TS_AT_BOTTOM)
+	if (m_toggle_state != TS_AT_BOTTOM && m_toggle_state != TS_GOING_DOWN)
 	{
-		DoorGoDown();
-		if (m_pPartnerEnt)
-			m_pPartnerEnt->DoorGoDown();
+		DoorGroupGoDown(true);
 	}
 }
 
@@ -547,34 +647,18 @@ void CGEDoor::InputToggle(inputdata_t &inputdata)
 		return;
 	
 	if (m_toggle_state == TS_AT_BOTTOM || m_toggle_state == TS_GOING_DOWN)
-	{
-		DoorGoUp();
-		if (m_pPartnerEnt)
-			m_pPartnerEnt->DoorGoUp();
-	}
+		DoorGroupGoUp(true);
 	else
-	{
-		DoorGoDown();
-		if (m_pPartnerEnt)
-			m_pPartnerEnt->DoorGoDown();
-	}
+		DoorGroupGoDown(true);
 }
 
 // Just the toggle input but ignores the uselimit and locked conditions.
 void CGEDoor::InputForceToggle(inputdata_t &inputdata)
 {
 	if (m_toggle_state == TS_AT_BOTTOM || m_toggle_state == TS_GOING_DOWN)
-	{
-		DoorGoUp();
-		if (m_pPartnerEnt)
-			m_pPartnerEnt->DoorGoUp();
-	}
+		DoorGroupGoUp(true);
 	else
-	{
-		DoorGoDown();
-		if (m_pPartnerEnt)
-			m_pPartnerEnt->DoorGoDown();
-	}
+		DoorGroupGoDown(true);
 }
 
 

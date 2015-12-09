@@ -158,8 +158,13 @@ void CGETKnife::DamageTouch( CBaseEntity *pOther )
 	trace_t tr;
 	UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + (vecAiming * 24), MASK_SHOT, this, COLLISION_GROUP_NONE, &tr );
 
+	// We didn't hit the player again with our damage cast.  Do a cast to the player's center to get a proper hit.
 	if (tr.m_pEnt != pOther)
+	{
+		Vector TargetVec = pOther->GetAbsOrigin();
+		TargetVec.z = min(GetAbsOrigin().z, pOther->EyePosition().z); //Make sure we don't cast over their head.
 		UTIL_TraceLine(GetAbsOrigin(), pOther->GetAbsOrigin(), MASK_SHOT, this, COLLISION_GROUP_NONE, &tr);
+	}
 
 // TEMPORARY DEBUGGING PURPOSES
 //	DebugDrawLine( tr.startpos, tr.endpos, 0, 255, 0, true, 5.0f );

@@ -45,6 +45,7 @@ public:
 	virtual Activity GetPrimaryAttackActivity( void ) { return ACT_VM_PRIMARYATTACK; };
 
 	virtual GEWeaponID GetWeaponID( void ) const { return WEAPON_SHOTGUN; }
+	virtual bool	IsShotgun() { return true; };
 	
 #ifdef GAME_DLL
 	void FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles );

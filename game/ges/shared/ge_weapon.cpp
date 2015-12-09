@@ -244,7 +244,10 @@ void CGEWeapon::PrimaryAttack(void)
 
 	pPlayer->DoMuzzleFlash();
 
-	SendWeaponAnim(ACT_VM_PRIMARYATTACK);
+	if (m_bSilenced)
+		SendWeaponAnim(ACT_VM_PRIMARYATTACK_SILENCED);
+	else
+		SendWeaponAnim(ACT_VM_PRIMARYATTACK);
 
 	//This stops silent firing...
 	if(pPlayer->m_nButtons & IN_RELOAD)

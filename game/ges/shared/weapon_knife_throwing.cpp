@@ -240,6 +240,7 @@ CGETKnife *CWeaponKnifeThrowing::CreateKnife( const Vector &vecOrigin, const QAn
 
 	pKnife->SetDamage( GetGEWpnData().m_iDamage );
 	pKnife->SetOwnerEntity( pOwner );
+	pKnife->SetSourceWeapon(this);
 
 	// Tell the owner what we threw to implement anti-spamming
 	if ( pOwner->IsPlayer() )

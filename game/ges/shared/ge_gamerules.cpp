@@ -624,7 +624,8 @@ void CGERules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn
 		// NOTE: dist pegs out at 152 units with dmg = 2.97
 		// Players get a fixed, precisely calculated damage (for large explosions ONLY)
 		if ( bIsPlayer )
-			flAdjustedDamage = 943.23 / (1.0 + 0.474*exp(.04*dist)) * smallExpScale;
+//			flAdjustedDamage = 943 / (1.0 + 0.5*exp(.04*dist)) * smallExpScale;
+			flAdjustedDamage = 630 - 60 * sqrt(dist) * smallExpScale;
 		else
 			flAdjustedDamage = info.GetDamage() * falloff;
 

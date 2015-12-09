@@ -229,8 +229,22 @@ void CGERocket::ExplodeTouch( CBaseEntity *pOther )
 	if ( pBot && pBot->GetNPC() == pOther )
 		return;
 
-	if ( pOther != GetThrower() )
+	if (pOther != GetThrower())
+	{
+		// Check if they're a player, if they are deal out instant death.
+		if (pOther->IsPlayer() || pOther->IsNPC())
+		{
+			Vector playercenter = pOther->GetAbsOrigin() + Vector(0, 0, 38);
+			Vector impactforce = playercenter - GetAbsOrigin();
+			VectorNormalize(impactforce);
+
+			impactforce *= 1000;
+
+			CTakeDamageInfo rocketinfo(this, GetThrower(), impactforce, GetAbsOrigin(), 398.0f, DMG_BLAST);
+			pOther->TakeDamage(rocketinfo);
+		}
 		Explode();
+	}
 }
 
 int CGERocket::OnTakeDamage( const CTakeDamageInfo &inputInfo )

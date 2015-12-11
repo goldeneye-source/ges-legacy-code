@@ -352,6 +352,14 @@ bool CGEScoreBoard::GetPlayerScoreInfo( int playerIndex, KeyValues *kv )
 	kv->SetInt("score", GEPlayerRes()->GetPlayerScore( playerIndex ));
 	kv->SetString("char", GEPlayerRes()->GetCharName( playerIndex ));
 
+
+//	int seconds = GEPlayerRes()->GetPlayerScore(playerIndex);
+
+//	int displayseconds = seconds % 60;
+//	int displayminutes = floor(seconds / 60);
+
+//	kv->SetString("score", "N/A");
+
 	// Get our developer status
 	int iStatus = GEPlayerRes()->GetDevStatus(playerIndex);
 

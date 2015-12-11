@@ -406,7 +406,6 @@ void CGEMPPlayer::Spawn()
 
 		// Reset invuln variables
 		m_pLastAttacker = m_pCurrAttacker = NULL;
-		m_iPrevDmgTaken = 99999;
 		m_iViewPunchScale = 0;
 
 		// Camping calcs

@@ -265,6 +265,18 @@ void CGEPlayer::PreThink( void )
 
 void CGEPlayer::PostThink( void )
 {
+	if (m_iDmgTakenThisFrame > 0)
+	{
+		DevMsg("Original damage force is %f\n", m_vDmgForceThisFrame.Length());
+		DevMsg("Frame damage is %d\n", m_iDmgTakenThisFrame);
+		// Scale damage push force based on damage, giving it a sort of parabolic curve.
+		m_vDmgForceThisFrame *= m_iDmgTakenThisFrame / 160.0;
+		// Push force from explosions does not get scaled this way, however.
+		// Potential issue here in that simultaneous hits can result in weird push vectors, but it should be very uncommon.
+		m_vDmgForceThisFrame += m_vExpDmgForceThisFrame;
+		DevMsg("Scaled damage force is %f\n", m_vDmgForceThisFrame.Length());
+	}
+
 	BaseClass::PostThink();
 
 	// Clamp force on alive players to 1000
@@ -281,11 +293,28 @@ void CGEPlayer::PostThink( void )
 	if (GetAbsVelocity().Length() < 300 || (GetAbsVelocity() + m_vDmgForceThisFrame).Length() < GetAbsVelocity().Length())
 		ApplyAbsVelocityImpulse( m_vDmgForceThisFrame );
 
+
+	// Play hitsound based on total damage dealt this frame.
+	if (!IsBotPlayer() && m_iFrameDamageOutput > 0)
+	{
+		DevMsg("~~Frame damage output is %d in postframe~~ \n", m_iFrameDamageOutput);
+		int noSound = atoi(engine->GetClientConVarValue(entindex(), "cl_ge_nohitsound"));
+		if (noSound == 0)
+		{
+			DevMsg("~~Trying to play hitsound!~~ \n");
+			PlayHitsound(m_iFrameDamageOutput, m_iFrameDamageOutputType);
+		}
+	}
+
 	// Reset our damage statistics
 	m_pCurrAttacker = NULL;
 	m_iViewPunchScale = 0;
+	m_iFrameDamageOutput = 0;
+	m_iFrameDamageOutputType = 0;
 	m_iDmgTakenThisFrame = 0;
 	m_vDmgForceThisFrame = vec3_origin;
+
+	m_vExpDmgForceThisFrame = vec3_origin;
 }
 
 void CGEPlayer::CheatImpulseCommands( int iImpulse )
@@ -349,43 +378,56 @@ bool CGEPlayer::ShouldRunRateLimitedCommand( const CCommand &args )
 
 int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 {
-
-	DevMsg("++ONTAKEDAMAGE CALLED!++\n");
-	// Reset invulnerability if we take world or self damage
-
-	if ( inputinfo.GetAttacker()->IsWorld() || inputinfo.GetAttacker() == this || Q_stristr("trigger_", inputinfo.GetAttacker()->GetClassname()) )
-		StopInvul();
-
+	// Copy over inputinfo so we can modify the damage when we pass it to the baseclass.
 	CTakeDamageInfo info = inputinfo;
 
-
-	CBasePlayer *pAttacker = ToBasePlayer(inputinfo.GetAttacker());
-
-	if (!pAttacker)
-		return BaseClass::OnTakeDamage(inputinfo);
-
-	CGEPlayer *pGEAttacker = ToGEPlayer(pAttacker);
+	// Get the attacker and convert them to GE player, if they cannot be converted do not run GE:S specific damage code.
+	CGEPlayer *pGEAttacker = ToGEPlayer(inputinfo.GetAttacker());
 
 	if (!pGEAttacker)
 		return BaseClass::OnTakeDamage(inputinfo);
-
 
 	// Make sure that our attacker has us loaded and we have our attacker loaded.
 	if (!CheckInPVS(pGEAttacker) && !pGEAttacker->CheckInPVS(this) && inputinfo.GetDamageType() & DMG_BULLET)
 		return 0;
 
+	// Scale the damage before doing invuln related stuff.
+	info.ScaleDamage(pGEAttacker->GetDamageMultiplier());
 
+	// First apply explosion invulnerability, which is seperate from regular invuln in that it just tries to use the highest explosion damage taken in a given interval.
+	// This will make explosion damage more consistent and running through the center of explosions way more consistently painful.
+	if (info.GetDamageType() & DMG_BLAST)
+	{
+		if (m_flEndExpDmgTime < gpGlobals->curtime)
+		{
+			m_flEndExpDmgTime = gpGlobals->curtime + INVULN_PERIOD;
+			m_iExpDmgTakenThisInterval = 0;
+		}
+
+		// If the new damage is at least two bars higher than the old damage, hit them again.
+		if ( m_iExpDmgTakenThisInterval == 0 || m_iExpDmgTakenThisInterval < info.GetDamage() - 40 )
+		{
+			info.SetDamage(info.GetDamage() - m_iExpDmgTakenThisInterval); // Adjust it so that they are only hit for the difference.
+			m_iExpDmgTakenThisInterval = info.GetDamage();
+		}
+		else // If not don't even go any further.
+		{
+			return 0;
+		}
+	}
+
+	// Get the attacker's weapon, then use it to calculate how much damage they should take with invuln.
 	CGEWeapon *pAttackerWep = NULL;
 
 	if (inputinfo.GetWeapon())
 		pAttackerWep = ToGEWeapon((CBaseCombatWeapon*)info.GetWeapon());
-	else if (!info.GetInflictor()->IsNPC() && Q_stristr(info.GetInflictor()->GetClassname(), "npc_"))
-		pAttackerWep = ToGEGrenade(info.GetInflictor())->GetSourceWeapon();
+	else if (!info.GetInflictor()->IsNPC() && Q_stristr(info.GetInflictor()->GetClassname(), "npc_")) // Projectiles do not return their source weapon on damage event.
+		pAttackerWep = ToGEGrenade(info.GetInflictor())->GetSourceWeapon(); // So we have to get it ourselves
 
-	int adjdmg = CalcInvul(inputinfo.GetDamage(), pGEAttacker, pAttackerWep);
+	int adjdmg = CalcInvul(info.GetDamage(), pGEAttacker, pAttackerWep);
 
+	// Now set the damage in our custom damage info and give it to the base function to deal with.
 	info.SetDamage(adjdmg);
-	DevMsg("++ADJDMG IS %d++\n", adjdmg);
 
 	int dmg = BaseClass::OnTakeDamage(info);
 
@@ -425,30 +467,18 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 		}
 
 		// Print this out when we get damage (developer 1 must be on)
-		float flFractionalDamage = m_DmgTake + m_DmgSave - floor( info.GetDamage() );
-		float flIntegerDamage = m_DmgTake + m_DmgSave - flFractionalDamage;
-		DevMsg( "%s took %0.1f damage to hitbox %i, %i HP / %i AP remaining.\n", GetPlayerName(), flIntegerDamage, LastHitGroup(), GetHealth(), ArmorValue() );
+		DevMsg( "%s took %0.1f damage to hitbox %i, %i HP / %i AP remaining.\n", GetPlayerName(), adjdmg, LastHitGroup(), GetHealth(), ArmorValue() );
 
 		// Tell our attacker that they damaged me
-		ToGEPlayer( pAttacker )->Event_DamagedOther( this, flIntegerDamage, inputinfo );
+		pGEAttacker->Event_DamagedOther(this, adjdmg, inputinfo);
 
 		// Play our hurt sound
 		HurtSound( inputinfo );
 
-		CBaseEntity *pInflictor;
-		if ( pAttacker == inputinfo.GetInflictor() )
-			pInflictor = pAttacker->GetActiveWeapon();
-		else
-			pInflictor = inputinfo.GetInflictor();
-
-		if ( !pInflictor )
-			return dmg;
-
 		int weapid = WEAPON_NONE;
-		if ( Q_stristr(pInflictor->GetClassname(), "weapon_") )
-			weapid = ToGEWeapon( (CBaseCombatWeapon*)pInflictor )->GetWeaponID();
-		else if ( !pInflictor->IsNPC() && Q_stristr(pInflictor->GetClassname(), "npc_") )
-			weapid = ToGEGrenade( pInflictor )->GetWeaponID();
+
+		if ( pAttackerWep )
+			weapid = pAttackerWep->GetWeaponID();
 		else if ( inputinfo.GetDamageType() & DMG_BLAST )
 			weapid = WEAPON_EXPLOSION;
 
@@ -457,11 +487,11 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 		if( event )
 		{
 			event->SetInt( "userid", GetUserID() );
-			event->SetInt( "attacker", pAttacker->GetUserID() );
+			event->SetInt( "attacker", pGEAttacker->GetUserID() );
 			event->SetInt( "weaponid", weapid );
 			event->SetInt( "health", max(0, GetHealth()) );
 			event->SetInt( "armor", ArmorValue() );
-			event->SetInt( "damage", flIntegerDamage );
+			event->SetInt( "damage", adjdmg );
 			event->SetInt( "dmgtype", inputinfo.GetDamageType() );
 			event->SetInt( "hitgroup", LastHitGroup() );
 			event->SetBool( "penetrated", FBitSet(inputinfo.GetDamageStats(), FIRE_BULLETS_PENETRATED_SHOT)?true:false );
@@ -470,17 +500,17 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 	}
 	else
 	{
-		if (!ToGEPlayer(inputinfo.GetAttacker())->IsBotPlayer())
-			ToGEPlayer(inputinfo.GetAttacker())->PlayHitsound(0, DMG_BULLET);
+		if (!pGEAttacker->IsBotPlayer())
+			pGEAttacker->PlayHitsound(0, DMG_BULLET);
 
 		// Upset accuracy based on how many half gauges of life would have been lost. 
 		// More substancial than you'd think because of the exponential nature of the accuracy recovery
-		CBaseEntity *pInflictor;
-		pInflictor = GetActiveWeapon();
+		CBaseEntity *pHeldWep;
+		pHeldWep = GetActiveWeapon();
 
-		if (pInflictor)
+		if (pHeldWep)
 		{
-			CGEWeapon *pOurWeapon = ToGEWeapon((CBaseCombatWeapon*)pInflictor);
+			CGEWeapon *pOurWeapon = ToGEWeapon((CBaseCombatWeapon*)pHeldWep);
 
 			if (pOurWeapon)
 			{
@@ -489,8 +519,6 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 		}
 		DevMsg("%s's invulnerability blocked that hit!\n", GetPlayerName());
 	}
-
-	DevMsg("++ONTAKEDAMAGE FINISHED!++\n");
 
 	return dmg;
 }
@@ -510,7 +538,6 @@ bool CGEPlayer::CheckInPVS(CBasePlayer *player)
 extern float DamageForce( const Vector &size, float damage );
 int CGEPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 {
-	DevMsg("++TAKEDAMAGE ALIVE CALLED!++\n");
 	CBaseEntity * attacker = inputInfo.GetAttacker();
 	if ( !attacker )
 		return 0;
@@ -529,10 +556,7 @@ int CGEPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 		}
 	}
 
-	DevMsg("%f basedamage", inputInfo.GetBaseDamage());
-
-	// Scale push force based on damage, giving it a sort of parabolic curve.
-	force *= inputInfo.GetBaseDamage()/160;
+	DevMsg("%f basedamage\n", inputInfo.GetBaseDamage());
 
 	// Limit our up/down force if this wasn't an explosion
 	if ( inputInfo.GetDamageType() &~ DMG_BLAST )
@@ -540,22 +564,20 @@ int CGEPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 	else if ( m_iHealth > 0 )
 		force.z = clamp( force.z, -450.0f, 450.0f );
 
-	m_vDmgForceThisFrame += force;
+	// Seperate explosion damage force from normal damage force because explosion damage force gets scaled differently.
+	if (inputInfo.GetDamageType() & DMG_BLAST)
+		m_vExpDmgForceThisFrame += force;
+	else
+		m_vDmgForceThisFrame += force;
 
-	DevMsg("++BASE TAKEDAMAGE ALIVE CALLED!++\n");
 	return BaseClass::OnTakeDamage_Alive( inputInfo );
 }
 
 // This gets called first, then ontakedamage, which can trigger ontakedamage_alive when the baseclass is called.
 void CGEPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr )
 {
-	DevMsg("++TRACE ATTACK CALLED!++\n");
-
 	CTakeDamageInfo info = inputInfo;
 	bool doTrace = false;
-
-	if ( info.GetAttacker()->IsWorld() || info.GetAttacker() == this )
-		StopInvul();
 
 	if ( m_takedamage != DAMAGE_NO )
 	{
@@ -569,11 +591,6 @@ void CGEPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vec
 			if ( pWeapon->GetGEWpnData().iFlags & ITEM_FLAG_DOHITLOCATIONDMG )
 				doTrace = true;
 		}
-
-		// Apply attacker's damage multiplier
-		CGEPlayer *pGEPlayer = ToGEPlayer(info.GetAttacker());
-		if ( pGEPlayer )
-			info.ScaleDamage( pGEPlayer->GetDamageMultiplier() );
 
 		// If we want hitlocation dmg and we have a weapon to refer to do it!
 		if ( doTrace && pWeapon )
@@ -604,24 +621,11 @@ void CGEPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vec
 
 					// If we didn't hit anything or we what we did hit wasn't the player, don't worry about finding a hitgroup.
 					if (tr2.fraction >= 1.0f || tr2.m_pEnt != ptr->m_pEnt)
-					{
-						if (tr2.fraction >= 1.0f)
-							DevMsg("We missed because of no hit.\n");
-
-						else if (tr2.m_pEnt != ptr->m_pEnt)
-							DevMsg("We missed because of entity mismatch.\n");
-
 						continue;
-					}
-
-					DevMsg("Hit group %d on retrace\n", tr2.hitgroup);
 
 					// Lower hitgroup IDs are almost always better.  0 is the default hitgroup though so ignore that one.
 					if (tr2.hitgroup > 0 && tr2.hitgroup < newhitgroup)
-					{
-						DevMsg("group %d is better than group %d, replacing! \n", tr2.hitgroup, newhitgroup);
 						newhitgroup = tr2.hitgroup;
-					}
 				}
 			}
 			// Set the last part where we got hit
@@ -666,10 +670,8 @@ void CGEPlayer::TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vec
 			SetLastHitGroup( HITGROUP_GENERIC );
 		}
 
-		DevMsg("++BASE TRACE ATTACK CALLED!++\n");
 		BaseClass::TraceAttack( info, vecDir, ptr );
 	}
-	DevMsg("++TRACE ATTACK FINISHED!++\n");
 }
 
 void CGEPlayer::HurtSound( const CTakeDamageInfo &info )
@@ -697,14 +699,12 @@ void CGEPlayer::HurtSound( const CTakeDamageInfo &info )
 
 void CGEPlayer::Event_DamagedOther( CGEPlayer *pOther, int dmgTaken, const CTakeDamageInfo &inputInfo )
 {
-	if ( !IsBotPlayer() )
-	{
-		int noSound = atoi( engine->GetClientConVarValue( entindex(), "cl_ge_nohitsound" ) );
-		if (!m_bSentHitSoundThisFrame && noSound == 0 && pOther != this)
-		{
-			PlayHitsound(dmgTaken, inputInfo.GetDamageType());
-		}
-	}
+	// If we damaged ourselves we didn't really damage someone else.
+	if (pOther == this)
+		return;
+
+	m_iFrameDamageOutput += dmgTaken;
+	m_iFrameDamageOutputType = inputInfo.GetDamageType();
 	
 	// TraceBleed occurs in TraceAttack and is defined in baseentity_shared.cpp
 	// SpawnBlood occurs in TraceAttack and is defined as UTIL_BloodDrips in util_shared.cpp
@@ -905,6 +905,10 @@ void CGEPlayer::Spawn()
 	HideBloodScreen();
 
 	m_iDmgTakenThisFrame = 0;
+	m_iFrameDamageOutput = 0;
+	m_flEndExpDmgTime = 0;
+	m_iExpDmgTakenThisInterval = 0;
+	m_vExpDmgForceThisFrame = vec3_origin;
 	m_iAimModeState = AIM_NONE;
 
 	for (int i = 0; i < 16; i++)
@@ -945,6 +949,7 @@ void CGEPlayer::FinishClientPutInServer()
 	Spawn();
 }
 
+// This is pretty much just used for spawn invuln now.
 void CGEPlayer::StartInvul( float time )
 {
 	DevMsg( "%s is invulnerable for %0.2f seconds...\n", GetPlayerName(), time );
@@ -952,11 +957,23 @@ void CGEPlayer::StartInvul( float time )
 	m_flEndInvulTime = gpGlobals->curtime + time;
 }
 
+// This is pretty much just used for stopping spawn invuln now
+void CGEPlayer::StopInvul(void)
+{
+	DevMsg("%s lost invulnerability...\n", GetPlayerName());
+	m_pLastAttacker = m_pCurrAttacker = NULL;
+	m_takedamage = DAMAGE_YES;
+	m_bInSpawnInvul = false;
+}
+
+// Adjusts incoming damage as needed to conform with invuln.  Was coded with arrays, as I was still learning the ropes when I made it
+// If you ever want to do something more fancy with it I reccomend recoding it to use util vectors, which are more versitle.
+
 int CGEPlayer::CalcInvul(int damage, CGEPlayer *pAttacker, CGEWeapon *pWeapon)
 {
-	DevMsg("++CALCINVUL CALLED!++\n");
 	DevMsg("%s took %d damage...", GetPlayerName(), damage);
 
+	// Spawn invuln negates incoming damage regardless of previous damage taken
 	if (m_bInSpawnInvul)
 		return 0;
 
@@ -976,21 +993,22 @@ int CGEPlayer::CalcInvul(int damage, CGEPlayer *pAttacker, CGEWeapon *pWeapon)
 
 
 	// If all damage slots are filled somehow, the player gets to cheat the system.  They earned it.
-	if (emptyid == -1)
-	{
-		m_takedamage = DAMAGE_NO;
-		return 0;
-	}
+	// Should be impossible with everything but the autoshotgun, with 16 leg hits coming in at 256 damage which is lower
+	// than the cap of 320.  Would require 4 players attacking at the same time to get this to happen due to shotgun firing interval.
 
+	if (emptyid == -1)
+		return 0;
+
+	// If there's no attacker, then invuln does not get applied.
 	if (!pAttacker)
 		return damage;
 
+	// Default damage cap is set to golden gun damage.  It's much higher than the max health, which is 320.
 	int damagecap = 5000;
 
+	// But if there's a GE weapon involved then the damage cap gets overwritten with that weapon's cap.
 	if (pWeapon)
 		damagecap = round(pAttacker->GetDamageMultiplier() * pWeapon->GetDamageCap());
-	else
-		Warning("NO WEAPON FOUND DURING INVULN CHECKS!!!\n");
 
 	// Calculate the damage taken in the last invuln period.
 	int totaldamage = 0;
@@ -1000,12 +1018,9 @@ int CGEPlayer::CalcInvul(int damage, CGEPlayer *pAttacker, CGEWeapon *pWeapon)
 		totaldamage += m_iAttackList[i];
 	}
 
-	// If we've hit the cap already, give up.
+	// If we've hit the cap already, return 0.
 	if (totaldamage >= damagecap)
-	{
-		m_takedamage = DAMAGE_NO;
 		return 0;
-	}
 	
 	//Otherwise it's time to add the entry to the list and announce the target has been hit.
 
@@ -1014,12 +1029,9 @@ int CGEPlayer::CalcInvul(int damage, CGEPlayer *pAttacker, CGEWeapon *pWeapon)
 	m_iAttackListTimes[emptyid] = gpGlobals->curtime;
 	m_iAttackList[emptyid] = damage;
 
-	m_takedamage = DAMAGE_YES;
-
 	DevMsg("...weapon damage cap is %d...", damagecap);
 	DevMsg("...total period damage is %d...", totaldamage);
 	DevMsg("...so the original damage became %d damage after invuln calcs!\n", damage);
-	DevMsg("++CALC INVULN FINISHED!++\n");
 
 	return damage;
 }
@@ -1033,11 +1045,21 @@ void CGEPlayer::PlayHitsound(int dmgTaken, int dmgtype)
 	float damageratio;
 	CGEWeapon *pGEWeapon = ToGEWeapon(GetActiveWeapon());
 	
+	int maxwepdamage = 160;
+
+	if (pGEWeapon)
+	{
+		maxwepdamage = pGEWeapon->GetWeaponDamage();
+
+		if (pGEWeapon->IsShotgun()) // If the weapon is a shotgun it can do 5 times the damage of a single pellet because it shoots 5 pellets per shot
+			maxwepdamage *= 4; // But we should also be forgiving since doing max shotgun damage is hard.  4/5 * 4/5 = 16/25 or roughly 64% damage triggers headshot sound.
+	}
+
 	// We adjust our hitsound conditions depending on the weapon so they still make sense.  
 	// Bullet is all hitscan, slash and club are knife and melee.
 	// Minor glitch here where if the player pulls out a gun right before hitting someone with a throwing knife they'll get the wrong sound.
 	if (dmgtype & DMG_BULLET || dmgtype & DMG_SLASH || dmgtype & DMG_CLUB)
-		damageratio = dmgTaken / pGEWeapon->GetWeaponDamage();
+		damageratio = dmgTaken / (float)maxwepdamage;
 	else if (dmgtype & DMG_BLAST) // Explosives and explosions.  "Headshot" is getting more than a gauge of damage. 160/0.8
 		damageratio = dmgTaken / 200.0f;
 	else // Some other weapon, probably a map entity.  Use default sound.
@@ -1053,15 +1075,6 @@ void CGEPlayer::PlayHitsound(int dmgTaken, int dmgtype)
 		EmitSound(filter, entindex(), "GEPlayer.HitOtherHead", 0, playAt);
 
 	m_bSentHitSoundThisFrame = true;
-}
-
-void CGEPlayer::StopInvul( void )
-{
-	DevMsg( "%s lost invulnerability...\n", GetPlayerName() );
-	m_pLastAttacker = m_pCurrAttacker = NULL;
-	m_iPrevDmgTaken = 0;
-	m_takedamage = DAMAGE_YES;
-	m_bInSpawnInvul = false;	
 }
 
 // Event notifier for plugins to tell when a player picks up stuff

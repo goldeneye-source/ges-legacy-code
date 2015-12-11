@@ -175,6 +175,8 @@ protected:
 	float m_flDamageMultiplier;
 	float m_flSpeedMultiplier;
 
+	int m_iFrameDamageOutput;
+	int m_iFrameDamageOutputType;
 	bool m_bSentHitSoundThisFrame;
 
 	// Invulnerability variables
@@ -185,11 +187,14 @@ protected:
 	int			m_iViewPunchScale;
 	int			m_iDmgTakenThisFrame;
 	Vector		m_vDmgForceThisFrame;
-	int			m_iPrevDmgTaken;
 	CBaseEntity *m_pLastAttacker;
 	CBaseEntity *m_pCurrAttacker;
 	int			m_iAttackList [16];
 	float		m_iAttackListTimes [16];
+
+	float		m_flEndExpDmgTime;
+	int			m_iExpDmgTakenThisInterval;
+	Vector		m_vExpDmgForceThisFrame;
 
 	// This lets us rate limit the commands the players can execute so they don't overflow things like reliable buffers.
 	CUtlDict<float,int>	m_RateLimitLastCommandTimes;

@@ -16,6 +16,7 @@
 #include "engine/IEngineSound.h"
 #include "soundent.h"
 #include "steamjet.h"
+#include "ge_gamerules.h"
 #include "ge_shareddefs.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -242,15 +243,6 @@ void CGE_Explosion::CreateInitialBlast( void )
 	else
 		UTIL_DecalTrace( &tr, "Scorch" );
 
-	// Create a dynamic light that lasts the length of the fire part of the explosion
-	const CBaseEntity *host = te->GetSuppressHost();
-	te->SetSuppressHost( NULL );
-
-	CPASFilter filter( GetAbsOrigin() );
-//	te->DynamicLight( filter, 0.0, &GetAbsOrigin(), 255, 156, 9, 1, m_flDamageRadius*2.5f, GE_EXP_DMG_TIME-0.5f, 40.0f, 1 );
-
-	te->SetSuppressHost( (CBaseEntity*)host );
-
 	// Generate the heat effects
 	CreateHeatWave();
 }
@@ -269,7 +261,6 @@ void CGE_Explosion::Think()
 		if ( m_hActivator.Get() && m_hOwner.Get() && m_flDamageRadius > 0 && m_flDamage > 0 )
 		{
 			CTakeDamageInfo info( m_hActivator.Get(), m_hOwner.Get(), vec3_origin, GetAbsOrigin(), m_flDamage, DMG_BLAST );
-			info.SetDamageForce( Vector( 600,0,0 ) );
 			g_pGameRules->RadiusDamage( info, GetAbsOrigin(), m_flDamageRadius, CLASS_NONE, NULL );
 		}
 
@@ -283,8 +274,8 @@ void CGE_Explosion::Think()
 			UTIL_ScreenShake( GetAbsOrigin(), amp, freq, 1.0f, radius, SHAKE_START );
 		}
 
-		// Apply another round of damage in 1/3 of a second
-		SetNextThink( gpGlobals->curtime + 0.75f );
+		// Apply another round of damage in 1/10 of a second
+		SetNextThink( gpGlobals->curtime + 0.1f );
 	}
 	else
 	{

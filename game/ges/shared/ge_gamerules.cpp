@@ -474,21 +474,18 @@ int CGERules::IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled )
 bool IsExplosionTraceBlocked( trace_t *ptr );
 
 ConVar ge_debug_explosions( "ge_debug_explosions", "0", FCVAR_CHEAT | FCVAR_GAMEDLL );
-ConVar ge_exp_allowz( "ge_exp_allowz", "0", FCVAR_GAMEDLL, "Allows excessive Z forces on explosions" );
+ConVar ge_exp_allowz( "ge_exp_allowz", "1", FCVAR_GAMEDLL, "Allows excessive Z forces on explosions" ); // Now that explosion pushforce is completely reworked the vertical push is no longer a huge issue.
 
 // ----------------------
 // Custom Radius Damage!
 // ----------------------
-void CGERules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore )
+void CGERules::RadiusDamage(const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, CBaseEntity *pEntityIgnore)
 {
-	const int MASK_RADIUS_DAMAGE = MASK_SHOT & (~CONTENTS_HITBOX);
 	CBaseEntity *pEntity = NULL;
-	trace_t		tr;
-	float		flAdjustedDamage, falloff;
-	Vector		vecSpot;
+	float		flAdjustedDamage, flDamagePercent;
 
 	Vector vecSrc = vecSrcIn;
-	vecSrc.z += 1;
+	Vector vecSpot = vec3_origin;
 
 	int bInWater = (UTIL_PointContents ( vecSrc ) & MASK_WATER) ? true : false;
 	if( bInWater )
@@ -500,192 +497,131 @@ void CGERules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn
 		}
 	}
 
+	int clusterIndex = engine->GetClusterForOrigin(vecSrc);
+	byte iPVS[MAX_MAP_CLUSTERS / 8];
+	bool skipPVS = false;
+
+	// Explosion is outside of map, usually caused by doors going through the wall.
+	// Explosions not hitting people from inside doorframes might actually be worse than the exploits this might bring about.
+	// or they might not...that's what testing is for!
+	if (clusterIndex == -1)
+		skipPVS = true;
+
+	engine->GetPVSForCluster(clusterIndex, sizeof(iPVS), iPVS);
+
 	if ( ge_debug_explosions.GetBool() )
 	{
+		Warning("Explosion radius is %f\n", flRadius);
+		Warning("Max damage is %f\n", info.GetDamage());
 		NDebugOverlay::Cross3D( vecSrc, Vector(-3,-3,-3), Vector(3,3,3), 255, 0, 0, 120, 7.0f );
 		NDebugOverlay::Sphere( vecSrc, vec3_angle, flRadius, 255, 0, 0, 50, false, 7.0f );
 	}
 
 	// iterate on all entities in the vicinity.
-	for ( CEntitySphereQuery sphere( vecSrc, flRadius ); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity() )
+	for (CEntitySphereQuery sphere(vecSrc, flRadius + 40); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity())
 	{
-		// This value is used to scale damage when the explosion is blocked by some other object.
-		float flBlockedDamagePercent = 0.0f;
 		bool bIsPlayer = pEntity->IsPlayer() || pEntity->IsNPC();
 
-		if ( pEntity == pEntityIgnore )
+		if (pEntity == pEntityIgnore || pEntity->IsWorld())
 			continue;
 
-		if ( pEntity->m_takedamage == DAMAGE_NO || (bIsPlayer && !pEntity->IsAlive()) )
+		if (pEntity->m_takedamage == DAMAGE_NO || (bIsPlayer && !pEntity->IsAlive()))
 			continue;
 
-		// UNDONE: this should check a damage mask, not an ignore
-		if ( iClassIgnore != CLASS_NONE && pEntity->Classify() == iClassIgnore )
-		{// houndeyes don't hurt other houndeyes with their attack
+		if (iClassIgnore != CLASS_NONE && pEntity->Classify() == iClassIgnore)
+		{
 			continue;
 		}
 
-		// blast's don't tavel into or out of water
-		if (bInWater && pEntity->GetWaterLevel() == 0)
+
+
+		// Check that the explosion is in the same area as this entity.
+		if (!skipPVS && !CheckInPVS(pEntity, iPVS))
 			continue;
 
-		if (!bInWater && pEntity->GetWaterLevel() == 3)
-			continue;
+		float dist;
 
-		// Check that the explosion can 'see' this entity.
-		vecSpot = pEntity->EyePosition();
-		UTIL_TraceLine( vecSrc, vecSpot, MASK_RADIUS_DAMAGE, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
-		
-		if ( tr.fraction != 1.0 )
+		// Figure out the ideal relative posistion to use to calculate explosion distance
+		if (!bIsPlayer)
 		{
-			if ( IsExplosionTraceBlocked(&tr) )
-			{
-				if( ShouldUseRobustRadiusDamage( pEntity ) )
-				{
-					Vector vecToTarget = vecSpot - tr.endpos;
-					VectorNormalize( vecToTarget );
-
-					// We're going to deflect the blast along the surface that 
-					// interrupted a trace from explosion to this target.
-					Vector vecUp, vecDeflect;
-					CrossProduct( vecToTarget, tr.plane.normal, vecUp );
-					CrossProduct( tr.plane.normal, vecUp, vecDeflect );
-					VectorNormalize( vecDeflect );
-
-					// Trace along the surface that intercepted the blast...
-					UTIL_TraceLine( tr.endpos, tr.endpos + vecDeflect * ROBUST_RADIUS_PROBE_DIST, MASK_RADIUS_DAMAGE, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
-					if ( ge_debug_explosions.GetBool() )
-						debugoverlay->AddLineOverlay( tr.startpos, tr.endpos, 255, 255, 0, false, 4 );
-
-					// ...to see if there's a nearby edge that the explosion would 'spill over' if the blast were fully simulated.
-					UTIL_TraceLine( tr.endpos, vecSpot, MASK_RADIUS_DAMAGE, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
-					if ( ge_debug_explosions.GetBool() )
-						debugoverlay->AddLineOverlay( tr.startpos, tr.endpos, 255, 0, 0, false, 4 );
-
-					if( tr.fraction != 1.0 && tr.DidHitWorld() )
-					{
-						// Still can't reach the target.
-						continue;
-					}
-					// else fall through
-				}
-				else
-				{
-					continue;
-				}
-			}
-
-			// UNDONE: Probably shouldn't let children block parents either?  Or maybe those guys should set their owner if they want this behavior?
-			// HL2 - Dissolve damage is not reduced by interposing non-world objects
-			if( tr.m_pEnt && tr.m_pEnt != pEntity && tr.m_pEnt->GetOwnerEntity() != pEntity )
-			{
-				// Some entity was hit by the trace, meaning the explosion does not have clear
-				// line of sight to the entity that it's trying to hurt. If the world is also
-				// blocking, we do no damage.
-				CBaseEntity *pBlockingEntity = tr.m_pEnt;
-				UTIL_TraceLine( vecSrc, vecSpot, CONTENTS_SOLID, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
-
-				if( tr.fraction != 1.0 )
-					continue;
-
-				// Now, if the interposing object is physics, block some explosion force based on its mass.
-				if( pBlockingEntity->VPhysicsGetObject() )
-				{
-					const float MASS_ABSORB_ALL_DAMAGE = 350.0f;
-					float flMass = pBlockingEntity->VPhysicsGetObject()->GetMass();
-					float scale = flMass / MASS_ABSORB_ALL_DAMAGE;
-
-					// Absorbed all the damage.
-					if( scale >= 1.0f )
-					{
-						continue;
-					}
-
-					ASSERT( scale > 0.0f );
-					flBlockedDamagePercent = scale;
-				}
-				else
-				{
-					// Some object that's not the world and not physics. Generically block 25% damage
-					flBlockedDamagePercent = 0.25f;
-				}
-			}
+			vecSpot = pEntity->GetAbsOrigin(); // Not a player so just use the default origin.
+			dist = (vecSpot - vecSrc).Length();
 		}
-		
-		// Small explosions get scaled sustantially
-		double smallExpScale = (flRadius <= 80.0f) ? RemapValClamped( flRadius, 10.0f, 80.0f, 0.05f, 0.35f ) : 1.0f;
-		double dist = (vecSrc - tr.endpos).Length();
-
-		if ( flRadius )
-			falloff = max( 1.0 - (dist / flRadius), 0 );
 		else
-			falloff = 1.0;
+		{
+			vecSpot = pEntity->GetAbsOrigin() + Vector(0, 0, 40); // Use the player's center as vecSpot even though we may not calculate damage from there.  Will lead to the most consistent damage forces.
+			dist = min((pEntity->EyePosition() - vecSrc).LengthSqr(), min((pEntity->GetAbsOrigin() + Vector(0, 0, 30) - vecSrc).LengthSqr(), (pEntity->GetAbsOrigin() + Vector(0, 0, 44) - vecSrc).LengthSqr()));
+			dist = sqrt(dist);
+		}
 
-		// NOTE: dist pegs out at 152 units with dmg = 2.97
-		// Players get a fixed, precisely calculated damage (for large explosions ONLY)
-		if ( bIsPlayer )
-//			flAdjustedDamage = 943 / (1.0 + 0.5*exp(.04*dist)) * smallExpScale;
-			flAdjustedDamage = 630 - 60 * sqrt(dist) * smallExpScale;
-		else
-			flAdjustedDamage = info.GetDamage() * falloff;
-
-		// Ignore damage that is insignificant
-		if ( flAdjustedDamage < 3.0f )
+		// The initial sphere checks are slightly bigger than the radius to make sure that we don't ignore people we should hit.
+		// But now that the more comprehensive checks are done we need to be sure they have a sensitive point in range.
+		if (dist > flRadius)
 			continue;
 
-		if ( ge_debug_explosions.GetBool() )
+		float distpercent = dist / flRadius * 100;
+
+		// The other function was apparantly super expensive and lagging people somehow?
+		// Changed it to a much cheaper sqrt function that matches up somewhat with original function.
+		// of flAdjustedDamage = 943 / (1.0 + 0.5*exp(.04*dist)) * smallExpScale;
+		// flDamagePercent = 100 - 20 * sqrt(distpercent) + distpercent; //x intercept is exactly 100, but curve was very sharp, 50% of the damage gone at 10% radius.
+
+		flDamagePercent = 500 - 80 * sqrt((distpercent * 0.75 + 25)) + 3 * distpercent; //x intercept is again 100, but curve is shifted and stretched to be less brutal at the start.  50% of damage gone within 25% of radius.  80% at 50% of radius.  and 96% at 75% of radius.
+
+		flAdjustedDamage = info.GetDamage() * flDamagePercent * 0.01 + 20;
+
+		if (ge_debug_explosions.GetBool())
 		{
-			float flForce = info.GetDamageForce().Length() * falloff * 1.15f * smallExpScale;
+			Warning("----------------------\n");
+
+			if (!bIsPlayer)
+				Warning("Targeted Non-Player\n");
+			else
+				Warning("Targeted Player\n");
+
+			Warning("True distance is %f\n", dist);
+			Warning("distpercent is %f\n", distpercent);
+			Warning("DamagePercent is %f\n", flDamagePercent);
+			Warning("AdjustedDamage is %f\n", flAdjustedDamage);
+
+			Warning("----------------------\n");
+
+			float flForce = info.GetDamageForce().Length() * flDamagePercent * 0.01f;
 			debugoverlay->AddLineOverlay( vecSrc, vecSpot, 255, 255, 255, false, 5.0f );
 			debugoverlay->AddTextOverlay( vecSpot, 0, 7.0f, "Damage: %0.2f", flAdjustedDamage );
 			debugoverlay->AddTextOverlay( vecSpot, 2, 7.0f, "Force: %0.1f", flForce );
 		}
 
-		// the explosion can 'see' this entity, so hurt them!
-		if (tr.startsolid)
-		{
-			// if we're stuck inside them, fixup the position and distance
-			tr.endpos = vecSrc;
-			tr.fraction = 0.0;
-		}
-
 		CTakeDamageInfo adjustedInfo = info;
-		adjustedInfo.SetDamage( flAdjustedDamage - (flAdjustedDamage * flBlockedDamagePercent) );
+		adjustedInfo.SetDamage( flAdjustedDamage );
 		adjustedInfo.SetDamagePosition( vecSrc );
 
 		Vector dir = vecSpot - vecSrc;
 		VectorNormalize( dir );
 
-		// If we don't have a damage force, manufacture one
-		if ( adjustedInfo.GetDamageForce() == vec3_origin )
-		{
-			if ( !( adjustedInfo.GetDamageType() & DMG_PREVENT_PHYSICS_FORCE ) )
-				CalculateExplosiveDamageForce( &adjustedInfo, dir, vecSrc, smallExpScale );
-		}
-		else
-		{
-			// Assume the force passed in is the maximum force. Decay it based on falloff.
-			float flForce = adjustedInfo.GetDamageForce().Length() * falloff * 1.15f * smallExpScale;
-			adjustedInfo.SetDamageForce( dir * flForce );
-		}
+		// Calculate damage force that will always push players away from the explosion.
 
-		if ( !ge_exp_allowz.GetBool() )
-			adjustedInfo.SetDamageForce( adjustedInfo.GetDamageForce() * Vector( 1.0, 1.0, 0.4 ) );
+		float flForce = min(flAdjustedDamage + 100, 500);
+		Vector vecForce = dir * flForce;
 
-		if ( tr.fraction != 1.0 && pEntity == tr.m_pEnt )
-		{
-			ClearMultiDamage();
-			pEntity->DispatchTraceAttack( adjustedInfo, dir, &tr );
-			ApplyMultiDamage();
-		}
-		else
-		{
-			pEntity->TakeDamage( adjustedInfo );
-		}
+		if (!ge_exp_allowz.GetBool())
+			vecForce *= Vector(1.0, 1.0, 0.4);
+
+		adjustedInfo.SetDamageForce( vecForce );
+
+		pEntity->TakeDamage( adjustedInfo );
 
 		// Now hit all triggers along the way that respond to damage... 
-		pEntity->TraceAttackToTriggers( adjustedInfo, vecSrc, tr.endpos, dir );
+		pEntity->TraceAttackToTriggers( adjustedInfo, vecSrc, vecSpot, dir );
 	}
+}
+
+bool CGERules::CheckInPVS(CBaseEntity *ent, byte iPVS[MAX_MAP_CLUSTERS / 8])
+{
+	if (ent->NetworkProp()->IsInPVS(NULL, iPVS, sizeof(iPVS)))
+		return true;
+
+	return false;
 }
 
 //-----------------------------------------------------------------------------

@@ -228,7 +228,6 @@ void CGEPlayer::FireBullets( const FireBulletsInfo_t &info )
 	// also, this shot counts for 0 damage!
 	if (m_bInSpawnInvul && !IsObserver() && GEMPRules()->GetSpawnInvulnCanBreak())
 	{
-//		modinfo.m_iPlayerDamage = modinfo.m_iDamage = 0;
 		StopInvul();
 	}
 #endif
@@ -256,6 +255,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 {
 	FireBulletsInfo_t modinfo = info;
 	CGEWeapon *pWeapon = NULL;
+	bool isWepShotgun = false;
 
 	// Player and NPC specific actions
 	if ( IsNPC() || IsPlayer() )
@@ -267,6 +267,8 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 			if ( !(modinfo.m_nFlags & FIRE_BULLETS_PENETRATED_SHOT) )
 				// Only take the weapon's damage if this is the first shot
 				modinfo.m_iDamage = pWeapon->GetGEWpnData().m_iDamage;
+
+			isWepShotgun = pWeapon->IsShotgun(); // We can't use the amount of shots fired for this because automatics can fire multiple bullets per frame.
 		}
 	}
 
@@ -315,6 +317,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	//-----------------------------------------------------
 	CShotManipulator Manipulator( modinfo.m_vecDirShooting );
 	float flCumulativeDamage = 0.0f;
+	Vector shotoffsets[5] = { Vector(0, 0, 0), Vector(0.38, 0.92, 0), Vector(-0.92, 0.38, 0), Vector(-0.38, -0.92, 0), Vector(0.92, -0.38, 0) }; //4 quadrantal points rotated 67.5 degrees.
 
 	// Now we actually fire the shot(s)
 	for (int iShot = 0; iShot < modinfo.m_iShots; iShot++)
@@ -331,7 +334,28 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 		}
 		else
 		{
-			vecDir = ApplySpreadGauss(modinfo.m_vecSpread, modinfo.m_vecDirShooting, modinfo.m_iGaussFactor, CBaseEntity::GetPredictionRandomSeed() + iShot);
+			Vector adjShotDir = modinfo.m_vecDirShooting;
+			Vector adjSpread = modinfo.m_vecSpread;
+
+			// For shotguns we want to take more control of the spread to give the weapon a more consistent performance.
+			// This code projects one shot down the center that is fairly accurate, and then 4 more shots at each corner
+			// that are substancially less so.  Overlap between the shot spreads is minimal, meaning across the map instant
+			// kills and point blank misses are much less likely.
+			if (isWepShotgun)
+			{
+				Vector vecRight, vecUp;
+
+				adjSpread *= 0.6; //Cut radius of spread in half to compensate for offsets.
+				VectorVectors(adjShotDir, vecRight, vecUp);
+
+				adjShotDir += shotoffsets[iShot].x * vecRight * adjSpread.x + shotoffsets[iShot].y * vecUp * adjSpread.y;
+
+				if (iShot > 0)
+					adjSpread *= 0.75;
+				else // Center shot is more accurate
+					adjSpread *= 0.5;
+			}
+			vecDir = ApplySpreadGauss(adjSpread, adjShotDir, modinfo.m_iGaussFactor, CBaseEntity::GetPredictionRandomSeed() + iShot);
 		}
 
 		vecEnd = modinfo.m_vecSrc + vecDir * modinfo.m_flDistance;
@@ -703,31 +727,42 @@ void CBaseEntity::HandleBulletPenetration( CBaseCombatWeapon *pWeapon, const Fir
 //-----------------------------------------------------------------------------
 // Specific handling of glass impacts
 //-----------------------------------------------------------------------------
-void CBaseEntity::HandleShotImpactingGlass( const FireBulletsInfo_t &info, trace_t &tr, const Vector &vecDir, ITraceFilter *pTraceFilter )
+void CBaseEntity::HandleShotImpactingGlass(const FireBulletsInfo_t &info, trace_t &tr, const Vector &vecDir, ITraceFilter *pTraceFilter)
 {
-	static int sBPGlassSurfaceIdx = physprops->GetSurfaceIndex( "bulletproof_glass" );
+	static int sBPGlassSurfaceIdx = physprops->GetSurfaceIndex("bulletproof_glass");
 	// Move through the glass until we're at the other side
-	Vector	testPos = tr.endpos + ( vecDir * MAX_GLASS_PENETRATION_DEPTH );
+	Vector	testPos = tr.endpos + (vecDir * MAX_GLASS_PENETRATION_DEPTH);
 
 	CEffectData	data;
 
 	data.m_vNormal = tr.plane.normal;
 	data.m_vOrigin = tr.endpos;
 
-	DispatchEffect( "GlassImpact", data );
+	DispatchEffect("GlassImpact", data);
 
 	trace_t	penetrationTrace;
+	FireBulletsInfo_t behindGlassInfo;
 
 	// Re-trace as if the bullet had passed right through
-	UTIL_TraceLine( testPos, tr.endpos, MASK_SHOT, pTraceFilter, &penetrationTrace );
+	UTIL_TraceLine(testPos, tr.endpos, MASK_SHOT, pTraceFilter, &penetrationTrace);
 
-	// See if we found the surface again
-	if ( penetrationTrace.startsolid || tr.fraction == 0.0f || penetrationTrace.fraction == 1.0f )
-	{
-		// We didn't penetrate, display a bulletproof bullet decal
-		tr.surface.surfaceProps = sBPGlassSurfaceIdx;
-		DoImpactEffect( tr, DMG_BULLET );
+	// We somehow didn't hit anything, ragequit.
+	if (penetrationTrace.fraction == 1.0f)
 		return;
+
+	// We got stuck inside of something
+	if (penetrationTrace.startsolid || tr.fraction == 0.0f)
+	{
+		// We got stuck inside the world, ragequit.
+		if (penetrationTrace.DidHitWorld())
+		{
+			DoImpactEffect(tr, DMG_BULLET);
+			return;
+		}
+
+		// We got stuck inside an entity, ignore it and keep going.
+		if (penetrationTrace.m_pEnt)
+			behindGlassInfo.m_pAdditionalIgnoreEnt = penetrationTrace.m_pEnt;
 	}
 	
 	// Do a penetrated bullet decal
@@ -753,7 +788,6 @@ void CBaseEntity::HandleShotImpactingGlass( const FireBulletsInfo_t &info, trace
 #endif
 
 	// Refire the round, as if starting from behind the glass
-	FireBulletsInfo_t behindGlassInfo;
 	behindGlassInfo.m_iShots = 1;
 	behindGlassInfo.m_vecSrc = penetrationTrace.endpos;
 	behindGlassInfo.m_vecDirShooting = vecDir;

@@ -248,12 +248,25 @@ int CGEShell::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	// Manually apply vphysics because BaseCombatCharacter takedamage doesn't call back to CBaseEntity OnTakeDamage
 	VPhysicsTakeDamage( inputInfo );
 
-	// Grenades only suffer blast damage.
-	if( inputInfo.GetDamageType() & DMG_BLAST )
+	// Grenades only suffer blast damage, but are somewhat robust and can pass around the edges of explosions.
+	if (inputInfo.GetDamageType() & DMG_BLAST && inputInfo.GetDamage() > 120)
 	{
 		m_iHealth -= inputInfo.GetDamage();
 		if ( m_iHealth <= 0 )
+		{
+			if (inputInfo.GetAttacker()->IsPlayer())
+			{
+				SetThrower(inputInfo.GetAttacker()->MyCombatCharacterPointer());
+			}
+			else if (inputInfo.GetAttacker()->IsNPC())
+			{
+				CNPC_GEBase *npc = (CNPC_GEBase*)inputInfo.GetAttacker();
+				if (npc->GetBotPlayer())
+					SetThrower(npc->GetBotPlayer());
+			}
+
 			ExplodeThink();
+		}
 
 		return inputInfo.GetDamage();
 	}

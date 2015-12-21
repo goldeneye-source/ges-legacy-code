@@ -293,15 +293,7 @@ int CGEMine::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		return 0;
 
 	// Mines can suffer blast and bullet damage
-	if( inputInfo.GetDamageType() & DMG_BLAST )
-	{
-		m_iHealth -= inputInfo.GetDamage();
-		if ( m_iHealth <= 0 )
-			g_EventQueue.AddEvent( this, "Explode", 0, GetThrower(), this );
-
-		return inputInfo.GetDamage();
-	}
-	else if ( inputInfo.GetDamageType() & DMG_BULLET )
+	else if ((inputInfo.GetDamageType() & DMG_BLAST && inputInfo.GetDamage() > 40) || inputInfo.GetDamageType() & DMG_BULLET)
 	{
 		m_iHealth -= inputInfo.GetDamage();
 		if ( m_iHealth <= 0 )

@@ -469,10 +469,6 @@ int CGERules::IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled )
 	return 1;
 }
 
-// If a solid surface blocks the explosion, this is how far to creep along the surface looking for another way to the target
-#define ROBUST_RADIUS_PROBE_DIST 16.0f
-bool IsExplosionTraceBlocked( trace_t *ptr );
-
 ConVar ge_debug_explosions( "ge_debug_explosions", "0", FCVAR_CHEAT | FCVAR_GAMEDLL );
 ConVar ge_exp_allowz( "ge_exp_allowz", "1", FCVAR_GAMEDLL, "Allows excessive Z forces on explosions" ); // Now that explosion pushforce is completely reworked the vertical push is no longer a huge issue.
 
@@ -532,8 +528,6 @@ void CGERules::RadiusDamage(const CTakeDamageInfo &info, const Vector &vecSrcIn,
 		{
 			continue;
 		}
-
-
 
 		// Check that the explosion is in the same area as this entity.
 		if (!skipPVS && !CheckInPVS(pEntity, iPVS))
@@ -605,14 +599,15 @@ void CGERules::RadiusDamage(const CTakeDamageInfo &info, const Vector &vecSrcIn,
 		Vector vecForce = dir * flForce;
 
 		if (!ge_exp_allowz.GetBool())
-			vecForce *= Vector(1.0, 1.0, 0.4);
+			vecForce.z *= 0.4;
 
 		adjustedInfo.SetDamageForce( vecForce );
 
-		pEntity->TakeDamage( adjustedInfo );
-
-		// Now hit all triggers along the way that respond to damage... 
+		// Hit all triggers along the way that respond to damage... 
 		pEntity->TraceAttackToTriggers( adjustedInfo, vecSrc, vecSpot, dir );
+
+		// Now hit the entity.
+		pEntity->TakeDamage(adjustedInfo);
 	}
 }
 

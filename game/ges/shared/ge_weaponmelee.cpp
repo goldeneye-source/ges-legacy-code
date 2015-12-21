@@ -414,6 +414,10 @@ void CGEWeaponMelee::Swing( int bIsSecondary )
 #endif
 			*/
 
+			// If they're not alive don't go huge.
+			if (!pPlayer->IsAlive())
+				continue;
+
 			// Don't pay attention to teammates.
 			if (GEMPRules()->IsTeamplay() && pPlayer->GetTeamNumber() == pOwner->GetTeamNumber())
 				continue;

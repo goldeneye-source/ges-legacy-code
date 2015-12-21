@@ -255,23 +255,22 @@ int CGERocket::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	// Manually apply vphysics because BaseCombatCharacter takedamage doesn't call back to CBaseEntity OnTakeDamage
 	VPhysicsTakeDamage( inputInfo );
 
-	// Rockets take Blast AND Bullet damage
-	if( inputInfo.GetDamageType() & DMG_BLAST )
+	// Rockets take Blast AND Bullet damage, though blast damage requires more.
+	if ((inputInfo.GetDamageType() & DMG_BLAST && inputInfo.GetDamage() > 80) || inputInfo.GetDamageType() & DMG_BULLET)
 	{
 		m_iHealth -= inputInfo.GetDamage();
-		if ( m_iHealth <= 0 )
-			Explode();
-
-		return inputInfo.GetDamage();
-	}
-	else if ( inputInfo.GetDamageType() & DMG_BULLET )
-	{
-		// Bullet damage transfers ownership to the attacker instead of the thrower
-		m_iHealth -= inputInfo.GetDamage();
-		if ( m_iHealth <= 0 )
+		if (m_iHealth <= 0)
 		{
-			if ( inputInfo.GetAttacker()->IsPlayer() )
-				SetThrower( ToBasePlayer(inputInfo.GetAttacker()) );
+			if (inputInfo.GetAttacker()->IsPlayer())
+			{
+				SetThrower(inputInfo.GetAttacker()->MyCombatCharacterPointer());
+			}
+			else if (inputInfo.GetAttacker()->IsNPC())
+			{
+				CNPC_GEBase *npc = (CNPC_GEBase*)inputInfo.GetAttacker();
+				if (npc->GetBotPlayer())
+					SetThrower(npc->GetBotPlayer());
+			}
 
 			Explode();
 		}

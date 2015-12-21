@@ -4,6 +4,7 @@
 #include "utlbuffer.h"
 #include "gamestringpool.h"
 #include "ge_shareddefs.h"
+#include "ge_weapon_parse.h"
 
 #ifdef CLIENT_DLL
 	#include <vgui/VGUI.h>
@@ -837,6 +838,28 @@ int GetStrengthOfWeapon(int id)
 
 	return GEWeaponInfo[id].strength;
 }
+
+
+int WeaponMaxDamageFromID(int id)
+{
+	const CGEWeaponInfo *weap = NULL;
+	
+	const char *name = WeaponIDToAlias(id);
+	if (name && name[0] != '\0')
+	{
+		int h = LookupWeaponInfoSlot(name);
+		if (h == GetInvalidWeaponInfoHandle())
+			return 5000;
+
+		weap = dynamic_cast<CGEWeaponInfo*>(GetFileWeaponInfoFromHandle(h));
+
+		if (weap)
+			return weap->m_iDamageCap;
+	}
+
+	return 5000;
+}
+
 // End weapon helper functions
 
 #ifdef GAME_DLL

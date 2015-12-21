@@ -277,6 +277,7 @@ extern const char *GetAmmoForWeapon( int id );
 extern const char *GetWeaponPrintName( int id );
 extern int GetRandWeightForWeapon( int id );
 extern int GetStrengthOfWeapon(int id);
+extern int WeaponMaxDamageFromID(int id);
 
 // Team colors for the GE Teams
 static Color COLOR_JANUS	( 238,  54,  54, 255 );

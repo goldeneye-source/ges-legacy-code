@@ -160,7 +160,7 @@ protected:
 	void StartInvul( float time );
 	void StopInvul( void );
 
-	int CalcInvul(int damage, CGEPlayer *pAttacker, CGEWeapon *pWeapon);
+	int CalcInvul(int damage, CGEPlayer *pAttacker, int weapid);
 
 	void SetCharIndex(int index){m_iCharIndex = index;}
 
@@ -192,6 +192,7 @@ protected:
 	int			m_iAttackList [16];
 	float		m_iAttackListTimes [16];
 
+	// Explosion invulnerability variables
 	float		m_flEndExpDmgTime;
 	int			m_iExpDmgTakenThisInterval;
 	Vector		m_vExpDmgForceThisFrame;

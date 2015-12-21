@@ -132,15 +132,7 @@ int CGEGrenade::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	VPhysicsTakeDamage( inputInfo );
 
 	// Grenades take Blast AND Bullet damage
-	if( inputInfo.GetDamageType() & DMG_BLAST )
-	{
-		m_iHealth -= inputInfo.GetDamage();
-		if ( m_iHealth <= 0 )
-			Explode();
-
-		return inputInfo.GetDamage();
-	}
-	else if ( inputInfo.GetDamageType() & DMG_BULLET )
+	if ((inputInfo.GetDamage() > 160 && inputInfo.GetDamageType() & DMG_BLAST) || inputInfo.GetDamageType() & DMG_BULLET)
 	{
 		// Bullet damage transfers ownership to the attacker instead of the thrower
 		m_iHealth -= inputInfo.GetDamage();

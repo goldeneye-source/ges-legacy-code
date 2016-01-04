@@ -1501,6 +1501,8 @@ void CGEMPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info 
 	int weaponid = WEAPON_NONE;
 	int killer_ID = 0;
 	int custom = 0;
+	bool VictimInPVS = true;
+	int dist = 0;
 
 	// Find the killer & the scorer
 	CBaseEntity *pInflictor = info.GetInflictor();
@@ -1522,6 +1524,13 @@ void CGEMPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info 
 		{
 			killer_weapon_name = pInflictor->GetClassname();  // it's just that easy
 		}
+
+		dist = floor((pKiller->GetAbsOrigin() - pVictim->GetAbsOrigin()).Length());
+
+		CGEPlayer *pGEKiller = ToGEPlayer(pKiller);
+
+		if (pGEKiller)
+			VictimInPVS = pGEKiller->CheckInPVS(pVictim);
 	}
 	else
 	{
@@ -1563,6 +1572,8 @@ void CGEMPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info 
 		event->SetInt( "weaponid", weaponid );
 		event->SetBool( "headshot", pVictim->LastHitGroup() == HITGROUP_HEAD );
 		event->SetBool( "penetrated", FBitSet(info.GetDamageStats(), FIRE_BULLETS_PENETRATED_SHOT)?true:false );
+		event->SetInt( "dist", dist);
+		event->SetBool( "InPVS", VictimInPVS);
 		event->SetInt( "custom", custom );
 		gameeventmanager->FireEvent( event );
 	}

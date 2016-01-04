@@ -317,7 +317,15 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	//-----------------------------------------------------
 	CShotManipulator Manipulator( modinfo.m_vecDirShooting );
 	float flCumulativeDamage = 0.0f;
-	Vector shotoffsets[5] = { Vector(0, 0, 0), Vector(0.38, 0.92, 0), Vector(-0.92, 0.38, 0), Vector(-0.38, -0.92, 0), Vector(0.92, -0.38, 0) }; //4 quadrantal points rotated 67.5 degrees.
+	Vector shotoffsetarray[4][5] = {
+		{ Vector(0, 0, 0), Vector(1, 0, 0), Vector(0, 1, 0), Vector(-1, 0, 0), Vector(0, -1, 0) },//0 degrees
+		{ Vector(0, 0, 0), Vector(0.92, 0.38, 0), Vector(-0.38, 0.92, 0), Vector(-0.92, -0.38, 0), Vector(0.38, -0.92, 0) }, //67.5 degrees
+		{ Vector(0, 0, 0), Vector(0.7, 0.7, 0), Vector(-0.7, 0.7, 0), Vector(-0.7, -0.7, 0), Vector(0.7, -0.7, 0) }, //45 degrees
+		{ Vector(0, 0, 0), Vector(0.38, 0.92, 0), Vector(-0.92, 0.38, 0), Vector(-0.38, -0.92, 0), Vector(0.92, -0.38, 0) }, //22.5 degrees
+	}; //4 quadrantal points rotated 67.5 degrees.
+
+	RandomSeed(iSeed);
+	int ishotmatrixID = rand() % 4;
 
 	// Now we actually fire the shot(s)
 	for (int iShot = 0; iShot < modinfo.m_iShots; iShot++)
@@ -345,15 +353,15 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 			{
 				Vector vecRight, vecUp;
 
-				adjSpread *= 0.6; //Cut radius of spread in half to compensate for offsets.
+				adjSpread *= 0.64; //Reduce radius to compensate for offsets.
 				VectorVectors(adjShotDir, vecRight, vecUp);
 
-				adjShotDir += shotoffsets[iShot].x * vecRight * adjSpread.x + shotoffsets[iShot].y * vecUp * adjSpread.y;
+				adjShotDir += shotoffsetarray[ishotmatrixID][iShot].x * vecRight * adjSpread.x + shotoffsetarray[ishotmatrixID][iShot].y * vecUp * adjSpread.y;
 
 				if (iShot > 0)
-					adjSpread *= 0.75;
-				else // Center shot is more accurate
 					adjSpread *= 0.5;
+				else // Center shot is more accurate
+					adjSpread *= 0.35;
 			}
 			vecDir = ApplySpreadGauss(adjSpread, adjShotDir, modinfo.m_iGaussFactor, CBaseEntity::GetPredictionRandomSeed() + iShot);
 		}

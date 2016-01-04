@@ -62,6 +62,7 @@ END_DATADESC()
 #endif
 
 ConVar ge_weapondroplimit("ge_weapondroplimit", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Cap on the number of weapons a player can drop on death in addition to their active one.");
+ConVar ge_limithalfarmorpickup("ge_limithalfarmorpickup", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Prevent players from getting more than half armor from a half armor pickup."); //--TAKE OUT LATER--
 
 CGEPlayer::CGEPlayer()
 {
@@ -110,12 +111,12 @@ void CGEPlayer::Precache( void )
 bool CGEPlayer::AddArmor( int amount )
 {
 	// If player can't carry any more armor or the vest is a half vest and the player has more than half armor, return false.
-	if (ArmorValue() < GetMaxArmor() && !(amount < MAX_ARMOR && ArmorValue() >= MAX_ARMOR / 2))
+	if (ArmorValue() < GetMaxArmor() && ( !ge_limithalfarmorpickup.GetBool() || !(amount < MAX_ARMOR && ArmorValue() >= MAX_ARMOR * 0.5)))
 	{
 		GEStats()->Event_PickedArmor(this, min(GetMaxArmor() - ArmorValue(), amount));
 
 		// Use a different cap depending on which armor it is.
-		if (amount < MAX_ARMOR)
+		if (ge_limithalfarmorpickup.GetBool() && amount < MAX_ARMOR)
 			IncrementArmorValue(amount, GetMaxArmor()/2);
 		else
 			IncrementArmorValue( amount, GetMaxArmor() );
@@ -403,6 +404,11 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 		{
 			info.SetDamage(info.GetDamage() - m_iExpDmgTakenThisInterval); // Adjust it so that they are only hit for the difference.
 			m_iExpDmgTakenThisInterval = info.GetDamage();
+
+			if (info.GetDamage() == 398)
+				SetLastHitGroup(HITGROUP_HEAD); // Used to mark direct hits
+			else
+				SetLastHitGroup(HITGROUP_GENERIC); // Set this here to avoid explosive headshot kills
 		}
 		else // If not don't even go any further.
 		{

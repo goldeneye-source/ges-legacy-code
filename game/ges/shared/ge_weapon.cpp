@@ -636,10 +636,10 @@ const Vector& CGEWeapon::GetBulletSpread( void )
 
 void CGEWeapon::UpdateAccPenalty()
 {
-	// Reduce accuracy penalty based on time of last attack
-	float timeratio = (gpGlobals->curtime - m_flCoolDownTime) / GetAccFireRate();
-
-	m_flAccuracyPenalty -= timeratio*timeratio*timeratio; //Time cubed so waiting longer yeilds much greater benefits.
+	// Reduce accuracy penalty based on time of last attack and minimum attack delay
+	float timeratio = (gpGlobals->curtime - m_flCoolDownTime - GetClickFireRate()) / (GetAccFireRate() - GetClickFireRate());
+	
+	m_flAccuracyPenalty -= timeratio*timeratio; //Time squared so waiting longer yeilds much greater benefits.
 	m_flAccuracyPenalty = max(m_flAccuracyPenalty, 0.0f);
 	m_flAccuracyPenalty = min(m_flAccuracyPenalty, (float)GetAccShots());
 }

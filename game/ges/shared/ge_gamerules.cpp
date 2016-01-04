@@ -560,7 +560,7 @@ void CGERules::RadiusDamage(const CTakeDamageInfo &info, const Vector &vecSrcIn,
 		// of flAdjustedDamage = 943 / (1.0 + 0.5*exp(.04*dist)) * smallExpScale;
 		// flDamagePercent = 100 - 20 * sqrt(distpercent) + distpercent; //x intercept is exactly 100, but curve was very sharp, 50% of the damage gone at 10% radius.
 
-		flDamagePercent = 500 - 80 * sqrt((distpercent * 0.75 + 25)) + 3 * distpercent; //x intercept is again 100, but curve is shifted and stretched to be less brutal at the start.  50% of damage gone within 25% of radius.  80% at 50% of radius.  and 96% at 75% of radius.
+		flDamagePercent = 500 - 80 * sqrt(distpercent * 0.75 + 25) + 3 * distpercent; //x intercept is again 100, but curve is shifted and stretched to be less brutal at the start.  50% of damage gone within 25% of radius.  80% at 50% of radius.  and 96% at 75% of radius.
 
 		flAdjustedDamage = info.GetDamage() * flDamagePercent * 0.01 + 20;
 

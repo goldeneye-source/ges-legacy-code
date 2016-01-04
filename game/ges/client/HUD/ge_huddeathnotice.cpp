@@ -233,8 +233,16 @@ void CGEHudDeathNotice::FireGameEvent( IGameEvent * event )
 
 		if ( headshot )
 		{
-			Q_snprintf( szConMsg, sizeof(szConMsg), "%s killed %s with %s%s Headshot.", m_DeathMsgInfo.Killer.szName, m_DeathMsgInfo.Victim.szName, m_DeathMsgInfo.article, m_DeathMsgInfo.killedWith );
-			m_DeathMsgInfo.wszFormat = g_pVGuiLocalize->Find( "#GES_Death_Headshot" );
+			if (!Q_stricmp(m_DeathMsgInfo.killedWith, "rocket launcher") || !Q_stricmp(m_DeathMsgInfo.killedWith, "grenade launcher"))
+			{
+				Q_snprintf(szConMsg, sizeof(szConMsg), "%s killed %s with %s%s Direct Hit.", m_DeathMsgInfo.Killer.szName, m_DeathMsgInfo.Victim.szName, m_DeathMsgInfo.article, m_DeathMsgInfo.killedWith);
+				m_DeathMsgInfo.wszFormat = g_pVGuiLocalize->Find("#GES_Death_Direct");
+			}
+			else
+			{
+				Q_snprintf(szConMsg, sizeof(szConMsg), "%s killed %s with %s%s Headshot.", m_DeathMsgInfo.Killer.szName, m_DeathMsgInfo.Victim.szName, m_DeathMsgInfo.article, m_DeathMsgInfo.killedWith);
+				m_DeathMsgInfo.wszFormat = g_pVGuiLocalize->Find("#GES_Death_Headshot");
+			}
 		}
 		else if ( strcmp(m_DeathMsgInfo.killedWith, "world") == 0)
 		{

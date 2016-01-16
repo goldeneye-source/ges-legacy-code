@@ -184,14 +184,13 @@ void CGEWeaponMine::ThrowMine( void )
 	//Create a mine
 	Vector	vecSrc = pOwner->Weapon_ShootPosition();
 
-	Vector	vForward, vRight;
-	AngleVectors( pOwner->EyeAngles(), &vForward, &vRight, NULL );
-	vForward[2] += 0.1f;
+	Vector	vForward, vRight, vUp;
+	AngleVectors( pOwner->EyeAngles(), &vForward, &vRight, &vUp );
 	
 	Vector vecThrow;
 	pOwner->GetVelocity( &vecThrow, NULL );
-	vecThrow += vForward * 462;
-
+	vecThrow += vForward * 600 + vUp * 80; //Pretty close to original throwing behavior.
+	
 	QAngle angAiming;
 	VectorAngles( vecThrow, angAiming );
 
@@ -203,13 +202,29 @@ void CGEWeaponMine::ThrowMine( void )
 			pOwner = pNPC->GetBotPlayer();
 	}
 
+	int iSeed = CBaseEntity::GetPredictionRandomSeed();
+	int randarray[3];
+	int rot1, rot2;
+
+	for (int i = 0; i < 3; i++)
+	{
+		RandomSeed(iSeed + i * 7);
+		randarray[i] = rand() % 4 + 4;
+	}
+
+	// clip and square randarray values to give more diversity to rotations.
+	// Possible values are 16, 25, 36, 49.
+	// randarray[2] is used to flip signs as just subtracting off the average value to make it the x intercept will not work in this case.
+	rot1 = randarray[0] * randarray[0] * 10 * (randarray[2] > 3 ? 1 : -1);
+	rot2 = randarray[1] * randarray[1] * 10 * (randarray[2] % 2 == 0 ? 1 : -1);
+
 	CGEMine *pMine = (CGEMine *)CBaseEntity::Create( "npc_mine", vecSrc, angAiming, NULL );
 
 	pMine->SetThrower( pOwner );
 	pMine->SetOwnerEntity( pOwner );
 	pMine->SetSourceWeapon(this);
 	pMine->ApplyAbsVelocityImpulse( vecThrow );
-	pMine->SetLocalAngularVelocity( QAngle(450,0,0) );
+	pMine->SetLocalAngularVelocity(QAngle(rot1, rot2, 0));
 	pMine->SetMineType( GetWeaponID() );
 	pMine->SetDamage( GetGEWpnData().m_iDamage );
 	pMine->SetDamageRadius( GetGEWpnData().m_flDamageRadius );

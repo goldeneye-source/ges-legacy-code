@@ -1737,6 +1737,9 @@
     <ClCompile Include="ges\shared\ge_game_timer.cpp">
       <Filter>GES\Entities</Filter>
     </ClCompile>
+    <ClCompile Include="v5_achievements.cpp">
+      <Filter>GES\Achievements</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ges\client\clientmode_ge.h">

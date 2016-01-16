@@ -266,7 +266,7 @@ void CGE_Explosion::Think()
 
 		if ( gpGlobals->curtime > m_flShakeTime && gpGlobals->curtime < m_flDieTime + 1.0f )
 		{
-			float radius = (m_flDamageRadius > 0) ? ( min(m_flDamageRadius, 300) * (IsSmallExp() ? 0.75f : 2.0f)) : 45.0f;
+			float radius = (m_flDamageRadius > 0) ? ( min(m_flDamageRadius, 300) * (IsSmallExp() ? 0.75f : 1.0f)) : 45.0f;
 			float freq = IsSmallExp() ? 50.0f : 100.0f;
 			float amp = IsSmallExp() ? 3.0 : 7.0;
 			

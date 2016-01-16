@@ -27,6 +27,7 @@ public:
 	virtual CBaseEntity *Respawn( void );
 	virtual void Materialize( void );
 
+	virtual void AliveThink();
 	virtual void ItemTouch( CBaseEntity *pEntity );
 	virtual bool MyTouch( CBasePlayer *pPlayer );
 	int CalcSpawnProgress();

@@ -88,8 +88,6 @@ void CGEMine::Spawn( void )
 	m_bExploded  = false;
 	m_bPreExplode = false;
 
-	SetGravity( UTIL_ScaleForGravity( 560 ) );	// slightly lower gravity
-
 	m_bInAir = true;
 
 	m_flSpawnTime = gpGlobals->curtime;
@@ -262,21 +260,20 @@ endOfThink:
 
 void CGEMine::MineTouch( CBaseEntity *pOther )
 {
-
-	if ( !pOther->IsSolid() )
+	if (!m_bInAir)
 		return;
-	
+
+	if (!pOther->IsSolid())
+		return;
+
 	if ( !PassServerEntityFilter( this, pOther) )
 		return;
 
-	if ( !g_pGameRules->ShouldCollide( GetCollisionGroup(), pOther->GetCollisionGroup() ) )
+	if (!g_pGameRules->ShouldCollide(GetCollisionGroup(), pOther->GetCollisionGroup()))
 		return;
 
-	if( !m_bInAir )
-		return;
-	
 	//If we can't align it properly, must have barely touched it, let it continue.
-	if( !AlignToSurf( pOther ) )
+	if (!AlignToSurf(pOther))
 		return;
 
 	m_bInAir = false;
@@ -284,7 +281,8 @@ void CGEMine::MineTouch( CBaseEntity *pOther )
 
 	EmitSound("weapon_mines.Attach");
 
-	SetTouch( NULL );
+	RemoveFlag(FL_DONTTOUCH);
+	//SetTouch( NULL );
 }
 
 int CGEMine::OnTakeDamage( const CTakeDamageInfo &inputInfo )
@@ -319,12 +317,15 @@ const char* CGEMine::GetPrintName( void )
 
 bool CGEMine::AlignToSurf( CBaseEntity *pSurface )
 {
-	Vector vecAiming;
+	Vector vecVelocity, vecAiming;
+	float speed;
 	trace_t tr;
 
-	vecAiming = GetAbsVelocity() / GetAbsVelocity().Length();
+	speed = GetAbsVelocity().Length();
+	vecVelocity = GetAbsVelocity();
+	vecAiming = vecVelocity / speed;
 
-	UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + (vecAiming * 64), MASK_SOLID, this, GetCollisionGroup(), &tr );
+	UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + (vecAiming * 24), MASK_SOLID, this, GetCollisionGroup(), &tr );
 
 	if( tr.surface.flags & SURF_SKY )
 	{
@@ -332,11 +333,11 @@ bool CGEMine::AlignToSurf( CBaseEntity *pSurface )
 		UTIL_Remove(this);
 		return false;
 	}
-	
+
 	if (tr.fraction < 1.0)
 	{
 		CBaseEntity *pEntity = tr.m_pEnt;
-		if ( pEntity && !(pEntity->GetFlags() & FL_CONVEYOR) )
+		if ( pEntity )
 		{
 			QAngle angles;
 			VectorAngles(tr.plane.normal, angles);
@@ -349,7 +350,7 @@ bool CGEMine::AlignToSurf( CBaseEntity *pSurface )
 			// If this is true we must have hit a prop so make sure we follow it if it moves!
 			if ( pSurface->GetMoveType() != MOVETYPE_NONE )
 			{
-				VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, false );
+				//VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, false );
 				SetMoveType( MOVETYPE_VPHYSICS );
 				FollowEntity( pEntity, false );
 				SetAbsVelocity(Vector(0, 0, 0));
@@ -357,10 +358,9 @@ bool CGEMine::AlignToSurf( CBaseEntity *pSurface )
 			else
 			{
 				SetMoveType( MOVETYPE_NONE );
-				IPhysicsObject *pObject = VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, false );
-				pObject->EnableMotion( false );
+				//IPhysicsObject *pObject = VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, false );
+				//pObject->EnableMotion( false );
 				SetAbsVelocity( Vector(0, 0, 0) );
-				AddSolidFlags( FSOLID_NOT_SOLID );
 			}
 
 			return true;

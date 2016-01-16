@@ -15,6 +15,11 @@
 
 #ifdef CLIENT_DLL
 #define CWeaponKF7 C_WeaponKF7
+#include "c_ge_playerresource.h"
+#include "c_gemp_player.h"
+#else
+#include "gemp_player.h"
+
 #endif
 
 //-----------------------------------------------------------------------------

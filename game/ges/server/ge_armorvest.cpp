@@ -33,6 +33,8 @@ BEGIN_DATADESC( CGEArmorVest )
 	DEFINE_INPUTFUNC(FIELD_VOID, "Toggle", InputToggle),
 END_DATADESC();
 
+#define AliveThinkInterval		1.0f
+
 CGEArmorVest::CGEArmorVest( void )
 {
 	m_bEnabled = true;
@@ -50,7 +52,9 @@ void CGEArmorVest::Spawn( void )
 
 	SetOriginalSpawnOrigin( GetAbsOrigin() );
 	SetOriginalSpawnAngles( GetAbsAngles() );
-	
+
+	SetCollisionGroup( COLLISION_GROUP_WEAPON ); // Might as well treat this the same way we do weapons.
+
 	BaseClass::Spawn();
 
 	// So NPC's can "see" us
@@ -58,6 +62,10 @@ void CGEArmorVest::Spawn( void )
 
 	// Override base's ItemTouch for NPC's
 	SetTouch( &CGEArmorVest::ItemTouch );
+
+	// Start thinking like a healthy, alive armorvest.
+	SetThink(&CGEArmorVest::AliveThink);
+	SetNextThink(gpGlobals->curtime + AliveThinkInterval);
 }
 
 void CGEArmorVest::Precache( void )
@@ -77,13 +85,31 @@ CBaseEntity *CGEArmorVest::Respawn(void)
 	return this;
 }
 
+void CGEArmorVest::AliveThink(void)
+{
+	float distfromspawnersqr = (GetOriginalSpawnOrigin() - GetAbsOrigin()).LengthSqr();
+
+	// If we're too far from our spawn location, instantly respawn.
+	if (distfromspawnersqr > 65536)
+	{
+		// Destroy and remake the vphysics object to prevent oddities.
+		VPhysicsDestroyObject();
+
+		UTIL_SetOrigin( this, GetOriginalSpawnOrigin() );
+		SetAbsAngles( GetOriginalSpawnAngles() );
+
+		CreateItemVPhysicsObject();
+	}
+
+	SetNextThink(gpGlobals->curtime + AliveThinkInterval);
+}
+
 void CGEArmorVest::Materialize(void)
 {
 	// I repurposed the respawn -> materalize loop to demo the dynamic respawn concept.
 	// May cause issues, create seperate loop if so.
 
 	m_iSpawnpoints += CalcSpawnProgress();
-
 	if (m_iSpawnpointsgoal < m_iSpawnpoints)
 	{
 		// Only materialize if we are enabled and allowed
@@ -92,6 +118,9 @@ void CGEArmorVest::Materialize(void)
 			BaseClass::Materialize();
 			// Override base's ItemTouch for NPC's
 			SetTouch(&CGEArmorVest::ItemTouch);
+
+			SetThink(&CGEArmorVest::AliveThink);
+			SetNextThink(gpGlobals->curtime + AliveThinkInterval);
 		}
 	}
 	else

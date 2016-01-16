@@ -14,7 +14,7 @@
 #include "cbase.h"
 #include "ge_gamerules.h"
 #include "ge_gameinterface.h"
-#include "GameStats.h"
+#include "gamestats.h"
 #include "mapentities.h"
 #include "ge_utils.h"
 

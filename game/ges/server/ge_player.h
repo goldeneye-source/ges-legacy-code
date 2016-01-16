@@ -149,6 +149,9 @@ public:
 	virtual void GiveNamedWeapon(const char* ident, int ammoCount, bool stripAmmo = false );
 	virtual void StripAllWeapons();
 
+	virtual CBaseEntity* GetLastAttacker(bool onlyrecent = true);
+	virtual void SetLastAttacker(CBaseEntity* lastAttacker) { m_pLastAttacker = lastAttacker; }
+
 protected:
 	// Purely GE Functions & Variables
 	void CheckAimMode( void );
@@ -187,8 +190,6 @@ protected:
 	int			m_iViewPunchScale;
 	int			m_iDmgTakenThisFrame;
 	Vector		m_vDmgForceThisFrame;
-	CBaseEntity *m_pLastAttacker;
-	CBaseEntity *m_pCurrAttacker;
 	int			m_iAttackList [16];
 	float		m_iAttackListTimes [16];
 
@@ -196,6 +197,11 @@ protected:
 	float		m_flEndExpDmgTime;
 	int			m_iExpDmgTakenThisInterval;
 	Vector		m_vExpDmgForceThisFrame;
+
+	// Kill credit variables, these are important for tracking who gets credit for suicides and other things.
+	CBaseEntity *m_pLastAttacker;
+	float		m_flLastAttackedTime;
+	int			m_iLastAttackedDamage;
 
 	// This lets us rate limit the commands the players can execute so they don't overflow things like reliable buffers.
 	CUtlDict<float,int>	m_RateLimitLastCommandTimes;

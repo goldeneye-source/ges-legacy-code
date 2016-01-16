@@ -21,9 +21,11 @@
 	#include "c_te_legacytempents.h"
 
 	#include "c_ge_player.h"
+	#include "c_gemp_player.h"
 	#include "ge_screeneffects.h"
 #else
 	#include "ge_player.h"
+	#include "gemp_player.h"
 	#include "npc_gebase.h"
 	#include "particle_parse.h"
 	#include "ge_tokenmanager.h"
@@ -83,6 +85,7 @@ BEGIN_DATADESC( CGEWeapon )
 	DEFINE_FIELD( m_flAccuracyPenalty,	FIELD_TIME ),
 	DEFINE_FIELD( m_flCoolDownTime,		FIELD_TIME ),
 
+	DEFINE_THINKFUNC( OnReloadOffscreen ),
 END_DATADESC()
 #endif
 
@@ -137,6 +140,8 @@ void CGEWeapon::Spawn()
 
 	BaseClass::Spawn();
 
+	RegisterThinkContext("HalfReload");
+
 	m_vOriginalSpawnOrigin = GetAbsOrigin();
 	m_vOriginalSpawnAngles = GetAbsAngles();
 
@@ -178,6 +183,12 @@ void CGEWeapon::Equip( CBaseCombatCharacter *pOwner )
 
 	// Fill this bad boy up with ammo if we have any for it to use!
 	FinishReload();
+
+	CGEMPPlayer *pGEPlayer = ToGEMPPlayer(pOwner);
+	if (!pGEPlayer)
+		SetSkin(0);
+	else
+		SetSkin(pGEPlayer->GetUsedWeaponSkin(GetWeaponID()));
 }
 
 void CGEWeapon::Drop( const Vector &vecVelocity )
@@ -244,7 +255,7 @@ void CGEWeapon::PrimaryAttack(void)
 
 	pPlayer->DoMuzzleFlash();
 
-	if (m_bSilenced)
+	if (IsSilenced())
 		SendWeaponAnim(ACT_VM_PRIMARYATTACK_SILENCED);
 	else
 		SendWeaponAnim(ACT_VM_PRIMARYATTACK);
@@ -283,6 +294,17 @@ void CGEWeapon::PrimaryAttack(void)
 	}
 }
 
+void CGEWeapon::OnReloadOffscreen(void)
+{
+	CBaseCombatCharacter *pOwner = GetOwner();
+	if (!pOwner)
+		return;
+
+	SetSkin(ToGEMPPlayer(pOwner)->GetUsedWeaponSkin(GetWeaponID()));
+}
+
+
+
 bool CGEWeapon::Reload( void )
 {
 	if ( m_flNextPrimaryAttack > gpGlobals->curtime || m_flNextSecondaryAttack > gpGlobals->curtime )
@@ -313,6 +335,7 @@ bool CGEWeapon::Reload( void )
 		pPlayer->ResetAimMode( true );
 
 		m_iShotsFired = 0;
+		SetContextThink(&CGEWeapon::OnReloadOffscreen, gpGlobals->curtime + 0.5f, "HalfReload");
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_RELOAD );
 	}
 
@@ -711,12 +734,6 @@ bool CGEWeapon::IsWeaponVisible( void )
 		return BaseClass::IsWeaponVisible();
 }
 
-// Have to leave this in for now because all the other weapon class files love it.
-void CGEWeapon::ItemPreFrame( void )
-{
-	BaseClass::ItemPreFrame();
-}
-
 void CGEWeapon::ItemPostFrame( void )
 {
 	// Reset shots fired if we go past our reset time (do this before any possible call to Primary Attack)
@@ -789,8 +806,11 @@ bool CGEWeapon::Deploy( void )
 		}
 #endif
 		if ( pOwner && pOwner->IsPlayer() )
-			ToGEPlayer( pOwner )->DoAnimationEvent( PLAYERANIMEVENT_GES_DRAW );
-		
+		{
+			SetSkin(ToGEMPPlayer(pOwner)->GetUsedWeaponSkin(GetWeaponID()));
+			ToGEPlayer(pOwner)->DoAnimationEvent(PLAYERANIMEVENT_GES_DRAW);
+		}
+
 		return true;
 	}
 
@@ -840,6 +860,20 @@ bool CGEWeapon::Holster( CBaseCombatWeapon *pSwitchingTo )
 	return false;
 }
 
+void CGEWeapon::SetViewModel()
+{
+	BaseClass::SetViewModel();
+
+	CGEPlayer *pGEPlayer = ToGEPlayer(GetOwner());
+	if (!pGEPlayer)
+		return;
+	CBaseViewModel *vm = pGEPlayer->GetViewModel(m_nViewModelIndex);
+	if (vm == NULL)
+		return;
+
+	vm->m_nSkin = m_nSkin;
+}
+
 void CGEWeapon::SetSkin( int skin )
 {
 #ifdef GAME_DLL
@@ -855,6 +889,20 @@ void CGEWeapon::SetSkin( int skin )
 		return;
 
 	vm->m_nSkin = m_nSkin;
+}
+
+void CGEWeapon::SwitchBodygroup(int bodygroup, int value)
+{
+	CGEPlayer *pGEPlayer = ToGEPlayer(GetOwner());
+	if (!pGEPlayer)
+		return;
+
+	CBaseViewModel *vm = pGEPlayer->GetViewModel(m_nViewModelIndex);
+	if (vm == NULL)
+		return;
+
+
+	vm->SetBodygroup(bodygroup, value);
 }
 
 void CGEWeapon::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType )

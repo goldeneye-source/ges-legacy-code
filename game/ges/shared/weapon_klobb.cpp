@@ -37,9 +37,6 @@ public:
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 
-	virtual void Equip( CBaseCombatCharacter *pOwner );
-	virtual void SetViewModel();
-
 	virtual GEWeaponID GetWeaponID( void ) const { return WEAPON_KLOBB; }
 	
 	DECLARE_ACTTABLE();
@@ -86,44 +83,4 @@ CWeaponKlobb::CWeaponKlobb()
 {
 	// NPC Ranging
 	m_fMaxRange1 = 1024;
-}
-
-void CWeaponKlobb::Equip( CBaseCombatCharacter *pOwner )
-{
-	BaseClass::Equip( pOwner );
-
-	CGEMPPlayer *pGEPlayer = ToGEMPPlayer( pOwner );
-	if ( !pGEPlayer )
-	{
-		m_nSkin = 0;
-		return;
-	}
-
-#ifdef CLIENT_DLL
-	if ( GEPlayerRes()->GetDevStatus( pGEPlayer->entindex() ) == GE_DEVELOPER )
-		m_nSkin = 2;
-	else if ( GEPlayerRes()->GetDevStatus( pGEPlayer->entindex() ) == GE_BETATESTER )
-		m_nSkin = 1;
-#else
-	if ( pGEPlayer->GetDevStatus() == GE_DEVELOPER )
-		m_nSkin = 2;
-	else if ( pGEPlayer->GetDevStatus() == GE_BETATESTER )
-		m_nSkin = 1;
-#endif
-	else
-		m_nSkin = 0;
-}
-
-void CWeaponKlobb::SetViewModel()
-{
-	BaseClass::SetViewModel();
-
-	CGEPlayer *pGEPlayer = ToGEPlayer( GetOwner() );
-	if ( !pGEPlayer )
-		return;
-	CBaseViewModel *vm = pGEPlayer->GetViewModel( m_nViewModelIndex );
-	if ( vm == NULL )
-		return;
-
-	vm->m_nSkin = m_nSkin;
 }

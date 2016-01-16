@@ -114,7 +114,7 @@ void CGEPlayer::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float
 void CGEPlayer::DoMuzzleFlash( void )
 {
 	CGEWeapon *pWeapon = ToGEWeapon( GetActiveWeapon() );
-	if ( pWeapon && (pWeapon->IsSilenced() || pWeapon->IsAlwaysSilenced()) )
+	if (pWeapon && (pWeapon->IsSilenced() || pWeapon->IsAlwaysSilenced() || pWeapon->GetWeaponID() == WEAPON_D5K_SILENCED)) //TODO:: Take out D5K exception when we finish redoing silenced weapons
 		return;
 	else
 		BaseClass::DoMuzzleFlash();

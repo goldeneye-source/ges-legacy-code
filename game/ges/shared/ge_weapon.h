@@ -66,6 +66,7 @@ public:
 
 	virtual void	PrimaryAttack();
 	virtual bool	Reload();
+	virtual void	OnReloadOffscreen();
 	virtual void	DryFire();
 	virtual void	PrepareFireBullets(int number, CBaseCombatCharacter *pOperator, Vector vecShootOrigin, Vector vecShootDir, bool haveplayer);
 	virtual void	PreOwnerDeath(); //Fired when owner dies but before anything else.
@@ -111,7 +112,6 @@ public:
 	virtual bool	HasShotsLeft( void );
 	virtual bool	IsWeaponVisible( void );
 
-	virtual void	ItemPreFrame( void );
 	virtual void	ItemPostFrame( void );
 
 	virtual void	Equip( CBaseCombatCharacter *pOwner );
@@ -119,8 +119,14 @@ public:
 	virtual	bool	Deploy( void );
 	virtual bool	Holster( CBaseCombatWeapon *pSwitchingTo );
 
-	virtual void	SetSkin( int skin );
 
+
+	virtual void	SetViewModel();
+	virtual void	SetSkin( int skin );
+	virtual int		GetSkin()						{ return (int)m_nSkin; }
+
+	virtual void	SwitchBodygroup( int group, int value );
+	
 	virtual void	SetPickupTouch( void );
 	virtual void	MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType );
 

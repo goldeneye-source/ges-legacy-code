@@ -103,6 +103,9 @@ public:
 	virtual void		 SetPlayerName( const char *name );
 	virtual const char  *GetCleanPlayerName()	{ return m_szCleanName; }
 
+	virtual int		GetUsedWeaponSkin(int weapid)				{ return m_iWeaponSkinInUse.Get(weapid); }
+	virtual void	SetUsedWeaponSkin(int weapid, int value)	{ m_iWeaponSkinInUse.Set(weapid, value); }
+
 	virtual void  ShowScenarioHelp();
 
 	// Gameplay Events
@@ -180,6 +183,8 @@ protected:
 
 	CNetworkVar( float, m_flRunTime );
 	CNetworkVar( int, m_flRunCode );
+	CNetworkArray( int, m_iWeaponSkinInUse, WEAPON_MAX );
+
 
 	char m_szCleanName[32];
 
@@ -188,6 +193,7 @@ protected:
 
 	int m_iSteamIDHash;
 	int m_iDevStatus;
+
 	// This vector keeps track of all the objects thrown by the player
 	// so they don't overpopulate the world
 	CUtlVector<CBaseHandle> m_hThrownObjects;

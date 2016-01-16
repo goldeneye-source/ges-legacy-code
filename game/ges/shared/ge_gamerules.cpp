@@ -1023,6 +1023,15 @@ bool CGERules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		}
 	}
 
+	// Mappers should be able to contain weapons how they need to.  This group only collides with weapons.
+	if (collisionGroup1 == COLLISION_GROUP_BLOCKWEAPONS)
+	{
+		if (collisionGroup0 == COLLISION_GROUP_DROPPEDWEAPON || collisionGroup0 == COLLISION_GROUP_WEAPON)
+			return true;
+		else
+			return false;
+	}
+
 	// Mines shouldn't collide with weapons, debris, players, NPCs, or projectiles
 	if ( collisionGroup1 == COLLISION_GROUP_MINE )
 	{

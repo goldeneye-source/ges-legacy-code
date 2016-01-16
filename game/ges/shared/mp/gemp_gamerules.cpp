@@ -43,6 +43,9 @@
 	#include "ge_stats_recorder.h"
 	#include "ge_bot.h"
 
+	#include "ge_triggers.h"
+	#include "ge_door.h"
+
 	extern void respawn(CBaseEntity *pEdict, bool fCopyCorpse);
 	extern void ClientActive( edict_t *pEdict, bool bLoadGame );
 
@@ -270,12 +273,14 @@ IMPLEMENT_NETWORKCLASS_ALIASED( GEMPGameRulesProxy, DT_GEMPGameRulesProxy )
 
 BEGIN_NETWORK_TABLE_NOBASE( CGEMPRules, DT_GEMPRules )
 #ifdef CLIENT_DLL
+	RecvPropInt( RECVINFO( m_iRandomSeedOffset ) ),
 	RecvPropBool( RECVINFO( m_bTeamPlayDesired ) ),
 	RecvPropInt( RECVINFO( m_iTeamplayMode ) ),
-	RecvPropFloat(RECVINFO(m_flMapFloorHeight)),
+	RecvPropFloat(RECVINFO( m_flMapFloorHeight )),
 	RecvPropEHandle( RECVINFO( m_hMatchTimer ) ),
 	RecvPropEHandle( RECVINFO( m_hRoundTimer ) ),
 #else
+	SendPropInt( SENDINFO( m_iRandomSeedOffset )),
 	SendPropBool( SENDINFO( m_bTeamPlayDesired ) ),
 	SendPropInt( SENDINFO( m_iTeamplayMode ) ),
 	SendPropFloat( SENDINFO( m_flMapFloorHeight )),
@@ -378,6 +383,7 @@ CGEMPRules::CGEMPRules()
 	m_bSpawnInvulnCanBreak = true;
 
 	m_flMapFloorHeight = 125.0;
+	m_iRandomSeedOffset = 0;
 
 	m_szNextLevel[0] = '\0';
 	m_szGameDesc[0] = '\0';
@@ -402,6 +408,10 @@ CGEMPRules::CGEMPRules()
 	// Create the weapon loadout manager
 	m_pLoadoutManager = new CGELoadoutManager;
 	m_pLoadoutManager->ParseLoadouts();
+
+	// Figure out what day it is
+	int day, month, year;
+	GetCurrentDate(&day, &month, &year);
 
 	// Load our bot names
 	g_vBotNames.RemoveAll();
@@ -590,6 +600,17 @@ void CGEMPRules::OnRoundEnd()
 // handles special particulars like swapping team spawns
 void CGEMPRules::SetupRound()
 {
+	// Purge the trap list so it can be reconstructed on world reload.
+	m_vTrapList.RemoveAll();
+
+	// Get the system time for the random seed selector.
+	tm sysTime;
+	VCRHook_LocalTime(&sysTime);
+
+	// Pick a new random seed offset so that any entities using it won't just get the same value over and over again.
+	// Pgameplay and date affect this.
+	m_iRandomSeedOffset = GetSpawnInvulnInterval() + sysTime.tm_sec + sysTime.tm_min * 60 + sysTime.tm_hour * 3600;
+
 	// Reload the world entities (unless protected)
 	WorldReload();
 
@@ -936,12 +957,56 @@ void CGEMPRules::Think()
 
 void CGEMPRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info )
 {
+	CTakeDamageInfo modinfo = info;
+
 	CBaseEntity *weap = info.GetWeapon();
 	if ( !weap )
 		weap = info.GetInflictor();
 
-	BaseClass::PlayerKilled( pVictim, info );
-	GetScenario()->OnPlayerKilled( ToGEPlayer(pVictim), ToGEPlayer(info.GetAttacker()), weap);
+	CBaseEntity *pKiller = info.GetAttacker();
+	CBaseEntity *pLastAttacker = ToGEPlayer(pVictim)->GetLastAttacker();
+	CBaseEntity *pInflictor = info.GetInflictor();
+	const char *inflictor_name = NULL;
+
+	if (pInflictor)
+		inflictor_name = pInflictor->GetClassname();
+
+	// First try to give credit to players who activated an entity system that killed this player.
+	if ( pKiller && !pKiller->IsPlayer() && (Q_strncmp(inflictor_name, "func_ge_door", 12) == 0 || Q_strncmp(inflictor_name, "trigger_trap", 12) == 0))
+	{
+		CBaseEntity *pTrapActivator = NULL;
+
+		if (Q_strncmp(inflictor_name, "trigger_trap", 12) == 0)
+		{
+			CTriggerTrap *traptrigger = static_cast<CTriggerTrap*>(pInflictor);
+
+			pTrapActivator = traptrigger->GetTrapOwner();
+		}
+		else
+		{
+			CGEDoor *trapdoor = static_cast<CGEDoor*>(pInflictor);
+
+			pTrapActivator = trapdoor->GetLastActivator();
+		}
+
+		// If we found an activator of the trap, give them credit for the kill.
+		if (pTrapActivator)
+		{
+			modinfo.SetAttacker(pTrapActivator);
+			pKiller = pTrapActivator; // Set this so the rest of the death code knows we have a new killer.
+		}
+	}
+
+
+	// Try to give credit for suicides to someone.
+	if ((!pKiller || !pKiller->IsPlayer() || pKiller == pVictim) && pLastAttacker)
+	{
+		modinfo.SetAttacker(pLastAttacker);
+		modinfo.SetDamageType(DMG_GENERIC); //If we replace the attacker, replace the damage type to prevent misidentification as an explosion kill.
+	}
+	
+	BaseClass::PlayerKilled( pVictim, modinfo );
+	GetScenario()->OnPlayerKilled( ToGEPlayer(pVictim), ToGEPlayer(modinfo.GetAttacker()), weap );
 }
 
 
@@ -966,6 +1031,34 @@ void CGEMPRules::ClientDisconnected( edict_t *pEntity )
 	CGEMPPlayer *player = (CGEMPPlayer*) CBaseEntity::Instance( pEntity );
 	if ( player )
 	{
+		// If a player has this player as their last attacker, nullify it to prevent invalid pointer.
+		FOR_EACH_PLAYER(pPlayer)
+			if (pPlayer->GetLastAttacker() == player)
+				pPlayer->SetLastAttacker(NULL);
+		END_OF_PLAYER_LOOP()
+
+		// Next wipe any traps this player may own.
+		for (int i = 0; i < m_vTrapList.Count(); i++)
+		{
+			const char *inflictor_name = m_vTrapList[i]->GetClassname();
+
+			if (Q_strncmp(inflictor_name, "trigger_trap", 12) == 0)
+			{
+				CTriggerTrap *traptrigger = static_cast<CTriggerTrap*>(m_vTrapList[i]);
+
+				if (traptrigger->GetTrapOwner() == player)
+					traptrigger->SetTrapOwner(NULL);
+			}
+
+			if (Q_strncmp(inflictor_name, "func_ge_door", 12) == 0)
+			{
+				CGEDoor *trapdoor = static_cast<CGEDoor*>(m_vTrapList[i]);
+
+				if (trapdoor->GetLastActivator() == player)
+					trapdoor->SetLastActivator(NULL);
+			}
+		}
+
 		player->RemoveLeftObjects();
 		GetScenario()->ClientDisconnect( player );
 
@@ -1503,11 +1596,16 @@ void CGEMPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info 
 	int custom = 0;
 	bool VictimInPVS = true;
 	int dist = 0;
+	int wepSkin = 0;
+	int dmgType = 0;
 
 	// Find the killer & the scorer
 	CBaseEntity *pInflictor = info.GetInflictor();
 	CBaseEntity *pKiller = info.GetAttacker();
 	CBaseEntity *pWeapon = info.GetWeapon();
+
+	if (info.GetDamageType())
+		dmgType = info.GetDamageType();
 
 	// Is the killer a player?
 	if ( pKiller->IsPlayer() )
@@ -1519,6 +1617,7 @@ void CGEMPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info 
 			CGEWeapon *pGEWeapon = ToGEWeapon( (CBaseCombatWeapon*)pWeapon );
 			killer_weapon_name = pGEWeapon->GetPrintName();
 			weaponid = pGEWeapon->GetWeaponID();
+			wepSkin = pGEWeapon->GetSkin();
 		}
 		else
 		{
@@ -1547,15 +1646,74 @@ void CGEMPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info 
 			weaponid = pNPC->GetWeaponID();
 			custom = pNPC->GetCustomData();
 		}
-		else if ( info.GetDamageType() & DMG_BLAST )
+		else if (!Q_stricmp(killer_weapon_name, "trigger_trap")) // Use the trigger's name as the weapon name if it's a kill, or replace the death message with a special one on suicide.
+		{
+			CTriggerTrap *traptrigger = static_cast<CTriggerTrap*>(pInflictor);
+
+			if (!pKiller->IsPlayer())
+			{
+				string_t sDeathMsg = traptrigger->GetTrapDeathString();
+
+				if (sDeathMsg != NULL_STRING)
+					killer_weapon_name = UTIL_VarArgs("-TD-%s", sDeathMsg);
+				else
+					killer_weapon_name = "#GE_Trap";
+			}
+			else if (pKiller == pVictim)
+			{
+				string_t sDeathMsg = traptrigger->GetTrapSuicideString();
+
+				if (sDeathMsg != NULL_STRING)
+					killer_weapon_name = UTIL_VarArgs("-TD-%s", sDeathMsg);
+				else
+					killer_weapon_name = "#GE_Trap";
+			}
+			else
+			{
+				string_t sDeathMsg = traptrigger->GetTrapKillString();
+
+				if (sDeathMsg != NULL_STRING) // We have a kill message to go along with our kill
+					killer_weapon_name = UTIL_VarArgs("-TD-%s", sDeathMsg);
+				else // We don't have a kill message, but we might be able to use the entity name
+				{
+					string_t sEntName = pInflictor->GetEntityName();
+
+					if (sEntName != NULL_STRING)
+						killer_weapon_name = UTIL_VarArgs("%s", sEntName);
+					else
+						killer_weapon_name = "#GE_Trap";
+				}
+			}
+
+			weaponid = WEAPON_TRAP;
+		}
+		else if (Q_strncmp(killer_weapon_name, "func_ge_door", 12) == 0)
+		{
+			// Detects ge door kills and displays the entity name in the killfeed if it has one.
+			string_t sEntName = pInflictor->GetEntityName();
+
+			if (sEntName != NULL_STRING)
+				killer_weapon_name = UTIL_VarArgs("%s", sEntName);
+			else
+				killer_weapon_name = "#GE_Trap";
+
+			weaponid = WEAPON_TRAP;
+		}
+		else if (!Q_stricmp( killer_weapon_name, "player" ))
+		{
+			// Detects killbinds and displays a special message for them
+			dmgType = DMG_GENERIC;
+			killer_weapon_name = "self";
+		}
+		else if (dmgType & DMG_BLAST)
 		{
 			// Special case if we didn't have a weapon check if we were damaged by an explosion
 			killer_weapon_name = "#GE_Explosion";
 			weaponid = WEAPON_EXPLOSION;
 		}
-		else if ( Q_strncmp( killer_weapon_name, "func_", 5 ) == 0 || Q_strncmp( killer_weapon_name, "prop_", 5 ) == 0 )
+		else
 		{
-			// The "world" killed us if it's a prop or func object (crushed / blown up)
+			// The "world" killed us if we can't figure out who did
 			killer_weapon_name = default_killer;
 		}
 	}
@@ -1573,6 +1731,8 @@ void CGEMPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info 
 		event->SetBool( "headshot", pVictim->LastHitGroup() == HITGROUP_HEAD );
 		event->SetBool( "penetrated", FBitSet(info.GetDamageStats(), FIRE_BULLETS_PENETRATED_SHOT)?true:false );
 		event->SetInt( "dist", dist);
+		event->SetInt( "weaponskin", wepSkin);
+		event->SetInt( "dmgtype", dmgType);
 		event->SetBool( "InPVS", VictimInPVS);
 		event->SetInt( "custom", custom );
 		gameeventmanager->FireEvent( event );

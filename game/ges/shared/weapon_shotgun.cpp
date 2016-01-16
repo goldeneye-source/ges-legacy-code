@@ -137,6 +137,9 @@ void CWeaponShotgun::PrimaryAttack( void )
 	// Fire the bullets, and force the first shot to be perfectly accuracy
 	PrepareFireBullets(5, pPlayer, vecSrc, vecAiming, true);
 
+	int BodyGroup_Shells = FindBodygroupByName("shells");
+	SetBodygroup(BodyGroup_Shells, 3);
+
 	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 	{
 		// HEV suit - indicate out of ammo condition

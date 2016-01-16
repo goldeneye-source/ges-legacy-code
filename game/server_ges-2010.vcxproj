@@ -459,6 +459,8 @@
     <ClCompile Include="ges\server\ai\ge_ai.cpp" />
     <ClCompile Include="ges\server\ai\ge_ai_concommands.cpp" />
     <ClCompile Include="ges\server\ai\npc_gebase_aiming.cpp" />
+    <ClCompile Include="ges\server\ge_brush.cpp" />
+    <ClCompile Include="ges\server\ge_door.cpp" />
     <ClCompile Include="ges\server\ge_gameplayinfo.cpp" />
     <ClCompile Include="ges\server\mp\gebot_player.cpp" />
     <ClCompile Include="ges\server\mp\ge_gameplayresource.cpp" />
@@ -484,8 +486,9 @@
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|Win32'">$(IntDir)server_py.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <ClCompile Include="ges\server\ge_recipientfilter.cpp" />
+    <ClCompile Include="ges\server\ge_triggers.cpp" />
+    <ClCompile Include="ges\server\prop_ge_dynamic.cpp" />
     <ClCompile Include="ges\shared\ge_webrequest.cpp" />
-    <ClCompile Include="ge_door.cpp" />
     <ClCompile Include="sdk\server\hl2\npc_bullseye.cpp" />
     <ClCompile Include="sdk\server\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -1393,7 +1396,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ges\server\ge_door.h" />
     <ClInclude Include="ges\server\ge_recipientfilter.h" />
+    <ClInclude Include="ges\server\ge_triggers.h" />
     <ClInclude Include="ges\server\mp\ge_gameplayresource.h" />
     <ClInclude Include="ges\server\mp\ge_playerspawn.h" />
     <ClInclude Include="ges\server\mp\gebot_player.h" />

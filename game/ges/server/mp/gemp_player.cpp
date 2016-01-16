@@ -49,6 +49,7 @@ IMPLEMENT_SERVERCLASS_ST(CGEMPPlayer, DT_GEMP_Player)
 	SendPropFloat( SENDINFO( m_flLastLandVelocity )),
 	SendPropFloat( SENDINFO( m_flRunTime )),
 	SendPropInt( SENDINFO( m_flRunCode )),
+	SendPropArray3( SENDINFO_ARRAY3(m_iWeaponSkinInUse), SendPropInt(SENDINFO_ARRAY(m_iWeaponSkinInUse))),
 END_SEND_TABLE()
 
 BEGIN_DATADESC( CGEMPPlayer )
@@ -101,6 +102,11 @@ CGEMPPlayer::CGEMPPlayer()
 
 	m_vLastDeath = Vector(-1, -1, -1);
 	m_vLastSpawn = Vector(-1, -1, -1);
+
+	for (int i = 0; i < WEAPON_MAX; i++)
+	{
+		m_iWeaponSkinInUse.Set(i, 0);
+	}
 }
 
 CGEMPPlayer::~CGEMPPlayer()
@@ -380,12 +386,30 @@ void CGEMPPlayer::Spawn()
 			m_flEndCloakTime = gpGlobals->curtime + 5.0;
 		}
 
+		// Create a dummy skin list, fill it out, and then transmit anything that changed.
+		int iDummySkinList[WEAPON_MAX] = {0};
+		
+		if (GetDevStatus() == GE_DEVELOPER)
+			iDummySkinList[WEAPON_KLOBB] = 2;
+		else if (GetDevStatus() == GE_BETATESTER)
+			iDummySkinList[WEAPON_KLOBB] = 1;
+
+		// If it's luchador, give him the watermelon KF7.  Love u 4evr luch.
+		if ( m_iSteamIDHash == 3135237817u )
+			iDummySkinList[WEAPON_KF7] = 1;
+
+		for (int i = 0; i < WEAPON_MAX; i++)
+		{
+			if (iDummySkinList[i] != m_iWeaponSkinInUse.Get(i))
+				m_iWeaponSkinInUse.Set(i, iDummySkinList[i]);
+		}
+
 		RemoveAllItems(true);
 		GiveDefaultItems();
 		GiveHat();
 
 		// Create our second view model for dualies
-		//CreateViewModel( GE_LEFT_HAND );
+		// CreateViewModel( GE_LEFT_HAND );
 
 		SetHealth( GetMaxHealth() );
 		
@@ -405,7 +429,7 @@ void CGEMPPlayer::Spawn()
 		m_vLastSpawn = GetAbsOrigin();
 
 		// Reset invuln variables
-		m_pLastAttacker = m_pCurrAttacker = NULL;
+		m_pLastAttacker = NULL;
 		m_iViewPunchScale = 0;
 
 		// Camping calcs
@@ -678,7 +702,7 @@ void CGEMPPlayer::ChangeTeam( int iTeam, bool bWasForced /* = false */ )
 	if ( GERules()->IsTeamplay() )
 	{
 		// Only suicide the player if they are switching teams and not observing and not forced to switch
-		if ( GetTeamNumber() != TEAM_UNASSIGNED && !IsObserver() && !bWasForced )
+		if (GetTeamNumber() != TEAM_UNASSIGNED && !IsObserver() && !bWasForced)
 			bKill = true;
 
 		// The player is trying to Auto Join a team so set them up!
@@ -694,7 +718,9 @@ void CGEMPPlayer::ChangeTeam( int iTeam, bool bWasForced /* = false */ )
 				iTeam = random->RandomInt( TEAM_MI6, TEAM_JANUS );
 		}
 	}
-
+	else if ( GetTeamNumber() == TEAM_UNASSIGNED && !m_bPreSpawn && IsAlive() && !bWasForced ) //Use alternate rules for non-teamplay.
+		bKill = true;
+	
 	// Coming on spectator we end pre spawn, but going from spectator
 	// to another team we initiate pre spawn
 	if ( iTeam == TEAM_SPECTATOR )
@@ -725,6 +751,10 @@ void CGEMPPlayer::ChangeTeam( int iTeam, bool bWasForced /* = false */ )
 
 	if ( iTeam == TEAM_SPECTATOR )
 	{
+		// If we didn't just join the server, we're alive, and this was by choice, force a suicide.
+		if ( bKill )
+			CommitSuicide();
+
 		RemoveAllItems( true );
 		ResetObserverMode();
 		State_Transition( STATE_OBSERVER_MODE );
@@ -1496,8 +1526,17 @@ bool CGEMPPlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 	if ( !pGEWeapon->CanEquip(this) || !GEGameplay()->GetScenario()->CanPlayerHaveItem(this, pGEWeapon) )
 		return false;
 
+	bool forcepickup = GERules()->ShouldForcePickup(this, pWeapon);
+
+	// We have to do this before we actually fire the weapon pickup code so the skin data is overwritten before it starts getting read.
+	if (GetUsedWeaponSkin(pGEWeapon->GetWeaponID()) < pWeapon->m_nSkin)
+	{
+		SetUsedWeaponSkin(pGEWeapon->GetWeaponID(), pWeapon->m_nSkin);
+		forcepickup = true;  //If we got a new skin, pick up the weapon no matter what.
+	}
+
 	bool ret = BaseClass::BumpWeapon(pWeapon);
-	if (!ret && (GERules()->ShouldForcePickup(this, pWeapon) || ((pGEWeapon->GetWeaponID() == WEAPON_MOONRAKER || pGEWeapon->GetWeaponID() == WEAPON_KNIFE) && IsAllowedToPickupWeapons()) ))
+	if (!ret && (forcepickup || ((pGEWeapon->GetWeaponID() == WEAPON_MOONRAKER || pGEWeapon->GetWeaponID() == WEAPON_KNIFE) && IsAllowedToPickupWeapons())))
 	{
 		// If we didn't pick it up and the game rules say we should have anyway remove it from the world
 		pWeapon->SetOwner( NULL );

@@ -303,7 +303,6 @@ void CGEPlayer::PostThink( void )
 	}
 
 	// Reset our damage statistics
-	m_pCurrAttacker = NULL;
 	m_iViewPunchScale = 0;
 	m_iFrameDamageOutput = 0;
 	m_iFrameDamageOutputType = 0;
@@ -380,7 +379,10 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 	CGEPlayer *pGEAttacker = ToGEPlayer(inputinfo.GetAttacker());
 
 	if (!pGEAttacker)
+	{
+		SetLastHitGroup(HITGROUP_GENERIC); // Set this here to avoid world kills counting as headshots.
 		return BaseClass::OnTakeDamage(inputinfo);
+	}
 
 	// Make sure that our attacker has us loaded and we have our attacker loaded.
 	if (inputinfo.GetDamageType() & DMG_BULLET && !CheckInPVS(pGEAttacker) && !pGEAttacker->CheckInPVS(this))
@@ -443,8 +445,19 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 	// Did we actually take damage?
 	if (adjdmg > 0)
 	{
-		// Record our attacker
-		m_pCurrAttacker = inputinfo.GetAttacker();
+		// Record our attacker, the time of the attack, and the damage taken.  Only player attacks make it this far.
+
+		// If the last attacker is the current one, and they are still relevant, just add the damage onto the existing damage.
+		// GetLastAttacker() returns null if the last attacker hasn't done enough damage recent enough.  If this check passes the timer is still positive.
+		// we don't want to reset the time here if we're adding to the damage since adding to the damage is essentially adding more time to an already valid timer.
+		if (GetLastAttacker() == inputinfo.GetAttacker())
+			m_iLastAttackedDamage += adjdmg;
+		else if (inputinfo.GetAttacker() != this && gpGlobals->curtime + min(adjdmg * 0.1, 10) > m_flLastAttackedTime + min(m_iLastAttackedDamage * 0.1, 10)) // We have a different attacker, but let's make sure they will be doing enough damage to extend the timer and take the title.
+		{
+			m_iLastAttackedDamage = adjdmg; // We reset everything and don't add here because even though they extended the timer, they don't deserve extra time for damage they didn't do.
+			m_flLastAttackedTime = gpGlobals->curtime;
+			m_pLastAttacker = inputinfo.GetAttacker();
+		}
 
 		// Add this damage to our frame's total damage
 		// m_DmgTake and m_DmgSave accumulate in the frame so we can just keep overwriting this value
@@ -1177,6 +1190,15 @@ void CGEPlayer::StripAllWeapons()
 		GetActiveWeapon()->Holster();
 
 	RemoveAllItems(false);
+}
+
+CBaseEntity* CGEPlayer::GetLastAttacker(bool onlyrecent)
+{
+	// If we only want an actually relevant last attacker, compare the last time we were attacked to the amount of damage that attack did.
+	if (onlyrecent && m_flLastAttackedTime + min(m_iLastAttackedDamage * 0.1, 10) < gpGlobals->curtime)// 20 points of damages give 1 second of kill tracking.
+		return NULL;
+	else
+		return m_pLastAttacker;
 }
 
 #include "npc_gebase.h"

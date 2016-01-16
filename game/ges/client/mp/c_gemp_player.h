@@ -55,6 +55,9 @@ public:
 	virtual int   GetRunCode()					{ return m_flRunCode; }
 	virtual void  SetRunCode(float code)		{ m_flRunCode = code; }
 
+	virtual int	  GetUsedWeaponSkin(int weapid)	{ return m_iWeaponSkinInUse[weapid]; }
+	virtual void  SetUsedWeaponSkin(int weapid, int value)	{ m_iWeaponSkinInUse[weapid] = value; }
+
 	// Observer calcs overrides for bots
 	virtual Vector GetChaseCamViewOffset( CBaseEntity *target );
 
@@ -66,6 +69,8 @@ private:
 	float m_flLastLandVelocity;
 	float m_flRunTime;
 	int m_flRunCode;
+
+	int m_iWeaponSkinInUse[WEAPON_MAX];
 };
 
 C_GEMPPlayer *ToGEMPPlayer( CBaseEntity *pEntity );

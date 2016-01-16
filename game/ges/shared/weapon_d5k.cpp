@@ -90,7 +90,7 @@ public:
 	DECLARE_PREDICTABLE();
 
 	virtual GEWeaponID	GetWeaponID( void ) const { return WEAPON_D5K_SILENCED; }
-	virtual bool		CanBeSilenced( void ) { return true; }
+	virtual bool		CanBeSilenced( void ) { return false; }
 
 	DECLARE_ACTTABLE();
 

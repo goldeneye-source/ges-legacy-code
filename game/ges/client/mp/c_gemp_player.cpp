@@ -33,7 +33,9 @@ IMPLEMENT_CLIENTCLASS_DT(C_GEMPPlayer, DT_GEMP_Player, CGEMPPlayer)
 	RecvPropFloat( RECVINFO( m_flJumpPenalty )),
 	RecvPropFloat( RECVINFO( m_flLastLandVelocity )),
 	RecvPropFloat( RECVINFO( m_flRunTime )),
-	RecvPropInt(  RECVINFO(m_flRunCode)),
+	RecvPropInt( RECVINFO(m_flRunCode)),
+	RecvPropArray3(RECVINFO_ARRAY(m_iWeaponSkinInUse), RecvPropInt(RECVINFO(m_iWeaponSkinInUse[0]))),
+//	RecvPropArray( RecvPropInt(RECVINFO_ARRAY(m_iWeaponSkinInUse)), m_iWeaponSkinInUse),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_GEMPPlayer )
@@ -57,6 +59,8 @@ C_GEMPPlayer::C_GEMPPlayer()
 	m_flLastLandVelocity = 0;
 	m_flRunTime = 0;
 	m_flRunCode = 0;
+
+	memset(m_iWeaponSkinInUse, 0, WEAPON_MAX);
 }
 
 void C_GEMPPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )

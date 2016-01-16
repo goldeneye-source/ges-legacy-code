@@ -86,6 +86,8 @@ public:
 	float GetSpawnInvulnInterval();
 	bool GetSpawnInvulnCanBreak();
 
+	void AddTrapToList(CBaseEntity* pEnt) { m_vTrapList.AddToTail(pEnt); }
+
 	float FlArmorRespawnTime( CItem *pItem );
 
 	bool AmmoShouldRespawn();
@@ -160,6 +162,8 @@ public:
 	void SetMapFloorHeight(float height);
 	float GetMapFloorHeight();
 
+	int   GetRandomSeedOffset() { return m_iRandomSeedOffset; }
+
 	// ------------------------------
 	// Server Only -- Inherited Functions
 #ifdef GAME_DLL
@@ -222,6 +226,8 @@ private:
 	float m_flNextBotCheck;
 	CUtlVector<EHANDLE> m_vBotList;
 
+	CUtlVector<CBaseEntity*> m_vTrapList; //List of traps that needs to be checked when a potential trap owner disconnects.
+
 	char  m_szNextLevel[64];
 	char  m_szGameDesc[32];
 
@@ -240,6 +246,7 @@ private:
 	int   m_iNumInRoundPlayers;
 #endif
 
+	CNetworkVar( int, m_iRandomSeedOffset );
 	CNetworkVar( float, m_flMapFloorHeight );
 	CNetworkVar( bool,	m_bTeamPlayDesired );
 	CNetworkVar( int,	m_iTeamplayMode );

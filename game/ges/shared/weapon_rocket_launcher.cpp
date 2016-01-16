@@ -56,6 +56,7 @@ public:
 
 	virtual void PrimaryAttack( void );
 	virtual void ItemPostFrame( void );
+	virtual void OnReloadOffscreen( void );
 
 	virtual void AddViewKick( void );
 
@@ -73,6 +74,8 @@ private:
 	void	CheckLaunchPosition( const Vector &vecEye, Vector &vecSrc );
 	void	LaunchRocket( void );
 	
+	int		m_iRocketGroup;
+
 	CNetworkVar( bool, m_bPreLaunch );
 	CNetworkVar( float, m_flRocketSpawnTime );
 
@@ -138,19 +141,37 @@ CGEWeaponRocketLauncher::CGEWeaponRocketLauncher( void )
 	// NPC Ranging
 	m_fMinRange1 = 300;
 	m_fMaxRange1 = 5000;
+
+	m_iRocketGroup = 0;
 }
 
 bool CGEWeaponRocketLauncher::Deploy( void )
 {
 	m_bPreLaunch = false;
 	m_flRocketSpawnTime = -1;
-	return BaseClass::Deploy();
+
+	bool success = BaseClass::Deploy();
+
+	if (m_iClip1 > 0)
+		SwitchBodygroup(1, 0);
+
+	return success;
 }
 
 void CGEWeaponRocketLauncher::Precache( void )
 {
 	PrecacheModel("models/weapons/rocket_launcher/w_rocket.mdl");
 	BaseClass::Precache();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Prepare the launcher to fire
+//-----------------------------------------------------------------------------
+void CGEWeaponRocketLauncher::OnReloadOffscreen(void)
+{
+	BaseClass::OnReloadOffscreen();
+
+	SwitchBodygroup(1, 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -276,6 +297,8 @@ void CGEWeaponRocketLauncher::LaunchRocket( void )
 	// Remove the rocket from our ammo pool
 	m_iClip1 -= 1;
 	WeaponSound( SINGLE );
+
+	SwitchBodygroup(1, 1);
 
 	//Add our view kick in
 	AddViewKick();

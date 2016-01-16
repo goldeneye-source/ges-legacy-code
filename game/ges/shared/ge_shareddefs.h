@@ -151,6 +151,7 @@ typedef enum GES_WEAPONS
 
 	WEAPON_RANDOM,		// For weapon spawning system, weighted random weapon.
 	WEAPON_EXPLOSION,	// Generic explosion (not from any particular weapon)
+	WEAPON_TRAP,		// Map entity kills
 	WEAPON_TOKEN,
 	WEAPON_RANDOM_HITSCAN,		// For weapon spawning system, weighted random hitscan weapon.
 	WEAPON_RANDOM_EXPLOSIVE,	// For weapon spawning system, weighted random explosive weapon.
@@ -225,6 +226,7 @@ static const GEWeaponInfo_t GEWeaponInfo[] =
 	// For weapon spawning system only!
 	{WEAPON_RANDOM,		"weapon_random",			AMMO_NONE,		"",					0,		-1	},
 	{WEAPON_EXPLOSION,  NULL,						AMMO_NONE,		"#GE_Explosion",	0,		-1	},
+	{WEAPON_TRAP,		NULL,						AMMO_NONE,		"#GE_Trap",			0,		-1  },
 	{WEAPON_TOKEN,		NULL,						AMMO_NONE,		"",					0,		-1	},
 	{WEAPON_RANDOM_HITSCAN, "weapon_random_hitscan",		AMMO_NONE,		"",				0,		-1	},
 	{WEAPON_RANDOM_EXPLOSIVE, "weapon_random_explosive",	AMMO_NONE,		"",				0,		-1	},

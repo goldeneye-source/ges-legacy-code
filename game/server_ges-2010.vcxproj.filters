@@ -1767,7 +1767,16 @@
     <ClCompile Include="ges\shared\ge_game_timer.cpp">
       <Filter>GES\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="ge_door.cpp">
+    <ClCompile Include="ges\server\ge_triggers.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\server\ge_door.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\server\prop_ge_dynamic.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\server\ge_brush.cpp">
       <Filter>GES\Entities</Filter>
     </ClCompile>
   </ItemGroup>
@@ -3495,6 +3504,12 @@
       <Filter>GES</Filter>
     </ClInclude>
     <ClInclude Include="ges\shared\ge_game_timer.h">
+      <Filter>GES\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\server\ge_triggers.h">
+      <Filter>GES\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\server\ge_door.h">
       <Filter>GES\Entities</Filter>
     </ClInclude>
   </ItemGroup>

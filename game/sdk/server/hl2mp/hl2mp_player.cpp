@@ -19,7 +19,7 @@
 #include "weapon_hl2mpbase.h"
 #include "grenade_satchel.h"
 #include "eventqueue.h"
-#include "GameStats.h"
+#include "gamestats.h"
 #include "tier0/vprof.h"
 #include "bone_setup.h"
 

@@ -105,7 +105,7 @@ extern ConVar sk_healthkit;
 #include "ai_waypoint.h"
 
 #include "utlbuffer.h"
-#include "GameStats.h"
+#include "gamestats.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

@@ -467,8 +467,8 @@ CGEMPRules::CGEMPRules()
 	m_pMapManager->ParseMapSelectionData();
 
 	// Figure out what day it is
-	int day, month, year;
-	GetCurrentDate(&day, &month, &year);
+	//int day, month, year;
+	//GetCurrentDate(&day, &month, &year);
 
 	// Load our bot names
 	g_vBotNames.RemoveAll();

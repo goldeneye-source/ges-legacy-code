@@ -45,7 +45,6 @@ public:
 
 protected:
 	virtual void Explode();
-	virtual Vector CalPath();
 
 private:
 	Vector m_vForward;

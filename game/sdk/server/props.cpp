@@ -39,7 +39,7 @@
 #include "datacache/imdlcache.h"
 #include "doors.h"
 #include "physics_collisionevent.h"
-#include "GameStats.h"
+#include "gamestats.h"
 #include "vehicle_base.h"
 
 #ifdef GE_DLL

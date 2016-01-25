@@ -92,7 +92,7 @@
 #include "engine/imatchmaking.h"
 #include "cdll_bounded_cvars.h"
 #include "matsys_controls/matsyscontrols.h"
-#include "GameStats.h"
+#include "gamestats.h"
 
 #ifdef GE_DLL
 	#include "ge_panelhelper.h"

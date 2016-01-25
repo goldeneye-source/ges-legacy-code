@@ -5,6 +5,8 @@
 !*.mak
 
 # Python 3 build files
+ges_build/
+
 *.py[cdo]
 *.o
 *.a

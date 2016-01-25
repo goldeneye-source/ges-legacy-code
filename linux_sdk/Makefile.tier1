@@ -64,7 +64,7 @@ dirs:
 	-mkdir -p $(TIER1_OBJ_DIR)
 
 tier1_$(ARCH).$(SHLIBEXT): $(TIER1_OBJS)
-	$(AR) $(BUILD_DIR)/$@ $(TIER1_OBJS)
+	$(AR) cr $(BUILD_DIR)/$@ $(TIER1_OBJS)
 
 $(TIER1_OBJ_DIR)/%.o: $(TIER1_SRC_DIR)/%.cpp
 	$(DO_CC)

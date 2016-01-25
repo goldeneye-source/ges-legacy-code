@@ -11,7 +11,7 @@
 NAME=server
 
 # is this a debug build?
-DODEBUG=false
+DODEBUG=true
 
 # the location of the vcproj that builds the mod
 MOD_PROJ=../game/server_ges-2010.vcxproj
@@ -24,26 +24,30 @@ endif
 
 # the directory the base binaries (tier0_i486.so, etc) are located
 # this should point to your orange box subfolder of where you have srcds installed.
-GAME_DIR=/home/jon/.steam/steam/SteamApps/common/sdk2007
+GAME_DIR="/media/sf_sdk"
 
 # the path to your mods directory
 # set this so that 'make install' or 'make installrelease' will copy your binary over automatically.
-MOD_DIR=/home/jon/sourcemods/gesource_release
+MOD_DIR="../../sourcemods/gesource_43"
 
 # compiler options (gcc 3.4.1 or above is required - 4.1.2+ recommended)
-CPLUS=g++-4.7
-CLINK=gcc-4.7
+CPLUS=g++
+CLINK=gcc
 CC=$(CLINK)
-CPP_LIB=/usr/lib/i386-linux-gnu/libstdc++.so.6
+CPP_LIB="/usr/lib/i386-linux-gnu/libstdc++.so.6"
 
 # GCC optimization flags
 #OPTFLAGS=-O1 -ffast-math
 OPTFLAGS=-ffast-math
 
 # put any compiler flags you want passed here
-USER_CFLAGS=
+USER_CFLAGS=--std=c++0x
 
-# Link Libraries
+ifeq ($(DODEBUG),true)
+    USER_CFLAGS+= -g
+endif
+
+# Link Librariesmust 
 LIBFILES= \
   $(SOURCE_DIR)/lib/linux/choreoobjects_486.a \
   $(SOURCE_DIR)/lib/linux/particles_486.a \
@@ -53,8 +57,8 @@ LIBFILES= \
   $(SOURCE_DIR)/lib/linux/tier1_486.a \
   $(SOURCE_DIR)/lib/linux/mathlib_486.a \
   $(SOURCE_DIR)/lib/curl/libcurl.a \
-  $(SOURCE_DIR)/lib/python/libpython2.6.a \
-  $(SOURCE_DIR)/lib/python/libboost_python.a \
+  $(SOURCE_DIR)/lib/python/libpython3.4m.a \
+  $(SOURCE_DIR)/lib/python/boost_python.a \
   steam_api_i486.so \
   tier0_i486.so \
   vstdlib_i486.so
@@ -82,7 +86,7 @@ SOURCE_DIR=..
 # the CPU target for the build, must be i486 for now
 ARCH=i486
 #ARCH_CFLAGS=-mtune=i686 -march=pentium -mmmx -msse -pipe
-ARCH_CFLAGS=-msse
+ARCH_CFLAGS=-msse -w
 
 # Flags for gcc/g++
 BASE_CFLAGS=-DVPROF_LEVEL=1 -DSWDS -D_LINUX -DLINUX -fpermissive -Dstricmp=strcasecmp -D_stricmp=strcasecmp -D_strnicmp=strncasecmp -Dstrnicmp=strncasecmp -D_snprintf=snprintf -D_vsnprintf=vsnprintf -D_alloca=alloca -Dstrcmpi=strcasecmp
@@ -108,7 +112,7 @@ BASE_DEFINES=CC=$(CC) CPLUS=$(CPLUS) CPP_LIB=$(CPP_LIB) \
 	DODEBUG=$(DODEBUG)
 
 # Project Makefile
-MAKE_MOD=Makefile.server
+MAKE_MOD=Makefile.game
 MAKE_VCPM=Makefile.vcpm
 MAKE_PLUGIN=Makefile.plugin
 
@@ -132,6 +136,11 @@ server: vcpm
 
 plugin:
 	$(MAKE) -f $(MAKE_PLUGIN) $(BASE_DEFINES)
+
+archives:
+	$(MAKE) -f Makefile.tier1 $(BASE_DEFINES)
+	#$(MAKE) -f Makefile.choreoobjects $(BASE_DEFINES)
+	$(MAKE) -f Makefile.mathlib $(BASE_DEFINES)
 
 clean:
 	 $(MAKE) -f $(MAKE_VCPM) $(BASE_DEFINES) clean

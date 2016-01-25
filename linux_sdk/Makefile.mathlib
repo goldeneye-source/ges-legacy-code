@@ -56,7 +56,7 @@ dirs:
 	-mkdir -p $(MATHLIB_OBJ_DIR)
 
 mathlib_$(ARCH).$(SHLIBEXT): $(MATHLIB_OBJS)
-	$(AR) $(BUILD_DIR)/$@ $(MATHLIB_OBJS)
+	$(AR) cr $(BUILD_DIR)/$@ $(MATHLIB_OBJS)
 
 $(MATHLIB_OBJ_DIR)/%.o: $(MATHLIB_SRC_DIR)/%.cpp
 	$(DO_CC)

@@ -292,7 +292,11 @@ void CGEPropDynamic::Event_Killed(const CTakeDamageInfo &info)
 
 void CGEPropDynamic::PickNewSkin(bool broken)
 {
-	RandomSeed((int)(GetAbsOrigin().x + GetAbsOrigin().y + GetAbsOrigin().z) + GEMPRules()->GetRandomSeedOffset() + gpGlobals->curtime); //Basically a way of making sure each entity gets a unique skin.
+	// Basically a way of making sure each entity gets a unique skin.
+	// We multiply the different coordinates with different coefficients in order to prevent certain arrangements from generating the same seed.
+	// aka (-2, 0, 0) is the same as (-1, -1, 0) and many more.  Overlap is obviously still possible with this system too, but there are only a few
+	// circumstances where the overlap would occour in locations near eachother.
+	RandomSeed((int)(GetAbsOrigin().x * 100 + GetAbsOrigin().y * 10 + GetAbsOrigin().z) + GEMPRules()->GetRandomSeedOffset() + gpGlobals->curtime);
 
 	int healthyskins = GetModelPtr()->numskinfamilies() - m_iBrokenSkinCount;
 

@@ -165,7 +165,7 @@ void CGEWeaponRocketLauncher::Precache( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Prepare the launcher to fire
+// Purpose: Put the rocket back on the end of the rocket launcher after we reload it.
 //-----------------------------------------------------------------------------
 void CGEWeaponRocketLauncher::OnReloadOffscreen(void)
 {

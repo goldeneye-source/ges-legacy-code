@@ -53,11 +53,17 @@ public:
 	virtual GEWeaponID GetWeaponID( void ) const { return WEAPON_GRENADE_LAUNCHER; }
 	
 	virtual bool IsExplosiveWeapon() { return true; }
+	virtual void OnReloadOffscreen( void );
 
 	virtual void PrimaryAttack( void );
 	virtual void ItemPostFrame( void );
 
 	virtual void AddViewKick( void );
+
+//	virtual void OnFireAnimReset(); //Fires when the firing animation loops around.
+	virtual void CalculateShellVis( bool fillclip ); // Calculates how many shells to have in the launcher on draw/reload
+	virtual void PushShells( bool fireshell ); // Shifts the bodygroups for shells over one on fire.
+	virtual void AssignShellVis(); // Reassigns bodygroups based on m_iShellVisArray
 
 #ifdef GAME_DLL
 	virtual int		CapabilitiesGet( void ) { return bits_CAP_WEAPON_RANGE_ATTACK1; }
@@ -65,14 +71,19 @@ public:
 	virtual void	FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles );
 #endif
 
-	virtual bool Deploy( void );
+	virtual bool Holster(CBaseCombatWeapon *pSwitchingTo);
+	virtual bool Deploy(void);
 	virtual void Precache( void );
+	virtual void FinishReload(void);
 
 private:
 	// check a throw from vecSrc.  If not valid, move the position back along the line to vecEye
 	void	CheckLaunchPosition( const Vector &vecEye, Vector &vecSrc );
 	void	LaunchGrenade( void );
-	
+	int		m_iShellBodyGroup[6];
+	bool	m_iShellVisArray[6];
+	float	m_bPushShells;
+
 	CNetworkVar( bool, m_bPreLaunch );
 	CNetworkVar( float, m_flGrenadeSpawnTime );
 
@@ -118,6 +129,8 @@ END_NETWORK_TABLE()
 BEGIN_DATADESC( CGEWeaponGrenadeLauncher )
 	DEFINE_FIELD( m_bPreLaunch, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_flGrenadeSpawnTime, FIELD_FLOAT ),
+
+//	DEFINE_THINKFUNC( OnFireAnimReset ),
 END_DATADESC()
 #endif
 
@@ -138,13 +151,75 @@ CGEWeaponGrenadeLauncher::CGEWeaponGrenadeLauncher( void )
 	// NPC Ranging
 	m_fMinRange1 = 250;
 	m_fMaxRange1 = 3000;
+
+	m_iShellBodyGroup[0] = { -1 };
+	m_bPushShells = false;
 }
 
 bool CGEWeaponGrenadeLauncher::Deploy( void )
 {
 	m_bPreLaunch = false;
 	m_flGrenadeSpawnTime = -1;
-	return BaseClass::Deploy();
+	bool success = BaseClass::Deploy();
+
+	// We have to do this here because "GetBodygroupFromName" relies on the weapon having a viewmodel.
+	// It's debatable if this is really how we should go about it, instead of just a table of integers for the bodygroups.
+	// but this does protect us from someone recompiling the model with a different order of bodygroups.
+
+	if (m_iShellBodyGroup[0] == -1) // We only need to check shell1 because we assign all of them at once.
+	{
+		m_iShellBodyGroup[0] = GetBodygroupFromName("shell1");
+		m_iShellBodyGroup[1] = GetBodygroupFromName("shell2");
+		m_iShellBodyGroup[2] = GetBodygroupFromName("shell3");
+		m_iShellBodyGroup[3] = GetBodygroupFromName("shell4");
+		m_iShellBodyGroup[4] = GetBodygroupFromName("shell5");
+		m_iShellBodyGroup[5] = GetBodygroupFromName("shell6");
+
+
+		// Also calculate shell visibility on the very first draw because we haven't reloaded yet and need to know how many to have in the chambers.
+		CalculateShellVis(false);
+	}
+
+	AssignShellVis(); // If it's not the first draw we don't recalculate here because we only reorginize shell posistions on reload.
+
+	return success;
+}
+
+bool CGEWeaponGrenadeLauncher::Holster(CBaseCombatWeapon *pSwitchingTo)
+{
+	m_bPushShells = false; //Prevent a shell push if we abort firing.
+
+	return BaseClass::Holster(pSwitchingTo);
+}
+
+void CGEWeaponGrenadeLauncher::OnReloadOffscreen(void)
+{
+	BaseClass::OnReloadOffscreen();
+
+	CalculateShellVis(true); // Check shell count when we reload, but adjust for the amount of ammo we're about to take out of the clip.
+	AssignShellVis(); // Also reassign vis because this is the one time it goes offscreen.
+}
+
+// We have to calculate shell vis here too, due to passive reload.  It might cause a small issue if someone picks up ammo during the second
+// half of their reload but the only way to really fix that is to have the actual reload finish halway through the animation instead of at the end.
+void CGEWeaponGrenadeLauncher::FinishReload(void)
+{
+	// Since FinishReload doesn't actually tell us if it reloaded anything so we need to figure that out here.
+	CBaseCombatCharacter *pOwner = GetOwner();
+	if (!pOwner)
+		return;
+
+	int reserveammo = pOwner->GetAmmoCount(m_iPrimaryAmmoType);
+
+	if (m_iClip1 < GetMaxClip1() && reserveammo > 0) //If our clip needs more ammo and we have the ammo to give it, we reloaded!
+	{
+		CalculateShellVis(true);
+
+		if (pOwner->GetActiveWeapon() == this) // If we have the weapon out we might as well try and correct any issues caused by picking up extra ammo during reload now.
+			AssignShellVis(); 
+	}
+
+	BaseClass::FinishReload();
 }
 
 void CGEWeaponGrenadeLauncher::Precache( void )
@@ -180,6 +255,7 @@ void CGEWeaponGrenadeLauncher::PrimaryAttack( void )
 
 	m_flGrenadeSpawnTime = gpGlobals->curtime + GetFireDelay();
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
+	m_bPushShells = true;
 }
 
 void CGEWeaponGrenadeLauncher::ItemPostFrame( void )
@@ -189,7 +265,13 @@ void CGEWeaponGrenadeLauncher::ItemPostFrame( void )
 		LaunchGrenade();
 		m_bPreLaunch = false;
 	}
-	
+
+	if (m_bPushShells && m_flNextPrimaryAttack < gpGlobals->curtime)
+	{
+		m_bPushShells = false;
+		PushShells(false);
+	}
+
 	BaseClass::ItemPostFrame();
 }
 
@@ -278,6 +360,68 @@ void CGEWeaponGrenadeLauncher::LaunchGrenade( void )
 
 	//Add our view kick in
 	AddViewKick();
+}
+
+void CGEWeaponGrenadeLauncher::CalculateShellVis( bool fillclip )
+{
+	// Shells on the shotgun viewmodel will be removed if the reserve ammo is less than 5.  
+	// Each time we draw and reload, we check to see if this is the case, and if it is we change bodygroups accordingly.
+
+	CBaseCombatCharacter *pOwner = GetOwner();
+
+	
+
+	if (!pOwner)
+		return;
+
+	int reserveammo = pOwner->GetAmmoCount(m_iPrimaryAmmoType);
+	int clipammo = m_iClip1;
+
+	if (fillclip) //If we need to fill the clip, just add on whatever reserve ammo we have.
+		clipammo += reserveammo; //This can be over 6, it won't change the comparision results.
+
+	// We don't actually change bodygroup visibility here so passive reload doesn't cause bodygroup changes on other weapons.
+	for (int i = 5; i >= 0; i--)
+	{
+		if (clipammo > i)
+			m_iShellVisArray[i] = true;
+		else
+			m_iShellVisArray[i] = false;
+	}
+}
+
+void CGEWeaponGrenadeLauncher::PushShells( bool fireshell )
+{
+	bool shiftedArray[6];
+
+	if (fireshell)
+		m_iShellVisArray[0] = false; //shell 1 just fire fired out of the chamber.  In just a moment it will shift to shell 6.
+
+	// Shift all the shells over one so we're ready for them to reset.
+	for (int i = 5; i >= 0; i--)
+	{
+		shiftedArray[i] = m_iShellVisArray[(i + 1) % 6]; //be sure to wrap around and make slot 6 slot 1
+	}
+
+	// We have to do 2 loops or a number of other fancy things to prevent overwriting one of the values.
+	for (int i = 5; i >= 0; i--)
+	{
+		m_iShellVisArray[i] = shiftedArray[i];
+	}
+
+	// Now assign the visibility
+	AssignShellVis();
+}
+
+void CGEWeaponGrenadeLauncher::AssignShellVis()
+{
+	for (int i = 5; i >= 0; i--)
+	{
+		if (m_iShellVisArray[i])
+			SwitchBodygroup(m_iShellBodyGroup[i], 0);
+		else
+			SwitchBodygroup(m_iShellBodyGroup[i], 1);
+	}
 }
 
 void CGEWeaponGrenadeLauncher::AddViewKick( void )

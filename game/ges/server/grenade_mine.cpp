@@ -24,13 +24,14 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define MINE_LIFETIME		180.0f	// 3 Minutes
+#define MINE_LIFETIME		300.0f	// 5 Minutes
 #define	MINE_POWERUPTIME	3.0f	// seconds
 #define MINE_TIMEDDELAY		3.0f	// seconds
 
 #define MINE_PROXYBEEPDISTSCALE	1.3f	// units from the edge of the explosion dist
 #define MINE_PROXYDELAY			0.28f	// seconds
 #define MINE_PROXBEEPDELAY		2.5f	// seconds
+#define MINE_WIDTH				1.5f	// inches
 
 BEGIN_DATADESC( CGEMine )
 
@@ -108,11 +109,12 @@ void CGEMine::InputExplode( inputdata_t &inputdata )
 
 	// Convert our mine angles to a Normal Vector
 	AngleVectors( angles, &forward );
-	if ( angles.y != 180.0f )
-		forward.z *= -1; // invert our z only if we aren't on the ceiling
 
-	// Create the explosion 16 units AWAY from the surface we are attached to
-	ExplosionCreate( GetAbsOrigin() - forward*16.0f, GetAbsAngles(), inputdata.pActivator, GetDamage(), GetDamageRadius(), 
+	//if ( angles.y != 180.0f )
+	//	forward.z *= -1; // invert our z only if we aren't on the ceiling
+
+	// Create the explosion 4 units AWAY from the surface we are attached to
+	ExplosionCreate( GetAbsOrigin() + forward*4, GetAbsAngles(), inputdata.pActivator, GetDamage(), GetDamageRadius(), 
 		SF_ENVEXPLOSION_NOSMOKE | SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS, 0.0f, this);
 
 	// Effectively hide us from everyone until the explosion is done with
@@ -282,7 +284,6 @@ void CGEMine::MineTouch( CBaseEntity *pOther )
 	EmitSound("weapon_mines.Attach");
 
 	RemoveFlag(FL_DONTTOUCH);
-	//SetTouch( NULL );
 }
 
 int CGEMine::OnTakeDamage( const CTakeDamageInfo &inputInfo )
@@ -317,7 +318,7 @@ const char* CGEMine::GetPrintName( void )
 
 bool CGEMine::AlignToSurf( CBaseEntity *pSurface )
 {
-	Vector vecVelocity, vecAiming;
+	Vector vecVelocity, vecAiming, vecUp, vecRight, traceOrigin;
 	float speed;
 	trace_t tr;
 
@@ -325,7 +326,25 @@ bool CGEMine::AlignToSurf( CBaseEntity *pSurface )
 	vecVelocity = GetAbsVelocity();
 	vecAiming = vecVelocity / speed;
 
-	UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + (vecAiming * 24), MASK_SOLID, this, GetCollisionGroup(), &tr );
+	VectorVectors(vecAiming, vecUp, vecRight);
+	Vector traceArray[9] = { Vector(0, 0, 0), (vecRight + vecUp)*0.7, (vecRight - vecUp)*0.7, (-vecRight + vecUp)*0.7, (-vecRight - vecUp)*0.7, vecUp, vecRight, -vecUp, -vecRight };
+	for (int i = 0; i < 9; i++)
+	{
+		traceOrigin = GetAbsOrigin() + traceArray[i] * MINE_WIDTH;
+
+		UTIL_TraceLine(traceOrigin, traceOrigin + (vecAiming * 4), MASK_SOLID, this, GetCollisionGroup(), &tr);
+
+		if (tr.fraction < 1.0 && tr.m_pEnt == pSurface)
+			break;
+	}
+
+	// If we still haven't hit something it's time for desperate mesaures.
+	if (tr.fraction == 1.0)
+	{
+		Vector originTrace = ( pSurface->GetAbsOrigin() - GetAbsOrigin() );
+
+		UTIL_TraceLine(GetAbsOrigin(), GetAbsOrigin() + originTrace / originTrace.Length() * 6, MASK_SOLID, this, GetCollisionGroup(), &tr);
+	}
 
 	if( tr.surface.flags & SURF_SKY )
 	{
@@ -341,28 +360,30 @@ bool CGEMine::AlignToSurf( CBaseEntity *pSurface )
 		{
 			QAngle angles;
 			VectorAngles(tr.plane.normal, angles);
+			VPhysicsDestroyObject();
 
 			angles.x += 90.0f;
 
-			SetAbsAngles( angles );
 			SetAbsOrigin( tr.endpos );
 
+			SetAbsAngles(angles);
+
 			// If this is true we must have hit a prop so make sure we follow it if it moves!
-			if ( pSurface->GetMoveType() != MOVETYPE_NONE )
+			if ( pEntity->GetMoveType() != MOVETYPE_NONE )
 			{
-				//VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, false );
-				SetMoveType( MOVETYPE_VPHYSICS );
+				SetMoveType(MOVETYPE_VPHYSICS);
 				FollowEntity( pEntity, false );
+				CreateVPhysics();
+				AddSolidFlags(FSOLID_TRIGGER); //This lets us shoot our own mines.
 				SetAbsVelocity(Vector(0, 0, 0));
 			}
 			else
 			{
-				SetMoveType( MOVETYPE_NONE );
-				//IPhysicsObject *pObject = VPhysicsInitNormal( SOLID_BBOX, GetSolidFlags() | FSOLID_TRIGGER, false );
-				//pObject->EnableMotion( false );
+				CreateVPhysics();
+				SetMoveType(MOVETYPE_NONE); //Make sure we can't knock the mines off a wall.
+				AddSolidFlags(FSOLID_TRIGGER);
 				SetAbsVelocity( Vector(0, 0, 0) );
 			}
-
 			return true;
 		}
 	}

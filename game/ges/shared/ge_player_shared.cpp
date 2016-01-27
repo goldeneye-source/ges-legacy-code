@@ -59,18 +59,23 @@ public:
 
 	bool ShouldHitEntity( IHandleEntity *pHandleEntity, int contentsMask )
 	{
+		CBaseEntity *pEntity = EntityFromEntityHandle(pHandleEntity);
+
 		if ( m_PassEntities.Count() )
 		{
-			CBaseEntity *pEntity = EntityFromEntityHandle( pHandleEntity );
 			CBaseEntity *pPassEntity = EntityFromEntityHandle( m_PassEntities[0] );
-			if ( pEntity && pPassEntity && pEntity->GetOwnerEntity() == pPassEntity && 
-				pPassEntity->IsSolidFlagSet(FSOLID_NOT_SOLID) && pPassEntity->IsSolidFlagSet( FSOLID_CUSTOMBOXTEST ) && 
-				pPassEntity->IsSolidFlagSet( FSOLID_CUSTOMRAYTEST ) )
+			if (pEntity && pPassEntity && pEntity->GetOwnerEntity() == pPassEntity &&
+				pPassEntity->IsSolidFlagSet(FSOLID_NOT_SOLID) && pPassEntity->IsSolidFlagSet(FSOLID_CUSTOMBOXTEST) &&
+				pPassEntity->IsSolidFlagSet(FSOLID_CUSTOMRAYTEST))
 			{
 				// It's a bone follower of the entity to ignore (toml 8/3/2007)
 				return false;
 			}
 		}
+
+		if (pEntity && (Q_strncmp(pEntity->GetClassname(), "npc_mine_", 9) == 0))
+			return true; // Can always shoot mines.
+
 		return CTraceFilterSimpleList::ShouldHitEntity( pHandleEntity, contentsMask );
 	}
 

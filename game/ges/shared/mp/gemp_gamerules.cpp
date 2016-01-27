@@ -1002,6 +1002,7 @@ void CGEMPRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info
 	if ((!pKiller || !pKiller->IsPlayer() || pKiller == pVictim) && pLastAttacker)
 	{
 		modinfo.SetAttacker(pLastAttacker);
+		modinfo.SetWeapon(NULL); // Set the weapon to weapon_none so transfered suicides with a given weapon don't just count as kills with that weapon.
 		modinfo.SetDamageType(DMG_GENERIC); //If we replace the attacker, replace the damage type to prevent misidentification as an explosion kill.
 	}
 	

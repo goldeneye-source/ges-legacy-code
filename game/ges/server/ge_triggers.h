@@ -24,6 +24,7 @@ public:
 	virtual void InputDisable(inputdata_t &inputdata);
 	virtual void InputToggle(inputdata_t &inputdata);
 	virtual void InputBecomeOwner(inputdata_t &inputdata);
+	virtual void InputVoidOwner(inputdata_t &inputdata);
 
 	CBaseEntity* m_hTrapOwner;	// Who gets credit for what this trap kills?
 	string_t	m_sDeathMessage;

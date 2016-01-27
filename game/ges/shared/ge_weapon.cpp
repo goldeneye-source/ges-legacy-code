@@ -891,6 +891,19 @@ void CGEWeapon::SetSkin( int skin )
 	vm->m_nSkin = m_nSkin;
 }
 
+int CGEWeapon::GetBodygroupFromName(const char* name)
+{
+	CGEPlayer *pGEPlayer = ToGEPlayer(GetOwner());
+	if (!pGEPlayer)
+		return -1;
+
+	CBaseViewModel *vm = pGEPlayer->GetViewModel(m_nViewModelIndex);
+	if (vm == NULL)
+		return -1;
+
+	return vm->FindBodygroupByName(name);
+}
+
 void CGEWeapon::SwitchBodygroup(int bodygroup, int value)
 {
 	CGEPlayer *pGEPlayer = ToGEPlayer(GetOwner());

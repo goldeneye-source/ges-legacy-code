@@ -3512,6 +3512,9 @@
     <ClInclude Include="ges\server\ge_door.h">
       <Filter>GES\Entities</Filter>
     </ClInclude>
+    <ClInclude Include="ges\shared\weapon_shotgun.h">
+      <Filter>GES\Weapons\Shotguns</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\lib\public\choreoobjects.lib">

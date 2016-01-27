@@ -1404,6 +1404,7 @@
     <ClInclude Include="ges\server\mp\gebot_player.h" />
     <ClInclude Include="ges\server\py\ge_pyfuncs.h" />
     <ClInclude Include="ges\shared\ge_webrequest.h" />
+    <ClInclude Include="ges\shared\weapon_shotgun.h" />
     <ClInclude Include="sdk\server\hl2\npc_bullseye.h" />
     <ClInclude Include="sdk\server\plasma.h" />
     <ClInclude Include="sdk\server\smoke_trail.h" />

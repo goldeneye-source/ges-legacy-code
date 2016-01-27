@@ -26,6 +26,7 @@ BEGIN_DATADESC(CTriggerTrap)
 	DEFINE_KEYFIELD(m_sKillMessage, FIELD_STRING, "KillMessage"),
 	// Inputs
 	DEFINE_INPUTFUNC(FIELD_VOID, "BecomeOwner", InputBecomeOwner),
+	DEFINE_INPUTFUNC(FIELD_VOID, "VoidOwner", InputVoidOwner),
 	DEFINE_INPUT(m_sDeathMessage, FIELD_STRING, "SetDeathMessage"),
 	DEFINE_INPUT(m_sSuicideMessage, FIELD_STRING, "SetSuicideMessage"),
 	DEFINE_INPUT(m_sKillMessage, FIELD_STRING, "SetKillMessage"),
@@ -51,6 +52,14 @@ void CTriggerTrap::InputBecomeOwner(inputdata_t &inputdata)
 {
 	if (inputdata.pActivator && inputdata.pActivator->IsPlayer())
 		m_hTrapOwner = inputdata.pActivator;
+}
+
+//------------------------------------------------------------------------------
+// Purpose: Remove the owner from the trap
+//------------------------------------------------------------------------------
+void CTriggerTrap::InputVoidOwner(inputdata_t &inputdata)
+{
+		m_hTrapOwner = NULL;
 }
 
 //------------------------------------------------------------------------------

@@ -125,6 +125,7 @@ public:
 	virtual void	SetSkin( int skin );
 	virtual int		GetSkin()						{ return (int)m_nSkin; }
 
+	virtual int		GetBodygroupFromName(const char* name);
 	virtual void	SwitchBodygroup( int group, int value );
 	
 	virtual void	SetPickupTouch( void );

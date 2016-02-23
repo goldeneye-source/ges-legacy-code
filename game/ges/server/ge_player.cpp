@@ -452,7 +452,7 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 		// we don't want to reset the time here if we're adding to the damage since adding to the damage is essentially adding more time to an already valid timer.
 		if (GetLastAttacker() == inputinfo.GetAttacker())
 			m_iLastAttackedDamage += adjdmg;
-		else if (inputinfo.GetAttacker() != this && gpGlobals->curtime + min(adjdmg * 0.1, 10) > m_flLastAttackedTime + min(m_iLastAttackedDamage * 0.1, 10)) // We have a different attacker, but let's make sure they will be doing enough damage to extend the timer and take the title.
+		else if ( inputinfo.GetAttacker() != this && gpGlobals->curtime + min(adjdmg * 0.1, 10) > m_flLastAttackedTime + min(m_iLastAttackedDamage * 0.1, 10)) // We have a different attacker, but let's make sure they will be doing enough damage to extend the timer and take the title.
 		{
 			m_iLastAttackedDamage = adjdmg; // We reset everything and don't add here because even though they extended the timer, they don't deserve extra time for damage they didn't do.
 			m_flLastAttackedTime = gpGlobals->curtime;
@@ -537,12 +537,12 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 	return dmg;
 }
 
-bool CGEPlayer::CheckInPVS(CBasePlayer *player)
+bool CGEPlayer::CheckInPVS(CBaseEntity *pEnt)
 {
 	int clusterIndex = engine->GetClusterForOrigin(EyePosition());
 	engine->GetPVSForCluster(clusterIndex, sizeof(m_iPVS), m_iPVS);
 
-	if (player->NetworkProp()->IsInPVS(edict(), m_iPVS, sizeof(m_iPVS)))
+	if (pEnt->NetworkProp()->IsInPVS(edict(), m_iPVS, sizeof(m_iPVS)))
 		return true;
 
 	return false;

@@ -68,8 +68,10 @@ void CGEWeaponAutomatic::PrimaryAttack( void )
 		return;
 	
 	// Abort here to handle burst and auto fire modes
-	if ( (UsesClipsForAmmo1() && m_iClip1 == 0) || ( !UsesClipsForAmmo1() && !pPlayer->GetAmmoCount(m_iPrimaryAmmoType) ) )
+	if ((UsesClipsForAmmo1() && m_iClip1 == 0) || (!UsesClipsForAmmo1() && !pPlayer->GetAmmoCount(m_iPrimaryAmmoType)))
+	{
 		return;
+	}
 
 	pPlayer->DoMuzzleFlash();
 
@@ -94,18 +96,6 @@ void CGEWeaponAutomatic::PrimaryAttack( void )
 			iBulletsToFire = m_iClip1;
 		m_iClip1 -= iBulletsToFire;
 	}
-		// Fire the bullets
-	/*
-	FireBulletsInfo_t info;
-	info.m_iShots = iBulletsToFire;
-	info.m_vecSrc = pPlayer->Weapon_ShootPosition( );
-	info.m_vecDirShooting = pPlayer->GetAutoaimVector( AUTOAIM_5DEGREES );
-	info.m_vecSpread = GetBulletSpread();
-	info.m_flDistance = MAX_TRACE_LENGTH;
-	info.m_iAmmoType = m_iPrimaryAmmoType;
-	info.m_iTracerFreq = 2;
-	pPlayer->FireBullets( info );
-	*/
 
 	PrepareFireBullets(iBulletsToFire, pPlayer, pPlayer->Weapon_ShootPosition(), pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES), true);
 
@@ -119,6 +109,12 @@ void CGEWeaponAutomatic::PrimaryAttack( void )
 	{
 		// HEV suit - indicate out of ammo condition
 		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0); 
+	}
+
+	if (!m_iClip1)
+	{
+		m_bFireOnEmpty = true;
+		m_flNextEmptySoundTime = gpGlobals->curtime + max(GetClickFireRate(), 0.25);
 	}
 
 	SendWeaponAnim( GetPrimaryAttackActivity() );

@@ -27,6 +27,8 @@ class CGEBaseGrenade : public CBaseGrenade
 public:
 	virtual bool		IsInAir( void ) { return false; };
 	virtual GEWeaponID	GetWeaponID( void ) { return WEAPON_NONE; };
+
+	//Use carefully as this can return a null pointer.
 	virtual CGEWeapon*	GetSourceWeapon(void) { return m_pWeaponOwner; };
 	virtual const char* GetPrintName( void ) { return "#GE_NOWEAPON"; };
 	virtual int			GetCustomData( void ) { return 0; };
@@ -56,7 +58,7 @@ public:
 protected:
 
 	CGEWeapon *m_pWeaponOwner;
-
+	
 	virtual void Explode() {
 		ExplosionCreate( GetAbsOrigin(), GetAbsAngles(), GetThrower(), GetDamage(), GetDamageRadius(), 
 				SF_ENVEXPLOSION_NOSMOKE | SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS, 0.0f, this);

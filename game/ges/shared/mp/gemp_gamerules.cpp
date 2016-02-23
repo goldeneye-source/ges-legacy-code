@@ -1003,9 +1003,9 @@ void CGEMPRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info
 	{
 		modinfo.SetAttacker(pLastAttacker);
 		modinfo.SetWeapon(NULL); // Set the weapon to weapon_none so transfered suicides with a given weapon don't just count as kills with that weapon.
-		modinfo.SetDamageType(DMG_GENERIC); //If we replace the attacker, replace the damage type to prevent misidentification as an explosion kill.
+		modinfo.AddDamageType(DMG_NERVEGAS); //Add the NerveGas damage type as a flag to tell other parts of the code that this was a transfered kill.
 	}
-	
+
 	BaseClass::PlayerKilled( pVictim, modinfo );
 	GetScenario()->OnPlayerKilled( ToGEPlayer(pVictim), ToGEPlayer(modinfo.GetAttacker()), weap );
 }
@@ -1620,7 +1620,7 @@ void CGEMPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info 
 			weaponid = pGEWeapon->GetWeaponID();
 			wepSkin = pGEWeapon->GetSkin();
 		}
-		else
+		else if (!(dmgType & DMG_NERVEGAS)) // Only do this if the Nervegas damage flag isn't set.
 		{
 			killer_weapon_name = pInflictor->GetClassname();  // it's just that easy
 		}
@@ -1640,7 +1640,9 @@ void CGEMPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info 
 	// We only need to check the classname if we didn't explicitly resolve the weapon above
 	if ( weaponid == WEAPON_NONE )
 	{
-		if ( Q_stristr( killer_weapon_name, "npc_" ) && !pInflictor->IsNPC() )
+		if (dmgType & DMG_NERVEGAS) // Make sure we're actually looking for a weapon first, if this flag is set we want to pretend there isn't one.
+			killer_weapon_name = default_killer;
+		else if ( Q_stristr( killer_weapon_name, "npc_" ) && !pInflictor->IsNPC() )
 		{
 			CGEBaseGrenade *pNPC = ToGEGrenade( pInflictor );
 			killer_weapon_name = pNPC->GetPrintName();

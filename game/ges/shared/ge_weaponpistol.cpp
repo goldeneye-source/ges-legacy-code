@@ -134,7 +134,7 @@ void CGEWeaponPistol::ItemPostFrame( void )
 	}
 	else if ( ( pOwner->m_nButtons & IN_ATTACK ) && ( m_flNextPrimaryAttack < gpGlobals->curtime ) && ( m_iClip1 <= 0 ) )
 	{
-		DryFire();
+		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
 	}
 }
 

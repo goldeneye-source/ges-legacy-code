@@ -121,6 +121,9 @@ CGEWeapon::CGEWeapon()
 	m_GlowColor.Set( col32 );
 	m_GlowDist.Set( 250.0f );
 #else
+	m_flLastBobCalc = 0;
+	m_flLastSpeedrat = 0;
+	m_flLastFallrat = 0;
 	m_bClientGlow = false;
 	m_pEntGlowEffect = (CEntGlowEffect*)g_pScreenSpaceEffects->GetScreenSpaceEffect("ge_entglow");
 #endif
@@ -168,6 +171,10 @@ void CGEWeapon::Precache( void )
 
 	PrecacheParticleSystem( "tracer_standard" );
 	PrecacheParticleSystem( "muzzle_smoke" );
+
+	// These are common enough to precache here.
+	PrecacheScriptSound( "Weapon.Empty" );
+	PrecacheScriptSound( "Weapon.Reload" );
 }
 
 void CGEWeapon::Equip( CBaseCombatCharacter *pOwner )
@@ -186,9 +193,9 @@ void CGEWeapon::Equip( CBaseCombatCharacter *pOwner )
 
 	CGEMPPlayer *pGEPlayer = ToGEMPPlayer(pOwner);
 	if (!pGEPlayer)
-		SetSkin(0);
+		m_nSkin = 0;
 	else
-		SetSkin(pGEPlayer->GetUsedWeaponSkin(GetWeaponID()));
+		m_nSkin = pGEPlayer->GetUsedWeaponSkin(GetWeaponID()); // We don't use setskin here because the player likely doesn't have the weapon out.
 }
 
 void CGEWeapon::Drop( const Vector &vecVelocity )
@@ -271,13 +278,8 @@ void CGEWeapon::PrimaryAttack(void)
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 	ToGEPlayer(pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 
-	//BaseClass::PrimaryAttack();  //Taking this out for now so weapon logic can be consistent and handled in one place someday.
-
 	Vector	vecSrc = pPlayer->Weapon_ShootPosition();
 	Vector	vecAiming = pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
-
-	//	FireBulletsInfo_t info( 5, vecSrc, vecAiming, pGEPlayer->GetAttackSpread(this), MAX_TRACE_LENGTH, m_iPrimaryAmmoType );
-	//	info.m_pAttacker = pPlayer;
 
 	RecordShotFired();
 
@@ -292,6 +294,12 @@ void CGEWeapon::PrimaryAttack(void)
 		// HEV suit - indicate out of ammo condition
 		pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 	}
+
+	if (!m_iClip1)
+	{
+		m_bFireOnEmpty = true;
+		m_flNextEmptySoundTime = gpGlobals->curtime + max(GetClickFireRate(), 0.25);
+	}
 }
 
 void CGEWeapon::OnReloadOffscreen(void)
@@ -300,7 +308,8 @@ void CGEWeapon::OnReloadOffscreen(void)
 	if (!pOwner)
 		return;
 
-	SetSkin(ToGEMPPlayer(pOwner)->GetUsedWeaponSkin(GetWeaponID()));
+	if (pOwner->GetActiveWeapon() == this) // Only switch skins if we still have the weapon equipped!
+		SetSkin(ToGEMPPlayer(pOwner)->GetUsedWeaponSkin(GetWeaponID()));
 }
 
 
@@ -379,42 +388,57 @@ int CGEWeapon::GetTracerAttachment( void )
 #define GE_BOB_W		0.65f
 #define GE_BOB_H		0.3f
 #define GE_BOB_TIME		1.25f
+#define GE_FALL_H		0.5f
+#define GE_FALL_S		500.0f //Speed the player needs to fall at to have max viewmodel offset
 
 extern float	g_lateralBob;
 extern float	g_verticalBob;
 
 float CGEWeapon::CalcViewmodelBob( void )
 {
-	static	float bobtime;
-	static	float lastbobtime;
 	float	cycle;
+	float	framelength = gpGlobals->curtime - m_flLastBobCalc;
 	
-	CBasePlayer *player = ToBasePlayer( GetOwner() );
+	CGEMPPlayer *player = ToGEMPPlayer( GetOwner() );
 	if ( !gpGlobals->frametime || player == NULL )
 		return 0;
 
 	// Find the speed ratio vs max speed
 	float speedrat = player->GetLocalVelocity().Length2D() / (float)GE_NORM_SPEED;
-	speedrat = clamp( speedrat, 0, 1.2f );
+
+	speedrat = clamp( speedrat, m_flLastSpeedrat - 6 * framelength, m_flLastSpeedrat + 6 * framelength ); // A little bit of interpolation to prevent flickering.
+	speedrat = clamp( speedrat, 0, 1.5f );
+
+	m_flLastSpeedrat = speedrat;
 
 	// Calculate the width/height based on our speed ratio
 	float w = GE_BOB_W * speedrat;
 	float h = GE_BOB_H * speedrat;
-	
-	// Find our bobtime
-	bobtime += gpGlobals->curtime - lastbobtime;
-	lastbobtime = gpGlobals->curtime;
 
-	cycle = bobtime / GE_BOB_TIME;
+	cycle = gpGlobals->curtime / GE_BOB_TIME;
 	
 	g_lateralBob = w * sin( M_TWOPI * cycle );
 	g_verticalBob = h * sin ( 2.0f * M_TWOPI * cycle );
-	
+
+	// Now let's add an offset for how fast we're falling
+
+	float fallspeed = clamp(player->GetLocalVelocity().z, -GE_FALL_S, GE_FALL_S);
+	float fallrat = -(fallspeed / GE_FALL_S) - (clamp(player->GetJumpPenalty(), 0, 50) / 200);
+
+	fallrat = clamp(fallrat, m_flLastFallrat - 10 * framelength, m_flLastFallrat + 10 * framelength);
+
+	m_flLastFallrat = fallrat;
+
+	g_verticalBob += RemapValClamped( fallrat, -1, 1, -GE_FALL_H, GE_FALL_H);
+
+	m_flLastBobCalc = gpGlobals->curtime;
+
 	return 0;
 }
 
 void CGEWeapon::AddViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAngle &angles )
 {
+
 	Vector	forward, right, up;
 	AngleVectors( angles, &forward, &right, &up );
 
@@ -429,6 +453,7 @@ void CGEWeapon::AddViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAng
 	angles[ ROLL ]	+= g_lateralBob;
 	angles[ PITCH ]	-= g_verticalBob * 0.8f;
 	angles[ YAW ]	-= g_lateralBob  * 0.6f;
+
 }
 
 void CGEWeapon::PostDataUpdate( DataUpdateType_t updateType )
@@ -876,9 +901,7 @@ void CGEWeapon::SetViewModel()
 
 void CGEWeapon::SetSkin( int skin )
 {
-#ifdef GAME_DLL
 	m_nSkin = skin;
-#endif
 
 	CGEPlayer *pGEPlayer = ToGEPlayer( GetOwner() );
 	if ( !pGEPlayer )

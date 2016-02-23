@@ -64,7 +64,7 @@ public:
 	bool IsInAimMode();
 	bool IsRadarCloaked()					{ return m_bInSpawnCloak; }
 	bool AddArmor( int amount );
-	bool CheckInPVS(CBasePlayer *player);
+	bool CheckInPVS(CBaseEntity *pEnt);
 
 	virtual void KnockOffHat( bool bRemove = false, const CTakeDamageInfo *dmg = NULL );
 	virtual void GiveHat( void );

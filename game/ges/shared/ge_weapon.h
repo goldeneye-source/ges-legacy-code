@@ -192,6 +192,9 @@ private:
 #else
 	CEntGlowEffect *m_pEntGlowEffect;
 	bool m_bClientGlow;
+	float m_flLastBobCalc;
+	float m_flLastSpeedrat;
+	float m_flLastFallrat;
 #endif
 
 	CNetworkVar( bool, m_bEnableGlow );

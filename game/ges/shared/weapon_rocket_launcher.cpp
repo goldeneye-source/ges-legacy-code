@@ -161,6 +161,11 @@ bool CGEWeaponRocketLauncher::Deploy( void )
 void CGEWeaponRocketLauncher::Precache( void )
 {
 	PrecacheModel("models/weapons/rocket_launcher/w_rocket.mdl");
+	PrecacheMaterial("models/weapons/w_models/w_gl/grenadeprojectile");
+
+	PrecacheScriptSound("Weapon_RocketLauncher.Single");
+	PrecacheScriptSound("Weapon_RocketLauncher.Ignite");
+
 	BaseClass::Precache();
 }
 

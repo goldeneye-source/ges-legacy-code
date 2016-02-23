@@ -60,7 +60,6 @@ public:
 
 	virtual void AddViewKick( void );
 
-//	virtual void OnFireAnimReset(); //Fires when the firing animation loops around.
 	virtual void CalculateShellVis( bool fillclip ); // Calculates how many shells to have in the launcher on draw/reload
 	virtual void PushShells( bool fireshell ); // Shifts the bodygroups for shells over one on fire.
 	virtual void AssignShellVis(); // Reassigns bodygroups based on m_iShellVisArray
@@ -75,6 +74,7 @@ public:
 	virtual bool Deploy(void);
 	virtual void Precache( void );
 	virtual void FinishReload(void);
+	virtual void WeaponIdle(void);
 
 private:
 	// check a throw from vecSrc.  If not valid, move the position back along the line to vecEye
@@ -82,8 +82,8 @@ private:
 	void	LaunchGrenade( void );
 	int		m_iShellBodyGroup[6];
 	bool	m_iShellVisArray[6];
-	float	m_bPushShells;
 
+	CNetworkVar( bool, m_bPushShells );
 	CNetworkVar( bool, m_bPreLaunch );
 	CNetworkVar( float, m_flGrenadeSpawnTime );
 
@@ -117,9 +117,11 @@ IMPLEMENT_NETWORKCLASS_ALIASED( GEWeaponGrenadeLauncher, DT_GEWeaponGrenadeLaunc
 
 BEGIN_NETWORK_TABLE( CGEWeaponGrenadeLauncher, DT_GEWeaponGrenadeLauncher )
 #ifdef CLIENT_DLL
+	RecvPropBool( RECVINFO( m_bPushShells ) ),
 	RecvPropBool( RECVINFO( m_bPreLaunch ) ),
 	RecvPropFloat( RECVINFO( m_flGrenadeSpawnTime ) ),
 #else
+	SendPropBool( SENDINFO( m_bPushShells ) ),
 	SendPropBool( SENDINFO( m_bPreLaunch ) ),
 	SendPropFloat( SENDINFO( m_flGrenadeSpawnTime ) ),
 #endif
@@ -127,10 +129,9 @@ END_NETWORK_TABLE()
 
 #if !defined( CLIENT_DLL )
 BEGIN_DATADESC( CGEWeaponGrenadeLauncher )
+	DEFINE_FIELD( m_bPushShells, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_bPreLaunch, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_flGrenadeSpawnTime, FIELD_FLOAT ),
-
-//	DEFINE_THINKFUNC( OnFireAnimReset ),
 END_DATADESC()
 #endif
 
@@ -222,9 +223,16 @@ void CGEWeaponGrenadeLauncher::FinishReload(void)
 	BaseClass::FinishReload();
 }
 
+void CGEWeaponGrenadeLauncher::WeaponIdle(void)
+{
+	BaseClass::WeaponIdle();
+}
+
 void CGEWeaponGrenadeLauncher::Precache( void )
 {
 	PrecacheModel("models/weapons/gl/grenadeprojectile.mdl");
+	PrecacheMaterial("models/weapons/w_models/w_gl/grenadeprojectile");
+
 	BaseClass::Precache();
 }
 
@@ -237,25 +245,22 @@ void CGEWeaponGrenadeLauncher::PrimaryAttack( void )
 	if (!pPlayer)
 		return;
 
-	// If my clip is empty (and I use clips) start reload
-	if ( UsesClipsForAmmo1() && !m_iClip1 ) 
-	{
-		Reload();
-		return;
-	}
-
 	// Bring us back to center view
 	pPlayer->ViewPunchReset();
 
 	// Note that this is a primary attack and prepare the grenade attack to pause.
 	m_bPreLaunch = true;
 	SendWeaponAnim( GetPrimaryAttackActivity() );
+
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 	ToGEPlayer(pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 
+#ifdef GAME_DLL
+	m_bPushShells = true;
+#endif
+
 	m_flGrenadeSpawnTime = gpGlobals->curtime + GetFireDelay();
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
-	m_bPushShells = true;
 }
 
 void CGEWeaponGrenadeLauncher::ItemPostFrame( void )
@@ -266,7 +271,7 @@ void CGEWeaponGrenadeLauncher::ItemPostFrame( void )
 		m_bPreLaunch = false;
 	}
 
-	if (m_bPushShells && m_flNextPrimaryAttack < gpGlobals->curtime)
+	if (m_bPushShells && m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
 		m_bPushShells = false;
 		PushShells(false);
@@ -304,6 +309,13 @@ void CGEWeaponGrenadeLauncher::LaunchGrenade( void )
 	CBaseCombatCharacter *pOwner = GetOwner();
 	if ( !pOwner )
 		return;
+
+	// If my clip is empty (and I use clips) dry fire instead.
+	if (UsesClipsForAmmo1() && !m_iClip1)
+	{
+		DryFire();
+		return;
+	}
 
 #ifndef CLIENT_DLL
 	Vector	vForward, vRight, vUp;
@@ -364,13 +376,7 @@ void CGEWeaponGrenadeLauncher::LaunchGrenade( void )
 
 void CGEWeaponGrenadeLauncher::CalculateShellVis( bool fillclip )
 {
-	// Shells on the shotgun viewmodel will be removed if the reserve ammo is less than 5.  
-	// Each time we draw and reload, we check to see if this is the case, and if it is we change bodygroups accordingly.
-
 	CBaseCombatCharacter *pOwner = GetOwner();
-
-	
-
 	if (!pOwner)
 		return;
 
@@ -395,7 +401,7 @@ void CGEWeaponGrenadeLauncher::PushShells( bool fireshell )
 	bool shiftedArray[6];
 
 	if (fireshell)
-		m_iShellVisArray[0] = false; //shell 1 just fire fired out of the chamber.  In just a moment it will shift to shell 6.
+		m_iShellVisArray[0] = false;
 
 	// Shift all the shells over one so we're ready for them to reset.
 	for (int i = 5; i >= 0; i--)

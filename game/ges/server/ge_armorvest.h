@@ -31,6 +31,9 @@ public:
 	virtual void ItemTouch( CBaseEntity *pEntity );
 	virtual bool MyTouch( CBasePlayer *pPlayer );
 	int CalcSpawnProgress();
+	void AddSpawnProgressMod(CBasePlayer *pPlayer, int amount);
+	void ClearSpawnProgressMod(CBasePlayer *pPlayer);
+	void ClearAllSpawnProgress();
 
 	void SetEnabled( bool state );
 	bool IsEnabled() { return m_bEnabled; }
@@ -39,6 +42,12 @@ public:
 	void InputEnable( inputdata_t &inputdata );
 	void InputDisable( inputdata_t &inputdata );
 	void InputToggle( inputdata_t &inputdata );	
+
+	int	m_flSpawnCheckRadius;
+	int m_flSpawnCheckRadiusSqr;
+	int m_flSpawnCheckHalfRadiusSqr;
+
+	int m_iPlayerDamagePenalty[MAX_PLAYERS];
 
 protected:
 	void OnEnabled();

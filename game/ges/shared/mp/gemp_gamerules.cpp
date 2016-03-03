@@ -971,8 +971,10 @@ void CGEMPRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info
 	if (pInflictor)
 		inflictor_name = pInflictor->GetClassname();
 
+	bool trapInflictor = (Q_strncmp(inflictor_name, "func_ge_door", 12) == 0 || Q_strncmp(inflictor_name, "trigger_trap", 12) == 0);
+
 	// First try to give credit to players who activated an entity system that killed this player.
-	if ( pKiller && !pKiller->IsPlayer() && (Q_strncmp(inflictor_name, "func_ge_door", 12) == 0 || Q_strncmp(inflictor_name, "trigger_trap", 12) == 0))
+	if ( pKiller && !pKiller->IsPlayer() && trapInflictor )
 	{
 		CBaseEntity *pTrapActivator = NULL;
 
@@ -1003,7 +1005,8 @@ void CGEMPRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info
 	{
 		modinfo.SetAttacker(pLastAttacker);
 		modinfo.SetWeapon(NULL); // Set the weapon to weapon_none so transfered suicides with a given weapon don't just count as kills with that weapon.
-		modinfo.AddDamageType(DMG_NERVEGAS); //Add the NerveGas damage type as a flag to tell other parts of the code that this was a transfered kill.
+		if (!trapInflictor)
+			modinfo.AddDamageType(DMG_NERVEGAS); //Add the NerveGas damage type as a flag to tell other parts of the code that this was a transfered kill.
 	}
 
 	BaseClass::PlayerKilled( pVictim, modinfo );

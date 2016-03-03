@@ -461,7 +461,10 @@
     <ClCompile Include="ges\server\ai\npc_gebase_aiming.cpp" />
     <ClCompile Include="ges\server\ge_brush.cpp" />
     <ClCompile Include="ges\server\ge_door.cpp" />
+    <ClCompile Include="ges\server\ge_door_interp.cpp" />
     <ClCompile Include="ges\server\ge_gameplayinfo.cpp" />
+    <ClCompile Include="ges\server\ge_logic_gate.cpp" />
+    <ClCompile Include="ges\server\ge_point_follower.cpp" />
     <ClCompile Include="ges\server\mp\gebot_player.cpp" />
     <ClCompile Include="ges\server\mp\ge_gameplayresource.cpp" />
     <ClCompile Include="ges\server\mp\ge_playerspawn.cpp" />
@@ -1397,6 +1400,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ges\server\ge_door.h" />
+    <ClInclude Include="ges\server\ge_door_interp.h" />
+    <ClInclude Include="ges\server\ge_logic_gate.h" />
+    <ClInclude Include="ges\server\ge_point_follower.h" />
     <ClInclude Include="ges\server\ge_recipientfilter.h" />
     <ClInclude Include="ges\server\ge_triggers.h" />
     <ClInclude Include="ges\server\mp\ge_gameplayresource.h" />

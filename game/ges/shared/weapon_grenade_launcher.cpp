@@ -54,6 +54,7 @@ public:
 	
 	virtual bool IsExplosiveWeapon() { return true; }
 	virtual void OnReloadOffscreen( void );
+	virtual void Equip(CBaseCombatCharacter *pOwner);
 
 	virtual void PrimaryAttack( void );
 	virtual void ItemPostFrame( void );
@@ -61,7 +62,6 @@ public:
 	virtual void AddViewKick( void );
 
 	virtual void CalculateShellVis( bool fillclip ); // Calculates how many shells to have in the launcher on draw/reload
-	virtual void PushShells( bool fireshell ); // Shifts the bodygroups for shells over one on fire.
 	virtual void AssignShellVis(); // Reassigns bodygroups based on m_iShellVisArray
 
 #ifdef GAME_DLL
@@ -76,12 +76,16 @@ public:
 	virtual void FinishReload(void);
 	virtual void WeaponIdle(void);
 
+	CNetworkVar(int, m_iDesiredShellOffset);
+	CNetworkVar(int, m_iDesiredShellVisAmount);
+	CNetworkVar(int, m_iShellOffset);
+	CNetworkVar(int, m_iShellVisAmount);
+
 private:
 	// check a throw from vecSrc.  If not valid, move the position back along the line to vecEye
 	void	CheckLaunchPosition( const Vector &vecEye, Vector &vecSrc );
 	void	LaunchGrenade( void );
 	int		m_iShellBodyGroup[6];
-	bool	m_iShellVisArray[6];
 
 	CNetworkVar( bool, m_bPushShells );
 	CNetworkVar( bool, m_bPreLaunch );
@@ -117,11 +121,17 @@ IMPLEMENT_NETWORKCLASS_ALIASED( GEWeaponGrenadeLauncher, DT_GEWeaponGrenadeLaunc
 
 BEGIN_NETWORK_TABLE( CGEWeaponGrenadeLauncher, DT_GEWeaponGrenadeLauncher )
 #ifdef CLIENT_DLL
-	RecvPropBool( RECVINFO( m_bPushShells ) ),
+	RecvPropInt( RECVINFO( m_iDesiredShellOffset ) ),
+	RecvPropInt( RECVINFO( m_iDesiredShellVisAmount ) ),
+	RecvPropInt( RECVINFO( m_iShellOffset)),
+	RecvPropInt( RECVINFO( m_iShellVisAmount)),
 	RecvPropBool( RECVINFO( m_bPreLaunch ) ),
 	RecvPropFloat( RECVINFO( m_flGrenadeSpawnTime ) ),
 #else
-	SendPropBool( SENDINFO( m_bPushShells ) ),
+	SendPropInt( SENDINFO( m_iDesiredShellOffset ) ),
+	SendPropInt( SENDINFO( m_iDesiredShellVisAmount ) ),
+	SendPropInt( SENDINFO( m_iShellOffset ) ),
+	SendPropInt( SENDINFO( m_iShellVisAmount ) ),
 	SendPropBool( SENDINFO( m_bPreLaunch ) ),
 	SendPropFloat( SENDINFO( m_flGrenadeSpawnTime ) ),
 #endif
@@ -129,7 +139,7 @@ END_NETWORK_TABLE()
 
 #if !defined( CLIENT_DLL )
 BEGIN_DATADESC( CGEWeaponGrenadeLauncher )
-	DEFINE_FIELD( m_bPushShells, FIELD_BOOLEAN ),
+	DEFINE_FIELD( m_iDesiredShellOffset, FIELD_INTEGER ),
 	DEFINE_FIELD( m_bPreLaunch, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_flGrenadeSpawnTime, FIELD_FLOAT ),
 END_DATADESC()
@@ -139,6 +149,10 @@ END_DATADESC()
 BEGIN_PREDICTION_DATA( CGEWeaponGrenadeLauncher )
 	DEFINE_PRED_FIELD( m_bPreLaunch, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flGrenadeSpawnTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_iDesiredShellOffset, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_iDesiredShellVisAmount, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_iShellOffset, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_iShellVisAmount, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_PRED_FIELD_TOL( m_flGrenadeSpawnTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),
 END_PREDICTION_DATA()
@@ -186,9 +200,19 @@ bool CGEWeaponGrenadeLauncher::Deploy( void )
 	return success;
 }
 
+void CGEWeaponGrenadeLauncher::Equip(CBaseCombatCharacter *pOwner)
+{
+	BaseClass::Equip(pOwner);
+
+	CalculateShellVis(false); // We just picked it up and don't know how many shells it has loaded, fix that.
+	AssignShellVis();
+}
+
 bool CGEWeaponGrenadeLauncher::Holster(CBaseCombatWeapon *pSwitchingTo)
 {
-	m_bPushShells = false; //Prevent a shell push if we abort firing.
+	// Prevent a shell push if we abort firing.
+	m_iDesiredShellOffset = m_iShellOffset;
+	m_iDesiredShellVisAmount = m_iShellVisAmount;
 
 	return BaseClass::Holster(pSwitchingTo);
 }
@@ -198,7 +222,13 @@ void CGEWeaponGrenadeLauncher::OnReloadOffscreen(void)
 	BaseClass::OnReloadOffscreen();
 
 	CalculateShellVis(true); // Check shell count when we reload, but adjust for the amount of ammo we're about to take out of the clip.
-	AssignShellVis(); // Also reassign vis because this is the one time it goes offscreen.
+
+	CBaseCombatCharacter *pOwner = GetOwner();
+	if (!pOwner)
+		return;
+
+	if (pOwner->GetActiveWeapon() == this)
+		AssignShellVis(); // Also reassign vis because this is the one time it goes offscreen.
 }
 
 // We have to calculate shell vis here too, due to passive reload.  It might cause a small issue if someone picks up ammo during the second
@@ -255,9 +285,20 @@ void CGEWeaponGrenadeLauncher::PrimaryAttack( void )
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 	ToGEPlayer(pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 
-#ifdef GAME_DLL
-	m_bPushShells = true;
-#endif
+	// For ejecting the shell on fire if we decide to go that route for a special weapon skin or something.
+	bool fireshell = false;
+
+	if (fireshell)
+	{
+		m_iDesiredShellVisAmount = m_iShellVisAmount - 1;
+		m_iDesiredShellOffset = m_iShellOffset + 1;
+	}
+
+	m_iDesiredShellOffset = m_iShellOffset - 1;
+
+	// Can't use %6 since it's not modulo but division remainder and can give negative results.
+	if (m_iDesiredShellOffset < 0)
+		m_iDesiredShellOffset = m_iShellOffset + 5;
 
 	m_flGrenadeSpawnTime = gpGlobals->curtime + GetFireDelay();
 	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
@@ -271,10 +312,13 @@ void CGEWeaponGrenadeLauncher::ItemPostFrame( void )
 		m_bPreLaunch = false;
 	}
 
-	if (m_bPushShells && m_flNextPrimaryAttack <= gpGlobals->curtime)
+	if (m_iShellOffset != m_iDesiredShellOffset && m_flNextPrimaryAttack <= gpGlobals->curtime)
 	{
-		m_bPushShells = false;
-		PushShells(false);
+		m_iShellOffset = m_iDesiredShellOffset;
+		m_iShellVisAmount = m_iDesiredShellVisAmount;
+
+		// Now assign the visibility
+		AssignShellVis();
 	}
 
 	BaseClass::ItemPostFrame();
@@ -387,46 +431,36 @@ void CGEWeaponGrenadeLauncher::CalculateShellVis( bool fillclip )
 		clipammo += reserveammo; //This can be over 6, it won't change the comparision results.
 
 	// We don't actually change bodygroup visibility here so passive reload doesn't cause bodygroup changes on other weapons.
-	for (int i = 5; i >= 0; i--)
-	{
-		if (clipammo > i)
-			m_iShellVisArray[i] = true;
-		else
-			m_iShellVisArray[i] = false;
-	}
-}
-
-void CGEWeaponGrenadeLauncher::PushShells( bool fireshell )
-{
-	bool shiftedArray[6];
-
-	if (fireshell)
-		m_iShellVisArray[0] = false;
-
-	// Shift all the shells over one so we're ready for them to reset.
-	for (int i = 5; i >= 0; i--)
-	{
-		shiftedArray[i] = m_iShellVisArray[(i + 1) % 6]; //be sure to wrap around and make slot 6 slot 1
-	}
-
-	// We have to do 2 loops or a number of other fancy things to prevent overwriting one of the values.
-	for (int i = 5; i >= 0; i--)
-	{
-		m_iShellVisArray[i] = shiftedArray[i];
-	}
-
-	// Now assign the visibility
-	AssignShellVis();
+	m_iDesiredShellVisAmount = m_iShellVisAmount = min(clipammo, 6);
+	m_iDesiredShellOffset = m_iShellOffset = 0;
 }
 
 void CGEWeaponGrenadeLauncher::AssignShellVis()
 {
-	for (int i = 5; i >= 0; i--)
+	for (int i = 0; i <= 5; i++) //Check each shell to see if it should be visible according to our bounds.
 	{
-		if (m_iShellVisArray[i])
-			SwitchBodygroup(m_iShellBodyGroup[i], 0);
-		else
-			SwitchBodygroup(m_iShellBodyGroup[i], 1);
+		if (m_iShellOffset + m_iShellVisAmount <= 6) // Either they're all contained in one cycle
+		{
+			if (i >= m_iShellOffset && i < m_iShellOffset + m_iShellVisAmount)
+			{
+				SwitchBodygroup(m_iShellBodyGroup[i], 0);
+			}
+			else
+			{
+				SwitchBodygroup(m_iShellBodyGroup[i], 1);
+			}
+		}
+		else // Or occupy the ends of two seperate ones.
+		{
+			if (i >= m_iShellOffset || i < (m_iShellOffset + m_iShellVisAmount) % 6)
+			{
+				SwitchBodygroup(m_iShellBodyGroup[i], 0);
+			}
+			else
+			{
+				SwitchBodygroup(m_iShellBodyGroup[i], 1);
+			}
+		}
 	}
 }
 

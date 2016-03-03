@@ -59,7 +59,7 @@ public:
 		if (pPlayer && (keynum == MOUSE_WHEEL_UP || keynum == MOUSE_WHEEL_DOWN))
 		{
 			// Check if we are allowed to zoom in/out
-			if (pPlayer->IsInAimMode() || pPlayer->GetAimModeState() != AIM_NONE)
+			if (pPlayer->StartedAimMode())
 			{
 				// Grab our current desired zoom
 				int cur_zoom = pPlayer->GetZoomEnd();
@@ -75,7 +75,7 @@ public:
 				cur_zoom = clamp(cur_zoom, (90 + GetGEWpnData().m_iZoomOffset) - pPlayer->GetDefaultFOV(), 0);
 
 				// Apply the new zoom to the player
-				pPlayer->SetZoom(cur_zoom);
+				pPlayer->SetDesiredZoomOffset(cur_zoom);
 
 				// Save it away
 				m_iLastZoomOffset = cur_zoom;
@@ -91,18 +91,6 @@ public:
 	virtual float GetZoomOffset()
 	{
 		return m_iLastZoomOffset;
-	}
-
-	virtual bool Holster(C_BaseCombatWeapon *pSwitchingTo)
-	{
-		// Reset the last zoom change
-		if (BaseClass::Holster(pSwitchingTo))
-		{
-//			m_iLastZoomOffset = GetGEWpnData().m_iZoomOffset;
-			return true;
-		}
-
-		return false;
 	}
 
 private:

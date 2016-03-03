@@ -23,25 +23,9 @@ public:
 	string_t m_sTargetDoor; // Name of the door this entity mimics
 
 	void Spawn();
-	virtual void HookMovementValues();
-	virtual void PostSpawnInit();
 
 	CGEDoor *GetTarget();
 
-	CGEDoor *m_pTargetDoor; // Pointer to target door
-
-	//Copies of the relevant ge_door info to send to clients.
-	CNetworkVar(float, m_flAccelSpeedT);
-	CNetworkVar(float, m_flMinSpeedT);
-	CNetworkVar(float, m_flThinkIntervalT);
-	CNetworkVar(float, m_flDeccelDistT);
-	CNetworkVar(float, m_flStartMoveTimeT);
-	CNetworkVar(float, m_flMoveDistanceT);
-	CNetworkVar(float, m_flMaxSpeedT);
-	CNetworkVector(m_vecFinalDestT);
-	CNetworkVector(m_vecPosSynch);
-	CNetworkVector(m_vecVelSynch);
-
-	CNetworkVar(float, m_flAccelDampener);
-	CNetworkVar(float, m_flMoveDelay);
+	CNetworkVector(m_vecSpawnPos);
+	CNetworkHandle(CBaseEntity, m_pTargetDoor); // Pointer to target entity
 };

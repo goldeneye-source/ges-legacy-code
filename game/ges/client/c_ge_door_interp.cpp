@@ -26,201 +26,98 @@ public:
 	C_GEDoorInterp();
 
 	void Spawn();
-	void PostDataUpdate(DataUpdateType_t updateType);
-	void MoveThink();
-	void Simulate();
+	void ClientThink();
 
-	//Copies of the relevant ge_door info to send to clients.
-	float m_flAccelSpeedT;
-	float m_flMinSpeedT;
-	float m_flThinkIntervalT;
-	float m_flDeccelDistT;
-	float m_flStartMoveTimeT;
-	float m_flMoveDistanceT;
-	float m_flMaxSpeedT;
-	float m_flMoveDelay;
-	float m_flAccelDampener;
-	Vector m_vecFinalDestT;
-	Vector m_vecPosSynch;
-	Vector m_vecVelSynch;
-
-private:
-	float m_flAccelSpeed;
-	float m_flMoveStartTime;
-	float m_flLastMoveCalc;
-	float m_flLastPosCalc;
-	float m_flNextSimThink;
-	Vector m_vecAccelDir;
-	Vector m_vecSimPos;
-	Vector m_vecSimVel;
-	Vector m_vecCurrentDest;
-	bool m_bIsMoving;
-	bool m_bNeedsSpawnData;
+	EHANDLE m_pTargetDoor;
+	Vector m_vecOffsetAverage;
+	Vector m_vecTargetPosAverage;
+	Vector m_vecSpawnPos;
 };
 
 IMPLEMENT_CLIENTCLASS_DT(C_GEDoorInterp, DT_GEDoorInterp, CGEDoorInterp)
-	RecvPropFloat(RECVINFO(m_flAccelSpeedT)),
-	RecvPropFloat(RECVINFO(m_flMinSpeedT)),
-	RecvPropFloat(RECVINFO(m_flThinkIntervalT)),
-	RecvPropFloat(RECVINFO(m_flDeccelDistT)),
-	RecvPropFloat(RECVINFO(m_flStartMoveTimeT)),
-	RecvPropFloat(RECVINFO(m_flMoveDistanceT)),
-	RecvPropFloat(RECVINFO(m_flMaxSpeedT)),
-	RecvPropFloat(RECVINFO(m_flAccelDampener)),
-	RecvPropFloat(RECVINFO(m_flMoveDelay)),
-	RecvPropVector(RECVINFO(m_vecFinalDestT)),
-	RecvPropVector(RECVINFO(m_vecPosSynch)),
-	RecvPropVector(RECVINFO(m_vecVelSynch)),
+	RecvPropEHandle(RECVINFO(m_pTargetDoor)),
+	RecvPropVector(RECVINFO(m_vecSpawnPos)),
 END_RECV_TABLE()
 
 C_GEDoorInterp::C_GEDoorInterp()
 {
-	m_bIsMoving = false;
-	m_bNeedsSpawnData = true;
-	m_vecPosSynch = vec3_origin;
-	m_vecVelSynch = vec3_origin;
-	m_flAccelDampener = 0.8;
-	m_flMoveDelay = 0.1;
-	m_flNextSimThink = 0;
-	m_flMoveStartTime = -1;
-	m_flAccelSpeedT = 0;
+	m_vecOffsetAverage = 0;
+	m_pTargetDoor = NULL;
+	m_vecSpawnPos = vec3_origin;
 }
 
 void C_GEDoorInterp::Spawn(void)
 {
-	m_bIsMoving = false;
-	m_bNeedsSpawnData = true;
-	m_vecPosSynch = vec3_origin;
-	m_vecVelSynch = vec3_origin;
+	m_pTargetDoor = NULL;
+	SetLocalOrigin(m_vecSpawnPos);
 
 	BaseClass::Spawn();
 
 	SetNextClientThink(CLIENT_THINK_ALWAYS);
 }
 
-void C_GEDoorInterp::PostDataUpdate(DataUpdateType_t updateType)
+void C_GEDoorInterp::ClientThink()
 {
-	BaseClass::PostDataUpdate(updateType);
+	BaseClass::ClientThink();
 
-	if (m_bNeedsSpawnData)
-	{
-		SetAbsOrigin(m_vecPosSynch);
-	}
+	// If we don't have something to follow around, don't bother.
+	if (!m_pTargetDoor)
+		return;
 
-	if (m_vecFinalDestT != m_vecCurrentDest)
-	{
-		m_bNeedsSpawnData = false;
-		m_vecSimVel = m_vecVelSynch;
-		m_vecSimPos = m_vecPosSynch;
-		SetAbsOrigin(m_vecSimPos);
-		SetAbsVelocity(vec3_origin);
-		m_vecAccelDir = (m_vecFinalDestT - m_vecSimPos) / (m_vecFinalDestT - m_vecSimPos).Length();
-		m_flNextSimThink = gpGlobals->curtime;
-		m_vecCurrentDest = m_vecFinalDestT;
-		m_flMoveStartTime = gpGlobals->curtime + m_flMoveDelay;
-	}
-}
+	//This is basically a bunch of nonsense in a desperate attempt to reduce elevator jitter.  All intuitive approaches
+	//that I could think of have failed me, this is all that's left.
 
-void C_GEDoorInterp::Simulate()
-{
-	if (m_bIsMoving && IsAbsQueriesValid())
-	{
-		// However, we want to use roughly the same velocity integration intervals as the server so we don't desynch from the actual door due to integrator error.
-//		if (m_flNextSimThink < gpGlobals->curtime)
-		MoveThink();
-
-		//float calcTime = gpGlobals->curtime - m_flLastPosCalc;
-		//m_flLastPosCalc = gpGlobals->curtime;
-
-		// We need to integrate posistion every frame for smooth movement
-//		m_vecSimPos = m_vecSimPos + m_vecSimVel * calcTime;
-		
-//		SetAbsOrigin(m_vecSimPos);
+	//Maybe one day someone else will figure out the core issue and finally do away with this poor compromise.
 
 
-		if (IsPlayerSimulated())
-			Warning("We are player simulated!\n");
+	//In the interests of anyone who comes after me:
 
-		if (ShouldPredict())
-			Warning("We are predicted!\n");
+	//Basically, there are two things that make elevators dinky in source.
+	//The first is cl_smooth, which is actually not too hard to account for.  It basically just averages the prediction errors
+	//concerning the player's posistion over however many frames and then offsets their view accordingly.  It causes the player's
+	//view to sink into the elevator though so it's worth trying to account for.
+	//I did so by just averaging the posistion of the elevator over the last 1/10th of a second, which is the default value for
+	//cl_smooth, but there are more direct ways of accounting for it like:
 
-		if (ShouldInterpolate())
-			Warning("We are Interpolated!\n");
-	}
-	else if (m_flMoveStartTime != -1 && m_flMoveStartTime < gpGlobals->curtime)
-	{
-		m_flLastPosCalc = m_flLastMoveCalc = gpGlobals->curtime;
-		m_bIsMoving = true;
-		m_flMoveStartTime = -1;
-	}
-}
+	//  Vector PosistionOffset;
+	//	CBasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
+	//  pPlayer->GetPredictionErrorSmoothingVector(PosistionOffset);
 
-void C_GEDoorInterp::MoveThink(void)
-{
-	Vector framevelocity, remainingvector;
-	QAngle frameangularvelocity, remainingangle;
-	float framespeed, remainingdist, directionmetric, speedmetric, covereddist;
+	// And then add PosistionOffset to the calculated posistion of the elevator.  My attempts at doing this ended up kind of
+	// jittery though.
 
-	framevelocity = m_vecSimVel;
-	remainingvector = m_vecFinalDestT - m_vecSimPos;
 
-	framespeed = framevelocity.Length();
-	remainingdist = remainingvector.Length();
+	//The other problem is some sort of nonsense that happens when the player rides an entity.  All other moving entities suddenly
+	//get interpolated really poorly and jump around everywhere.  I've tried a ton of stuff to combat this, but it seems
+	//to even happen to purely clientside entities.  (I had this clientside entity just constantly set its origin with SetAbsOrigin
+	//directly on top of the player's view and it still jittered around when I rode the elevator.)  If you can figure out
+	//what actually causes this then the rest should fall into place.  I do know that it became much worse when we changed
+	//cl_interp from 0.1 to 0.030303 but as far as i can tell clientside entities aren't affected by that.  Good luck!
 
-	directionmetric = (remainingvector.x + remainingvector.y + remainingvector.z) * (m_vecAccelDir.x + m_vecAccelDir.y + m_vecAccelDir.z);
-	speedmetric = (framevelocity.x + framevelocity.y + framevelocity.z) * (m_vecAccelDir.x + m_vecAccelDir.y + m_vecAccelDir.z);
+	//Anyway here's my shoddy strat.  It just does a rough average of the posistion of the door over the last 1/10th of
+	//a second and uses that as the client posistion.  This algorthem doesn't calculate a true average, but it should
+	//be close enough for our purposes.
 
-	float calctime = (gpGlobals->curtime - m_flLastMoveCalc);
-	m_flLastMoveCalc = gpGlobals->curtime;
-	float accelspeed = m_flAccelSpeedT * m_flAccelDampener;
-	covereddist = max(m_flMoveDistanceT - remainingdist, 0);
 
-	// If direction metric is negative then the two vectors point in opposite directions.  Only works because there are only two possible directions for them to point in.
-	// If they point in opposite directions then we have moved past our objective.
-	if (directionmetric < 0)
-		remainingdist *= -1;
+	Vector TargetPos = m_pTargetDoor->GetLocalOrigin();
 
-	//If speedmetric is negative the door is moving in the direction opposite its acceleration vector
-	if (speedmetric < 0)
-	{
-		framespeed *= -1;
-	}
+	float calcTime = gpGlobals->frametime;
 
-	// Now calculate our speed for the next interval.
 
-	//DeccelDist should always be checked first because it can sometimes overlap with acceltime.  We use a kinematic equation
-	//for this instead of the integrator to reduce final deceleration error as much as possible.
-	//Cap the minimum at minspeed so mappers can have their doors slam shut if they want them to.
-	if (remainingdist < m_flDeccelDistT && framespeed >= 0) //Make sure we're actually moving towards the destination while also being within range of it.
-		framespeed = clamp(sqrt(2 * remainingdist * accelspeed), m_flMinSpeedT, framespeed + accelspeed *calctime); //Make sure we don't suddenly speed up or pass our minimum speed.
-	else if (covereddist < m_flDeccelDistT && framespeed < -accelspeed * calctime) //The opposite case, where we're moving towards the other end posistion and risk going past it.  Use an equation here too to prevent that.
-		framespeed = max(framespeed + accelspeed * calctime, -sqrt(2 * covereddist * accelspeed)); //Make sure we can't randomly speed up.  Both values are negative here so we use max instead of min.
+	if (calcTime > 0.1 || (m_vecTargetPosAverage - TargetPos).LengthSqr() < 1.0) //If our calctime is too large or we're super close, just set them equal.
+		m_vecTargetPosAverage = TargetPos;
 	else
-		framespeed = min(framespeed + accelspeed *calctime, m_flMaxSpeedT); //Cap it so the door will move at max speed once it hits it.
-
-	if (remainingdist > 0) // Still has distance to move so keep integrating
 	{
-		m_vecSimVel = framespeed * m_vecAccelDir;
-
-		m_vecSimPos = m_vecSimPos + m_vecSimVel * calctime;
-
-		SetAbsOrigin(m_vecSimPos);
-		SetAbsVelocity(vec3_origin);
-
-		// If the distance the door will move in the next interval is greater than the remaining distance, the door is about to move past the end point and then teleport back!
-		if (framespeed * m_flThinkIntervalT > remainingdist)
-			m_flNextSimThink = gpGlobals->curtime + remainingdist / framespeed; //Correct for this by adjusting the interval to match up with the end time.
-		else if (-framespeed * m_flThinkIntervalT > covereddist) // We're about to move past the other endpos while changing directions!
-			m_flNextSimThink = gpGlobals->curtime + covereddist / -framespeed;
+		if (m_vecTargetPosAverage == vec3_origin)
+			m_vecTargetPosAverage = TargetPos;
 		else
-			m_flNextSimThink = gpGlobals->curtime + m_flThinkIntervalT;
+		{
+			m_vecTargetPosAverage *= 1.00 - calcTime * 10;
+			m_vecTargetPosAverage += TargetPos * calcTime * 10;
+		}
 	}
-	else // Has hit or gone past the ending posistion so finalize the transistion and stop moving
-	{
-		m_vecSimVel = vec3_origin;
-		m_vecSimPos = m_vecFinalDestT;
-		SetAbsVelocity(m_vecSimVel);
-		SetAbsOrigin(m_vecSimPos);
-		m_bIsMoving = false;
-	}
+
+	SetLocalOrigin(m_vecTargetPosAverage);
+
+	SetNextClientThink(CLIENT_THINK_ALWAYS);
 }

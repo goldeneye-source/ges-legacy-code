@@ -53,12 +53,16 @@ public:
 
 	virtual void ItemPreFrame();
 	virtual void ClientThink();
+	virtual void PreThink();
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 
 	void ResetAimMode( bool forced=false );
 	bool IsInAimMode();
+	bool StartedAimMode()					{ return (m_flFullZoomTime > 0); }
+	float GetFullyZoomedTime()				{ return m_flFullZoomTime; }
+	void SetDesiredZoomOffset(float newoffset)				{ m_iNewZoomOffset = newoffset; }
 	void CheckAimMode();
-	int GetAimModeState() { return m_iAimModeState; }
+	int GetAimModeState();
 
 	void SetZoom( int zoom, bool forced=false ); 
 	int GetZoomEnd();
@@ -95,11 +99,11 @@ private:
 	EHANDLE m_hActiveWeaponCache;
 
 	// Local state tracking
-	int  m_iAimModeState;
+	float m_flFullZoomTime;
 
-	// Networked aiming variables
-	bool m_bInAimMode;
-	
+	// Used to tell clientthink what to set the zoom to.  -1 is force unzoom and -2 is no change.
+	int m_iNewZoomOffset;
+
 	bool m_bInSpecialMusic;
 	float m_flEndSpecialMusic;
 	int m_ArmorValue;

@@ -25,6 +25,8 @@ PRECACHE_REGISTER( item_armorvest );
 PRECACHE_REGISTER( item_armorvest_half );
 
 BEGIN_DATADESC( CGEArmorVest )
+	// Parameters
+	DEFINE_KEYFIELD( m_flSpawnCheckRadius, FIELD_FLOAT, "CheckRadius"),
 	// Function Pointers
 	DEFINE_ENTITYFUNC( ItemTouch ),
 	// Inputs
@@ -39,6 +41,7 @@ CGEArmorVest::CGEArmorVest( void )
 {
 	m_bEnabled = true;
 	m_iAmount = MAX_ARMOR;
+	m_flSpawnCheckRadius = 512;
 }
 
 void CGEArmorVest::Spawn( void )
@@ -46,9 +49,12 @@ void CGEArmorVest::Spawn( void )
 	Precache();
 
 	if ( !Q_strcmp(GetClassname(), "item_armorvest_half") )
+	{
+		SetModel("models/weapons/halfarmor/halfarmor.mdl");
 		m_iAmount = MAX_ARMOR / 2.0f;
-
-	SetModel( "models/weapons/armor/armor.mdl" );
+	}
+	else
+		SetModel("models/weapons/armor/armor.mdl");
 
 	SetOriginalSpawnOrigin( GetAbsOrigin() );
 	SetOriginalSpawnAngles( GetAbsAngles() );
@@ -59,6 +65,14 @@ void CGEArmorVest::Spawn( void )
 
 	// So NPC's can "see" us
 	AddFlag( FL_OBJECT );
+
+	m_flSpawnCheckRadiusSqr = m_flSpawnCheckRadius * m_flSpawnCheckRadius;
+	m_flSpawnCheckHalfRadiusSqr = m_flSpawnCheckRadiusSqr * 0.25;
+
+	for (int i = 0; i < MAX_PLAYERS; i++)
+	{
+		m_iPlayerDamagePenalty[i] = 0;
+	}
 
 	// Override base's ItemTouch for NPC's
 	SetTouch( &CGEArmorVest::ItemTouch );
@@ -71,6 +85,7 @@ void CGEArmorVest::Spawn( void )
 void CGEArmorVest::Precache( void )
 {
 	PrecacheModel( "models/weapons/armor/armor.mdl" );
+	PrecacheModel( "models/weapons/halfarmor/halfarmor.mdl" );
 	PrecacheScriptSound( "ArmorVest.Pickup" );
 
 	BaseClass::Precache();
@@ -80,7 +95,7 @@ CBaseEntity *CGEArmorVest::Respawn(void)
 {
 	BaseClass::Respawn();
 	m_iSpawnpointsgoal = (int)(120 - 15 * sqrt((float)GEMPRules()->GetNumAlivePlayers()));
-	m_iSpawnpoints = 0;
+	ClearAllSpawnProgress();
 	SetNextThink(gpGlobals->curtime + 1);
 	return this;
 }
@@ -109,7 +124,10 @@ void CGEArmorVest::Materialize(void)
 	// I repurposed the respawn -> materalize loop to demo the dynamic respawn concept.
 	// May cause issues, create seperate loop if so.
 
+	// If player dies near it, progress should go up.  If player gets hurt near it, progress should go down.  Ideally make it avoid spawning right on player death.
+
 	m_iSpawnpoints += CalcSpawnProgress();
+
 	if (m_iSpawnpointsgoal < m_iSpawnpoints)
 	{
 		// Only materialize if we are enabled and allowed
@@ -179,7 +197,8 @@ bool CGEArmorVest::MyTouch( CBasePlayer *pPlayer )
 
 int CGEArmorVest::CalcSpawnProgress()
 {
-	float closestlength = 262144;
+	float length1 = m_flSpawnCheckRadiusSqr; //Shortest length
+	float length2 = m_flSpawnCheckRadiusSqr; //Second shortest length
 	float currentlength = 0;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
@@ -187,18 +206,66 @@ int CGEArmorVest::CalcSpawnProgress()
 		CGEMPPlayer *pPlayer = ToGEMPPlayer(UTIL_PlayerByIndex(i));
 		if (pPlayer && pPlayer->IsConnected())
 		{
+			if (!pPlayer->CheckInPVS(this)) // We don't care about players who can't see us.
+				continue;
+
 			currentlength = (pPlayer->GetAbsOrigin() - GetAbsOrigin()).LengthSqr();
-			if (currentlength < closestlength)
-				closestlength = currentlength;
+			if (currentlength < length1)
+			{
+				length2 = length1; //We have to shift length1 down one.  We already know it's lower than length2.
+				length1 = currentlength;
+			}
+			else if (currentlength < length2)
+				length2 = currentlength;
 		}
 	}
 
-	// Don't stand right on top of the armor spawn, loser.
-	if (closestlength < 4096)
-		return 4;
+	// If the distances aren't low enough then we just tick down at max speed without calculating anything.
+	if (length1 > m_flSpawnCheckHalfRadiusSqr || length2 > m_flSpawnCheckRadiusSqr)
+		return 10;
 
-	// Ticks up at 6 points at minimum and 10 points at maximum.  Linear falloff.
-	return (int)min((sqrt(closestlength)) / 126 + 6, 10);
+	// Basically, 2 people being within the check distance of the armor with one of them within a quarter of it is the only way to get it to tick down at less than max rate.
+	// Discourages standing on top of the armor spawn in the middle of a fight because "oh man i need 3 gauges of health"
+	float metric = sqrt(m_flSpawnCheckHalfRadiusSqr - length1)*sqrt(m_flSpawnCheckRadiusSqr - length2);
+
+	// If 2 players are within 17% of the radius each the armor does not tick down at all.
+	return (int)clamp(10 - 11 * sqrt(metric) / m_flSpawnCheckRadius, 0, 10);
+}
+
+void CGEArmorVest::AddSpawnProgressMod(CBasePlayer *pPlayer, int amount)
+{
+	int cappedamount = min(amount, m_iSpawnpoints);
+
+	if (pPlayer)
+	{
+		int iPID = pPlayer->GetUserID();
+		m_iPlayerDamagePenalty[iPID] += cappedamount;
+	}
+
+	m_iSpawnpoints -= cappedamount;
+}
+
+void CGEArmorVest::ClearSpawnProgressMod(CBasePlayer *pPlayer)
+{
+	if (!pPlayer)
+		return;
+
+	int iPID = pPlayer->GetUserID();
+
+	if (m_iSpawnpoints < m_iSpawnpointsgoal - 20) // Only do this next bit if we won't subtract points.
+		m_iSpawnpoints = min(m_iSpawnpoints + m_iPlayerDamagePenalty[iPID], m_iSpawnpointsgoal - 20); // Add back all the spawn points that we stole but avoid having the armor respawn instantly after we died.
+
+	m_iPlayerDamagePenalty[iPID] = 0;
+}
+
+void CGEArmorVest::ClearAllSpawnProgress()
+{
+	m_iSpawnpoints = 0;
+
+	for (int i = 0; i < MAX_PLAYERS; i++)
+	{
+		m_iPlayerDamagePenalty[i] = 0;
+	}
 }
 
 void CGEArmorVest::OnEnabled( void )

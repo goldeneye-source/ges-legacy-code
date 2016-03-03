@@ -2051,6 +2051,14 @@ void CGameMovement::WalkMove( void )
 	else
 		strafeboost = clamp(runtime * -0.8 + 0.8, 1, 1.4); //The decay timer is only half the length so the formula needs to be adjusted for that.
 
+	//Calculate aimmode speed penalty.
+
+	float aimpenalty = 1;
+
+	if (((CGEMPPlayer*)player)->StartedAimMode())
+		aimpenalty = GE_AIM_SPEED_MULT;
+
+
 	//
 	// Clamp to server defined max speed
 	//
@@ -2063,7 +2071,7 @@ void CGameMovement::WalkMove( void )
 
 	// Set pmove velocity
 	mv->m_vecVelocity[2] = 0;
-	Accelerate( wishdir, wishspeed * strafeboost, sv_accelerate.GetFloat() );
+	Accelerate(wishdir, wishspeed * strafeboost * aimpenalty, sv_accelerate.GetFloat());
 	mv->m_vecVelocity[2] = 0;
 #else
 

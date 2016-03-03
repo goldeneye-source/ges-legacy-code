@@ -43,7 +43,7 @@ IMPLEMENT_SERVERCLASS_ST(CGEPlayer, DT_GE_Player)
 	SendPropInt( SENDINFO( m_iMaxArmor ) ),
 	SendPropInt( SENDINFO( m_iMaxHealth ) ),
 
-	SendPropBool( SENDINFO( m_bInAimMode) ),
+	SendPropFloat(SENDINFO(m_flFullZoomTime)),
 
 	SendPropEHandle( SENDINFO( m_hHat ) ),
 	SendPropInt( SENDINFO( m_takedamage ) ),
@@ -66,7 +66,6 @@ ConVar ge_limithalfarmorpickup("ge_limithalfarmorpickup", "0", FCVAR_GAMEDLL | F
 
 CGEPlayer::CGEPlayer()
 {
-	m_iAimModeState = AIM_NONE;
 	m_bInSpawnInvul = false;
 	m_bInSpawnCloak = false;
 
@@ -238,12 +237,6 @@ void CGEPlayer::PreThink( void )
 {
 	// See if the player is pressing the AIMMODE button
 	CheckAimMode();
-
-	// Adjust our speed! (NOTE: crouch speed is taken into account in CGameMovement::HandleDuckingSpeedCrop)
-	if ( IsInAimMode() )
-		SetMaxSpeed( GE_AIMED_SPEED * GEMPRules()->GetSpeedMultiplier( this ) );
-	else
-		SetMaxSpeed( GE_NORM_SPEED * GEMPRules()->GetSpeedMultiplier( this ) );
 
 	// Invulnerability checks (make sure we are never invulnerable forever!)
 	if ( m_takedamage == DAMAGE_NO && m_bInSpawnInvul && m_flEndInvulTime < gpGlobals->curtime && !IsObserver() )
@@ -920,7 +913,6 @@ void CGEPlayer::Spawn()
 	m_flEndExpDmgTime = 0;
 	m_iExpDmgTakenThisInterval = 0;
 	m_vExpDmgForceThisFrame = vec3_origin;
-	m_iAimModeState = AIM_NONE;
 
 	for (int i = 0; i < 16; i++)
 	{

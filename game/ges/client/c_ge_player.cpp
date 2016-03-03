@@ -42,14 +42,14 @@ IMPLEMENT_CLIENTCLASS_DT(C_GEPlayer, DT_GE_Player, CGEPlayer)
 	RecvPropInt( RECVINFO( m_iMaxArmor ) ),
 	RecvPropInt( RECVINFO( m_iMaxHealth ) ),
 
-	RecvPropBool( RECVINFO( m_bInAimMode ) ),
+	RecvPropFloat( RECVINFO( m_flFullZoomTime ) ),
 
 	RecvPropEHandle( RECVINFO( m_hHat ) ),
 	RecvPropInt( RECVINFO( m_takedamage ) ),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_GEPlayer )
-	DEFINE_PRED_FIELD( m_bInAimMode, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+DEFINE_PRED_FIELD( m_flFullZoomTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
 extern ConVar v_viewmodel_fov;
@@ -67,7 +67,7 @@ C_GEPlayer::C_GEPlayer()
 	m_iMaxArmor = MAX_ARMOR;
 	m_iMaxHealth = MAX_HEALTH;
 
-	m_iAimModeState = AIM_NONE;
+	m_iNewZoomOffset = 0;
 
 	// Load our voice overhead icons if not done yet
 	if ( m_pDM_VoiceHeadMaterial == NULL )
@@ -136,6 +136,18 @@ int C_GEPlayer::GetZoomEnd()
 	return m_flZoomEnd;
 }
 
+int C_GEPlayer::GetAimModeState()
+{
+	if (m_flFullZoomTime > 0)
+	{
+		if (m_flFullZoomTime < gpGlobals->curtime)
+			return AIM_ZOOMED;
+		else
+			return AIM_ZOOM_IN;
+	}
+	return AIM_NONE;
+}
+
 void C_GEPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov )
 {
 	// if we're dead, we want to deal with first or third person ragdolls.
@@ -175,6 +187,13 @@ bool C_GEPlayer::CanSetSoundMixer( void )
 		return false;
 
 	return BaseClass::CanSetSoundMixer();
+}
+
+void C_GEPlayer::PreThink(void)
+{
+	CheckAimMode();
+
+	BaseClass::PreThink();
 }
 
 void C_GEPlayer::FireGameEvent( IGameEvent *event )
@@ -286,7 +305,17 @@ void C_GEPlayer::ClientThink( void )
 	if ( IsLocalPlayer() )
 	{
 		// See if we need to zoom in/out based on our aim mode
-		CheckAimMode();
+
+		// We have to do this here rather than in aimmode land so gpGlobals->curtime reads off the correct value.
+		// But we have to check aimmode status in preframe because it needs to be called in the same function as on the server
+		// and the server has no ClientThink.
+		if (m_iNewZoomOffset != m_flZoomEnd)
+		{
+			if (m_iNewZoomOffset == -1)
+				SetZoom(0, true);
+			else
+				SetZoom(m_iNewZoomOffset);
+		}
 
 		// Check if we should draw our hat
 		if ( m_hHat.Get() )
@@ -338,7 +367,6 @@ void C_GEPlayer::PostDataUpdate( DataUpdateType_t updateType )
 	if ( GetActiveWeapon() != m_hActiveWeaponCache )
 	{
 		m_hActiveWeaponCache = GetActiveWeapon();
-		ResetAimMode();
 	}
 }
 

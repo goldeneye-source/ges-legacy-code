@@ -219,7 +219,7 @@ int Q_ExtractData( const char *in, CUtlVector<char*> &out )
 
 #ifdef CLIENT_DLL
 
-void GEUTIL_DrawSprite3D( IMaterial *pMaterial, Vector offset, float width, float height )
+void GEUTIL_DrawSprite3D( IMaterial *pMaterial, Vector offset, float width, float height, int alpha = 255 )
 {
 	// Make sure we are allowed to access our orientation
 	Assert( IsCurrentViewAccessAllowed() );
@@ -256,22 +256,22 @@ void GEUTIL_DrawSprite3D( IMaterial *pMaterial, Vector offset, float width, floa
 	CMeshBuilder meshBuilder;
 	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
 
-	meshBuilder.Color4ub( 255, 255, 255, 255 );
+	meshBuilder.Color4ub( 255, 255, 255, alpha );
 	meshBuilder.TexCoord2f( 0,0,0 );
 	meshBuilder.Position3fv( (vOrigin + left + top).Base() );
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Color4ub( 255, 255, 255, 255 );
+	meshBuilder.Color4ub( 255, 255, 255, alpha );
 	meshBuilder.TexCoord2f( 0,1,0 );
 	meshBuilder.Position3fv( (vOrigin + right + top).Base() );
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Color4ub( 255, 255, 255, 255 );
+	meshBuilder.Color4ub( 255, 255, 255, alpha );
 	meshBuilder.TexCoord2f( 0,1,1 );
 	meshBuilder.Position3fv( (vOrigin + right + bottom).Base() );
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Color4ub( 255, 255, 255, 255 );
+	meshBuilder.Color4ub( 255, 255, 255, alpha );
 	meshBuilder.TexCoord2f( 0,0,1 );
 	meshBuilder.Position3fv( (vOrigin + left + bottom).Base() );
 	meshBuilder.AdvanceVertex();

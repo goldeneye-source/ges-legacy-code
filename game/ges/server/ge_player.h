@@ -62,6 +62,7 @@ public:
 	//This will return true if the player is 'fully' in AimMode
 	void ResetAimMode(bool forced = false);
 	bool IsInAimMode();
+	bool StartedAimMode()					{ return (m_flFullZoomTime > 0); }
 	bool IsRadarCloaked()					{ return m_bInSpawnCloak; }
 	bool AddArmor( int amount );
 	bool CheckInPVS(CBaseEntity *pEnt);
@@ -152,10 +153,10 @@ public:
 	virtual CBaseEntity* GetLastAttacker(bool onlyrecent = true);
 	virtual void SetLastAttacker(CBaseEntity* lastAttacker) { m_pLastAttacker = lastAttacker; }
 
+	void CheckAimMode(void);
+
 protected:
 	// Purely GE Functions & Variables
-	void CheckAimMode( void );
-
 	bool ShouldRunRateLimitedCommand( const CCommand &args );
 
 	void NotifyPickup( const char *classname, int type );
@@ -208,12 +209,8 @@ protected:
 
 	CNetworkVar( int,	m_iMaxArmor );
 
-	// Networked zoom variables
-	CNetworkVar( bool, m_bInAimMode );
-
 	// Let's us know when we are officially in aim mode
-	int m_iAimModeState;
-	float m_flFullZoomTime;
+	CNetworkVar(float, m_flFullZoomTime);
 
 	CNetworkHandle( CBaseCombatWeapon,	m_hActiveLeftWeapon );
 	CNetworkHandle( CBaseEntity,		m_hHat );

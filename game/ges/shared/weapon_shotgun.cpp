@@ -166,7 +166,12 @@ void CWeaponShotgun::OnReloadOffscreen(void)
 {
 	BaseClass::OnReloadOffscreen();
 
-	CalculateShellVis(true); // Check shell count when we reload, but adjust for the amount of ammo we're about to take out of the clip.
+	CBaseCombatCharacter *pOwner = GetOwner();
+	if (!pOwner)
+		return;
+
+	if (pOwner->GetActiveWeapon() == this)
+		CalculateShellVis(true); // Check shell count when we reload, but adjust for the amount of ammo we're about to take out of the clip.
 }
 
 

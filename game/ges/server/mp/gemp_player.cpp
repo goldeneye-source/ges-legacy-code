@@ -1305,7 +1305,7 @@ void CGEMPPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	NotifyOnDeath();
 
-	bool killedByTrigger = !Q_stricmp("trigger_hurt", info.GetAttacker()->GetClassname());
+	bool killedByTrigger = (!Q_stricmp("trigger_hurt", info.GetAttacker()->GetClassname()) || !Q_stricmp("trigger_trap", info.GetAttacker()->GetClassname()));
 	CBaseCombatWeapon *pWeapon;
 	
 	// Check if we were killed by a trigger and our active weapon is a token

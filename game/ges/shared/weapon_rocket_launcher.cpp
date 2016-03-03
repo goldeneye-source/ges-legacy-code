@@ -176,7 +176,12 @@ void CGEWeaponRocketLauncher::OnReloadOffscreen(void)
 {
 	BaseClass::OnReloadOffscreen();
 
-	SwitchBodygroup(1, 0);
+	CBaseCombatCharacter *pOwner = GetOwner();
+	if (!pOwner)
+		return;
+
+	if (pOwner->GetActiveWeapon() == this)
+		SwitchBodygroup(1, 0);
 }
 
 //-----------------------------------------------------------------------------

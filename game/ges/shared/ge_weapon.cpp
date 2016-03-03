@@ -340,8 +340,6 @@ bool CGEWeapon::Reload( void )
 			gameeventmanager->FireEventClientSide( event );
 		}
 	#endif
-		// Reset our aim mode
-		pPlayer->ResetAimMode( true );
 
 		m_iShotsFired = 0;
 		SetContextThink(&CGEWeapon::OnReloadOffscreen, gpGlobals->curtime + 0.5f, "HalfReload");

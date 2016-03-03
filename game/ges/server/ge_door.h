@@ -26,7 +26,6 @@ public:
 	float m_flTriggerThreshold; // Fraction of total movedistance that triggers an output when passed.
 	string_t m_sPartner; // Name of the door that opens and closes with this one
 	CUtlVector<CGEDoor*> m_pPartnerEnts; // List of pointers to door entities that open and close with this one
-	CBaseEntity *m_pInterpEnt; // The interper for this door if it has one.
 	float m_flThinkInterval; // How often the door integrates velocity.
 
 	float m_flDeccelDist; //Distance within the end that the door must start decelerating.  Might not be the same as acceldist.
@@ -49,8 +48,6 @@ public:
 	virtual void CalcMovementValues(Vector startpos, Vector endpos);
 
 	bool CheckPartnerPosistions(int pos); // Checks the posistions of all the door's partners against the input.
-
-	void SetInterpEnt(CBaseEntity* newInterp);
 
 	virtual CBaseEntity* GetLastActivator()				{ return m_pLastActivator; }
 	virtual void SetLastActivator(CBaseEntity* pEnt)	{ m_pLastActivator = pEnt; }

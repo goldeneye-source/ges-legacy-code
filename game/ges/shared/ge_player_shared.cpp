@@ -828,9 +828,6 @@ bool CGEPlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex /*
 	{
 	#ifdef GAME_DLL
 		GEStats()->Event_WeaponSwitch( this, Weapon_GetLast(), GetActiveWeapon() );
-
-		// Reset the aim mode on the server, client is handled through m_hActiveWeaponCache
-		ResetAimMode();
 	#else
 		// Kill off any remaining particle effects
 		CBaseViewModel *pViewModel = GetViewModel( viewmodelindex );
@@ -839,26 +836,27 @@ bool CGEPlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex /*
 	#endif
 	}
 
+	ResetAimMode();
+
 	return res;
 }
 
 void CGEPlayer::ResetAimMode( bool forced /*=false*/ )
 {
+	m_flFullZoomTime = 0;
+
 #ifdef CLIENT_DLL
 	// Only the client needs to actually unzoom
-	SetZoom( 0, forced );
-#else
-	// Force us out of aim mode on the server
-	m_bInAimMode = false;
+	if (forced)
+		m_iNewZoomOffset = -1;
+	else
+		m_iNewZoomOffset = 0;
 #endif
-
-	m_iAimModeState = AIM_NONE;
 }
 
 bool CGEPlayer::IsInAimMode( void )
 {
-	// Calculated server side in CheckAimMode()
-	return m_bInAimMode;
+	return (m_flFullZoomTime != 0 && m_flFullZoomTime < gpGlobals->curtime);
 }
 
 // AIM MODE
@@ -868,44 +866,31 @@ void CGEPlayer::CheckAimMode( void )
 	if ( !pWeapon )
 		return;
 
-	// Don't allow zooming functions while reloading or dead
-	if ( pWeapon->m_bInReload || !IsAlive() || !pWeapon->IsWeaponVisible() )
+	// Don't allow zooming functions while dead, we'll allow pWeapon->m_bInReload for now.
+	if ( !IsAlive() || !pWeapon->IsWeaponVisible())
 	{
-		m_bInAimMode = false;
+		if (m_flFullZoomTime > 0)
+			ResetAimMode(true);
+
 		return;
 	}
 
-	// Get out of aim mode if we release the button
-	if ( !(m_nButtons & IN_AIMMODE) && m_iAimModeState != AIM_NONE )
+	// Get out of aim mode if we're currently in it and not pressing the button.
+	if ( !(m_nButtons & IN_AIMMODE) && m_flFullZoomTime > 0)
 	{
 		ResetAimMode();
 	}
-	else if ( (m_nButtons & IN_AIMMODE) && m_iAimModeState == AIM_NONE )
+	else if (m_nButtons & IN_AIMMODE && m_flFullZoomTime == 0)
 	{
+		if (pWeapon->GetWeaponID() == WEAPON_SNIPER_RIFLE) // Lazy fix for sniper so the variable zoom doesn't cause prediction errors.
+			m_flFullZoomTime = gpGlobals->curtime + abs(-50 / WEAPON_ZOOM_RATE);
+		else if (pWeapon->GetZoomOffset() != 0)
+			m_flFullZoomTime = gpGlobals->curtime + abs(pWeapon->GetZoomOffset() / WEAPON_ZOOM_RATE);
+		else
+			m_flFullZoomTime = gpGlobals->curtime + GE_AIMMODE_DELAY;
+
 #ifdef CLIENT_DLL
-		int zoom = (90 + pWeapon->GetZoomOffset()) - GetDefaultFOV();
-		SetZoom( zoom );
-#else
-		// Set our "full zoom time" which is when we should enter aimed mode
-		// Incorporate latency to the player, divide by 700 vice 1000 to account for propogation delays
-		float latency = g_pPlayerResource->GetPing( entindex() ) / 700.0f;
-		m_flFullZoomTime = gpGlobals->curtime + abs( pWeapon->GetZoomOffset() / WEAPON_ZOOM_RATE ) - latency;
+		m_iNewZoomOffset = (int)(pWeapon->GetZoomOffset()); //Update our desired zoom offset.
 #endif
-
-		m_iAimModeState = AIM_ZOOM_IN;
 	}
-
-#ifdef GAME_DLL
-	// Check if we made it into aim mode
-	if ( m_iAimModeState == AIM_ZOOM_IN && gpGlobals->curtime > m_flFullZoomTime )
-	{
-		m_bInAimMode = true;
-		m_iAimModeState = AIM_ZOOMED;
-	}
-	else if ( m_bInAimMode && m_iAimModeState != AIM_ZOOMED )
-	{
-		// FAIL-SAFE! Reset our aim mode if we are not in "zoomed" state
-		ResetAimMode( true );
-	}
-#endif
 }

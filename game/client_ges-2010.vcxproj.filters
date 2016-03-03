@@ -1740,6 +1740,12 @@
     <ClCompile Include="v5_achievements.cpp">
       <Filter>GES\Achievements</Filter>
     </ClCompile>
+    <ClCompile Include="ges\client\c_ge_point_follower.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\c_ge_door_interp.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ges\client\clientmode_ge.h">
@@ -3606,6 +3612,9 @@
       <Filter>GES\Player</Filter>
     </ClInclude>
     <ClInclude Include="ges\shared\ge_game_timer.h">
+      <Filter>GES\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\c_ge_point_follower.h">
       <Filter>GES\Entities</Filter>
     </ClInclude>
   </ItemGroup>

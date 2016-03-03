@@ -195,11 +195,6 @@ void CGEDoor::BuildPartnerList()
 	m_vecGroupCenter = totalpos / (m_pPartnerEnts.Count() + 1);
 }
 
-void CGEDoor::SetInterpEnt(CBaseEntity* newInterp)
-{
-	m_pInterpEnt = newInterp;
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: When fired door and partner will start moving
 // Output : int
@@ -321,9 +316,6 @@ void CGEDoor::DoorGoUp(void)
 	SetThink(&CGEDoor::MoveThink);
 	MoveThink();
 
-	if (m_pInterpEnt)
-		static_cast<CGEDoorInterp*>(m_pInterpEnt)->HookMovementValues();
-
 	//Fire our open ouput
 	m_OnOpen.FireOutput(this, this);
 }
@@ -360,9 +352,6 @@ void CGEDoor::DoorGoDown(void)
 
 	SetThink(&CGEDoor::MoveThink);
 	MoveThink();
-
-	if (m_pInterpEnt)
-		static_cast<CGEDoorInterp*>(m_pInterpEnt)->HookMovementValues();
 
 	//Fire our closed output
 	m_OnClose.FireOutput(this, this);

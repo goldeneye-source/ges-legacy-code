@@ -44,7 +44,7 @@ int Q_ExtractData( const char *in, CUtlVector<char*> &out );
 
 // Draw a sprite in 3D space
 // offset.x = forward, offset.y = right, offset.z = up
-void GEUTIL_DrawSprite3D( IMaterial *pMaterial, Vector offset, float width, float height );
+void GEUTIL_DrawSprite3D( IMaterial *pMaterial, Vector offset, float width, float height, int alpha = 255 );
 
 // Returns true on successful parsing, false if it isn't localizable or fails parsing
 void GEUTIL_ParseLocalization( wchar_t *out, int size, const char *input );

@@ -187,6 +187,7 @@ void CGEHudDeathNotice::FireGameEvent( IGameEvent * event )
 	int killedwithid = event->GetInt("weaponid");
 	int damagetype = event->GetInt("dmgtype");
 	const char *killedwith = event->GetString("weapon");
+	int killedwithskinID = event->GetInt("weaponskin");
 	bool headshot = event->GetBool("headshot");
 
 	// Get the names of the players
@@ -208,7 +209,19 @@ void CGEHudDeathNotice::FireGameEvent( IGameEvent * event )
 	m_DeathMsgInfo.bSuicide = ( !killer || killer == victim );
 
 	// Localize the weapon name!
-	wchar_t *wszKilledWith = g_pVGuiLocalize->Find( killedwith );
+	char killedwithskin[32];
+
+
+	// If our weapons has a skin try and find a unique name for it!
+	if (killedwithskinID)
+		Q_snprintf(killedwithskin, sizeof(killedwithskin), "%s%d", killedwith, killedwithskinID);
+	else
+		Q_strncpy(killedwithskin, killedwith, MAX_PLAYER_NAME_LENGTH);
+
+
+
+	wchar_t *wszKilledWith = g_pVGuiLocalize->Find(killedwithskin);
+
 	if ( wszKilledWith )
 		g_pVGuiLocalize->ConvertUnicodeToANSI( wszKilledWith, m_DeathMsgInfo.killedWith, sizeof( m_DeathMsgInfo.killedWith ) );
 	else

@@ -315,7 +315,8 @@ const float STARTING_ARMOR = 0;
 const float MAX_ARMOR = 160;
 
 #define GE_NORM_SPEED	190
-#define GE_AIMED_SPEED	110
+#define GE_AIM_SPEED_MULT	0.58
+#define GE_AIMMODE_DELAY	0.1f
 
 #ifdef GAME_DLL
 	typedef enum

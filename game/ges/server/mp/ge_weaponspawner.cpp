@@ -25,7 +25,8 @@ public:
 
 	CGEWeaponSpawner();
 
-	virtual bool IsSpecial( void ) { return (m_bAllowSpecial || BaseClass::IsSpecial()); };
+	virtual bool IsSpecial(void) { return ( m_bAllowSpecial || BaseClass::IsSpecial() ); };
+	virtual bool IsVerySpecial() { return m_bAllowSpecial; } // Spawns we've marked are very special and will be used over ones that aren't marked.
 	virtual bool KeyValue( const char *szKeyName, const char *szValue );
 
 protected:

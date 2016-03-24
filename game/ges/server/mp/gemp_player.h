@@ -73,6 +73,7 @@ public:
 	virtual bool IsValidObserverTarget( CBaseEntity* target );
 	virtual void CheckObserverSettings();
 	virtual int	 GetNextObserverSearchStartPoint( bool bReverse );
+	virtual void ObserverTransistion();
 
 	virtual CBaseEntity* EntSelectSpawnPoint();
 	virtual CBaseEntity* EntFindSpawnPoint( int iStart, int iType, int &iReturn,bool bAllowWrap = true, bool bRandomize = false );

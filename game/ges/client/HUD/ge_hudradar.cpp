@@ -484,13 +484,19 @@ void CGERadar::WorldToRadar( CGERadarContact *contact )
 	if(y_diff == 0.0f )
 		y_diff = 0.001f;
 
-	float fRadarRadius = m_flRadarDiameter / 2.0f;
+	float fRadarRadius = m_flRadarDiameter * 0.500f;
 	float fRange = GetRadarRange();
-	float fScale = fRange >= 1.0f ? fRadarRadius / fRange : 0;
+	float fScale = fRange >= 1.000f ? fRadarRadius / fRange : 0.000f;
 	float dist = min( GetContactRange( vContact ), fRange );
 
 	float flOffset = atan(y_diff/x_diff);
-	float flPlayerY = (pLocalPlayer->LocalEyeAngles().y * M_PI) / 180.0f; // Convert player y-angle to rads
+	float flPlayerY;
+
+	// If we're in first person spectate mode we should use the rotation of whoever we're spectating.
+	if (pLocalPlayer->IsObserver() && pLocalPlayer->GetObserverTarget() && pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
+		flPlayerY = (pLocalPlayer->GetObserverTarget()->EyeAngles().y * M_PI) * 0.0055555f;
+	else
+		flPlayerY = (pLocalPlayer->LocalEyeAngles().y * M_PI) * 0.0055555f;
 
 	// Always add because atan will return neg angle w/ neg coeff
 	if ( x_diff < 0 )
@@ -509,8 +515,8 @@ void CGERadar::WorldToRadar( CGERadarContact *contact )
 	ynew_diff *= fScale;
 
 	// Make sure we never leave our radar circle!
-	contact->m_vScaledPos.x = (int)fRadarRadius + (int)xnew_diff + m_iSideBuff;
-	contact->m_vScaledPos.y = (int)fRadarRadius + (int)ynew_diff + m_iSideBuff;
+	contact->m_vScaledPos.x = fRadarRadius + xnew_diff + m_iSideBuff;
+	contact->m_vScaledPos.y = fRadarRadius + ynew_diff + m_iSideBuff;
 	contact->m_vScaledPos.z = vContact.z - pLocalPlayer->GetAbsOrigin().z;
 
 	// Figure out our alpha modulation

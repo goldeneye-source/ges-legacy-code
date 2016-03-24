@@ -157,6 +157,36 @@ void pyDisableArmorSpawns()
 	}
 }
 
+void pyEnableArmorSpawns()
+{
+	// Disable armor spawns in the gamerules
+	GEMPRules()->SetArmorSpawnState(true);
+
+	CBaseEntity *pArmor = gEntList.FindEntityByClassname(NULL, "item_armorvest*");
+	while (pArmor)
+	{
+		// Respawn the armors
+		pArmor->Respawn();
+		pArmor = gEntList.FindEntityByClassname(pArmor, "item_armorvest*");
+	}
+}
+
+void pyStagnateArmorSpawns()
+{
+	// Disable armor spawns in the gamerules, but keep the armor already on the ground.
+	GEMPRules()->SetArmorSpawnState(false);
+}
+
+void pyEnableInfiniteAmmo()
+{
+	GEMPRules()->SetGamemodeInfAmmoState(true);
+}
+
+void pyDisableInfiniteAmmo()
+{
+	GEMPRules()->SetGamemodeInfAmmoState(false);
+}
+
 int pyGetWeaponInSlot( int iSlot )
 {
 	if ( !GEMPRules() )
@@ -414,7 +444,12 @@ BOOST_PYTHON_MODULE(GEMPGameRules)
 	def("DisableWeaponSpawns", pyDisableWeaponSpawns);
 	def("DisableAmmoSpawns", pyDisableAmmoSpawns);
 	def("DisableArmorSpawns", pyDisableArmorSpawns);
+	def("EnableArmorSpawns", pyEnableArmorSpawns);
+	def("StagnateArmorSpawns", pyStagnateArmorSpawns);
 
+	def("EnableInfiniteAmmo", pyEnableInfiniteAmmo);
+	def("DisableInfiniteAmmo", pyDisableInfiniteAmmo);
+	
 	def("GetWeaponInSlot", pyGetWeaponInSlot);
 	def("GetWeaponLoadout", pyGetWeaponLoadout, pyGetWeaponLoadout_overloads());
 

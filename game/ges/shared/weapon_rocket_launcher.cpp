@@ -154,6 +154,8 @@ bool CGEWeaponRocketLauncher::Deploy( void )
 
 	if (m_iClip1 > 0)
 		SwitchBodygroup(1, 0);
+	else
+		SwitchBodygroup(1, 1);
 
 	return success;
 }

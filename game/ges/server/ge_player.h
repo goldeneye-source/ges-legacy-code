@@ -63,17 +63,20 @@ public:
 	void ResetAimMode(bool forced = false);
 	bool IsInAimMode();
 	bool StartedAimMode()					{ return (m_flFullZoomTime > 0); }
-	bool IsRadarCloaked()					{ return m_bInSpawnCloak; }
+	bool IsRadarCloaked()					{ return m_bInSpawnInvul; }
 	bool AddArmor( int amount );
 	bool CheckInPVS(CBaseEntity *pEnt);
 
 	virtual void KnockOffHat( bool bRemove = false, const CTakeDamageInfo *dmg = NULL );
+	// Main way to assign hats to characters.  Uses model specific hats.
 	virtual void GiveHat( void );
+	// Method of assigning whatever hat you want to a player.
+	virtual void SpawnHat( const char* hatModel, Vector offset = { 0, 0, 0 }, QAngle angOffset = {0, 0, 0} );
 
 	void HideBloodScreen( void );
 
 	// Functions for Python
-	void  SetSpeedMultiplier( float mult )	{ m_flSpeedMultiplier = clamp( mult, 0.5f, 1.5f ); }
+	void  SetSpeedMultiplier(float mult);
 	float GetSpeedMultiplier()				{ return m_flSpeedMultiplier; }
 	void  SetDamageMultiplier( float mult )	{ m_flDamageMultiplier = clamp( mult, 0, 200.0f ); }
 	float GetDamageMultiplier()				{ return m_flDamageMultiplier; }
@@ -122,6 +125,7 @@ public:
 	virtual float GetSequenceGroundSpeed( CStudioHdr *pStudioHdr, int iSequence );
 
 	virtual void	DoMuzzleFlash( void );
+	virtual void	RemoveAmmo(int iCount, int iAmmoIndex);
 	virtual void	FireBullets( const FireBulletsInfo_t &info );
 	virtual Vector	GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget = NULL );
 
@@ -186,8 +190,6 @@ protected:
 	// Invulnerability variables
 	float		m_flEndInvulTime;
 	bool		m_bInSpawnInvul;
-	float		m_flEndCloakTime;
-	bool		m_bInSpawnCloak;
 	int			m_iViewPunchScale;
 	int			m_iDmgTakenThisFrame;
 	Vector		m_vDmgForceThisFrame;

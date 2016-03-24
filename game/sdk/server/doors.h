@@ -36,7 +36,9 @@
 #define SF_DOOR_SILENT_TO_NPCS		16384	// Does not alert NPC's when opened.
 #define SF_DOOR_IGNORE_USE			32768	// Completely ignores player +use commands.
 #define SF_DOOR_NEW_USE_RULES		65536	// For func_door entities, behave more like prop_door_rotating with respect to +USE (changelist 242482)
-
+#ifdef GE_DLL
+#define SF_DOOR_LOCKSOUNDORIGIN		131072	// Have the sound origin play at the starting location of the door all the time.
+#endif
 
 enum FuncDoorSpawnPos_t
 {
@@ -136,6 +138,10 @@ public:
 	bool	m_bIgnoreDebris;
 	
 	FuncDoorSpawnPos_t m_eSpawnPosition;
+
+#ifdef GE_DLL
+	CBaseEntity *m_pSoundOrigin;
+#endif
 
 	float	m_flBlockDamage;		// Damage inflicted when blocked.
 	string_t	m_NoiseMoving;		//Start/Looping sound

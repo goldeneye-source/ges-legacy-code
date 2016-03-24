@@ -115,12 +115,17 @@ protected:
 		}
 
 		// If we made it this far then the event is just the damage event, so we should add the damage we took to our total.
-		m_iDmgTaken += event->GetInt("damage");
-
-		if (m_iDmgTaken >= 2560 && event->GetInt("health") > 0) //160 * 8 = 1280
+		// Provided that we're still alive, anyway.
+		if (event->GetInt("health") > 0)
 		{
-			IncrementCount();
+			m_iDmgTaken += event->GetInt("damage");
+
+			if (m_iDmgTaken >= 2560) //160 * 8 = 1280
+				IncrementCount();
 		}
+		else
+			m_iDmgTaken = 0;
+
 	}
 private:
 	int m_iDmgTaken;
@@ -225,7 +230,7 @@ protected:
 DECLARE_GE_ACHIEVEMENT(CAchShellShocked, ACHIEVEMENT_GES_SHELL_SHOCKED, "GES_SHELL_SHOCKED", 100, GE_ACH_UNLOCKED);
 
 
-// Dart Board:  Kill a player from over 100 feet away with a throwing knife
+// Dart Board:  Kill a player from over 80 feet away with a throwing knife
 class CAchDartBoard : public CGEAchievement
 {
 protected:
@@ -250,15 +255,15 @@ protected:
 		if (event->GetInt("attacker") != pPlayer->GetUserID())
 			return;
 
-		// If we're using the throwing knives, and the victim is over 100 feet(1200 inches) away, we did it!
-		if (event->GetInt("weaponid") == WEAPON_KNIFE_THROWING && event->GetInt("dist") > 1200)
+		// If we're using the throwing knives, and the victim is over 80 feet(960 inches) away, we did it!
+		if (event->GetInt("weaponid") == WEAPON_KNIFE_THROWING && event->GetInt("dist") > 960)
 			IncrementCount();
 	}
 };
 DECLARE_GE_ACHIEVEMENT(CAchDartBoard, ACHIEVEMENT_GES_DART_BOARD, "GES_DART_BOARD", 100, GE_ACH_UNLOCKED);
 
 
-// Precision Bombing:  Kill a player from over 125 feet away with a grenade launcher direct hit
+// Precision Bombing:  Kill a player from over 100 feet away with a grenade launcher direct hit
 class CAchPrecisionBombing : public CGEAchievement
 {
 protected:
@@ -283,8 +288,8 @@ protected:
 		if (event->GetInt("attacker") != pPlayer->GetUserID())
 			return;
 
-		// If we're using the grenade launcher, got a direct hit, and the victim is over 125 feet(1500 inches) away, we did it!
-		if (event->GetInt("weaponid") == WEAPON_GRENADE_LAUNCHER && event->GetBool("headshot") && event->GetInt("dist") > 1500)
+		// If we're using the grenade launcher, got a direct hit, and the victim is over 100 feet(1200 inches) away, we did it!
+		if (event->GetInt("weaponid") == WEAPON_GRENADE_LAUNCHER && event->GetBool("headshot") && event->GetInt("dist") > 1200)
 			IncrementCount();
 	}
 };
@@ -349,7 +354,7 @@ protected:
 		if (event->GetInt("attacker") != pPlayer->GetUserID())
 			return;
 
-		// If we're using the shotgun, and the victim is less than 5 feet(60 inches) away, we did it!
+		// If we're using the shotgun, and the victim is less than 8 feet(96 inches) away, we did it!
 		if (event->GetInt("weaponid") == WEAPON_SHOTGUN && event->GetInt("dist") < 60)
 			IncrementCount();
 	}

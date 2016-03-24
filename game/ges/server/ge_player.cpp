@@ -67,7 +67,6 @@ ConVar ge_limithalfarmorpickup("ge_limithalfarmorpickup", "0", FCVAR_GAMEDLL | F
 CGEPlayer::CGEPlayer()
 {
 	m_bInSpawnInvul = false;
-	m_bInSpawnCloak = false;
 
 	m_pHints = new CHintSystem;
 	m_pHints->Init( this, 2, NULL );
@@ -76,7 +75,6 @@ CGEPlayer::CGEPlayer()
 	m_flDamageMultiplier = 1.0f;
 	m_flSpeedMultiplier = 1.0f;
 	m_flEndInvulTime = 0.0f;
-	m_flEndCloakTime = 0.0f;
 
 	m_iCharIndex = m_iSkinIndex = -1;
 
@@ -208,24 +206,44 @@ int CGEPlayer::GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound )
 
 		// Tell plugins what we grabbed
 		NotifyPickup( name, 1 );
-		
+
+		// If we surpressed the sound it wasn't a normal pickup so we don't deserve to get a bonus weapon from it.
+		if (bSuppressSound)
+			return amt;
+
+		const char* weaponname = NULL;
+
 		if ( Q_strstr(name,"mine") )
 		{
 			// Ok we picked up mines
 			if ( !Q_strcmp(name,AMMO_PROXIMITYMINE) )
-				GiveNamedItem("weapon_proximitymine");
+				weaponname = "weapon_proximitymine";
 			else if ( !Q_strcmp(name,AMMO_TIMEDMINE) )
-				GiveNamedItem("weapon_timedmine");
+				weaponname = "weapon_timedmine";
 			else if ( !Q_strcmp(name,AMMO_REMOTEMINE) )
-				GiveNamedItem("weapon_remotemine");
+				weaponname = "weapon_remotemine";
 		}
 		else if ( !Q_strcmp(name,AMMO_GRENADE) )
 		{
-			GiveNamedItem("weapon_grenade");
+			weaponname = "weapon_grenade";
 		}
 		else if ( !Q_strcmp(name,AMMO_TKNIFE) )
 		{
-			GiveNamedItem("weapon_knife_throwing");
+			weaponname = "weapon_knife_throwing";
+		}
+		
+		if (weaponname)
+		{
+			// If we actually got one of these weapons through an ammo box, we shouldn't also get the weapon's defualt clip.
+			// default clip should only be given from player drops.
+			CBaseEntity *pWeapon = GiveNamedItem(weaponname);
+			if (pWeapon)
+			{
+				CGEWeapon *pGEWeapon = ToGEWeapon((CBaseCombatWeapon*)pWeapon);
+
+				if (pGEWeapon)
+					RemoveAmmo(pGEWeapon->GetDefaultClip1(), GetAmmoDef()->Index(name));
+			}
 		}
 	}
 
@@ -239,12 +257,8 @@ void CGEPlayer::PreThink( void )
 	CheckAimMode();
 
 	// Invulnerability checks (make sure we are never invulnerable forever!)
-	if ( m_takedamage == DAMAGE_NO && m_bInSpawnInvul && m_flEndInvulTime < gpGlobals->curtime && !IsObserver() )
+	if ( m_bInSpawnInvul && m_flEndInvulTime < gpGlobals->curtime && !IsObserver() )
 		StopInvul();
-
-	// Cloak checks
-	if ( m_bInSpawnCloak && m_flEndCloakTime < gpGlobals->curtime && !IsObserver() )
-		m_bInSpawnCloak = false;
 
 	if ( GetObserverMode() > OBS_MODE_FREEZECAM )
 	{
@@ -388,7 +402,7 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 	// This will make explosion damage more consistent and running through the center of explosions way more consistently painful.
 	if (info.GetDamageType() & DMG_BLAST)
 	{
-		if (m_flEndExpDmgTime < gpGlobals->curtime)
+		if ( m_flEndExpDmgTime < gpGlobals->curtime)
 		{
 			m_flEndExpDmgTime = gpGlobals->curtime + INVULN_PERIOD;
 			m_iExpDmgTakenThisInterval = 0;
@@ -399,13 +413,22 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 		{
 			info.SetDamage(info.GetDamage() - m_iExpDmgTakenThisInterval); // Adjust it so that they are only hit for the difference.
 			m_iExpDmgTakenThisInterval = info.GetDamage();
+			m_flEndExpDmgTime = gpGlobals->curtime + INVULN_PERIOD; // If we get hit again, we get more invuln time.
 
 			if (info.GetDamage() == 398)
 				SetLastHitGroup(HITGROUP_HEAD); // Used to mark direct hits
 			else
 				SetLastHitGroup(HITGROUP_GENERIC); // Set this here to avoid explosive headshot kills
 		}
-		else // If not don't even go any further.
+		else if (m_flEndExpDmgTime - INVULN_PERIOD == gpGlobals->curtime) // Add up any damage that was applied on the same frame as the invuln trigger.  
+		{
+			// Lower the damage from successive hits based on how much damage has already been done this frame.
+			int weighteddamage = info.GetDamage() * info.GetDamage() / (m_iExpDmgTakenThisInterval + info.GetDamage());
+
+			m_iExpDmgTakenThisInterval += weighteddamage;
+			info.SetDamage(weighteddamage);
+		}
+		else // If this hit isn't strong enough or didn't happen on the same frame as a relevant one, don't go any further.
 		{
 			return 0;
 		}
@@ -715,6 +738,8 @@ void CGEPlayer::Event_DamagedOther( CGEPlayer *pOther, int dmgTaken, const CTake
 	// GE:S spawns blood on the client, the server blood is for all other players
 }
 
+ConVar ge_explosiveheadshots("ge_explosiveheadshots", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Headshot kills create explosions!");
+
 void CGEPlayer::Event_Killed( const CTakeDamageInfo &info )
 {
 	if ( !IsBotPlayer() )
@@ -734,6 +759,14 @@ void CGEPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Let the weapon know that the player has died, this is used for stuff like grenades.
 	if (GetActiveWeapon() && ToGEWeapon(GetActiveWeapon()))
 		ToGEWeapon(GetActiveWeapon())->PreOwnerDeath();
+
+	if ( ge_explosiveheadshots.GetBool() && info.GetAttacker() )
+	{
+		if (LastHitGroup() == HITGROUP_HEAD)
+			ExplosionCreate(EyePosition(), GetAbsAngles(), info.GetAttacker(), 500, 100,
+			SF_ENVEXPLOSION_NOSMOKE | SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS, 0.0f, NULL);
+	}
+
 
 	KnockOffHat();
 	DropAllTokens();
@@ -822,6 +855,8 @@ void CGEPlayer::DropTopWeapons()
 	}
 }
 
+ConVar ge_sillyhats("ge_sillyhats", "0", FCVAR_GAMEDLL, "Hats get extra silly!");
+
 void CGEPlayer::KnockOffHat( bool bRemove /* = false */, const CTakeDamageInfo *dmg /* = NULL */ )
 {
 	CBaseEntity *pHat = m_hHat;
@@ -830,30 +865,42 @@ void CGEPlayer::KnockOffHat( bool bRemove /* = false */, const CTakeDamageInfo *
 	{
 		UTIL_Remove( pHat );
 	}
-	else if ( pHat )
+	else if (pHat)
 	{
 		Vector origin = EyePosition();
 		origin.z += 8.0f;
 
 		pHat->Activate();
-		pHat->SetAbsOrigin( origin );
-		pHat->RemoveEffects( EF_NODRAW );
+		pHat->SetAbsOrigin(origin);
+		pHat->RemoveEffects(EF_NODRAW);
 
 		// Punt the hat appropriately
-		if ( dmg )
-			pHat->ApplyAbsVelocityImpulse( dmg->GetDamageForce() * 0.75f );
+		if (dmg)
+			pHat->ApplyAbsVelocityImpulse(dmg->GetDamageForce() * 0.75f);
+
+		if ( ge_sillyhats.GetBool() )
+		{
+			if ( dmg && dmg->GetAttacker() )
+				ExplosionCreate(origin, GetAbsAngles(), dmg->GetAttacker(), 500, 100,
+				SF_ENVEXPLOSION_NOSMOKE | SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS, 0.0f, NULL);
+			else
+				ExplosionCreate(origin, GetAbsAngles(), this, 500, 100,
+				SF_ENVEXPLOSION_NOSMOKE | SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS, 0.0f, NULL);
+
+			UTIL_Remove(pHat);
+		}
 	}
-	
+
 	SetHitboxSetByName( "default" );
 	m_hHat = NULL;
 }
 
 void CGEPlayer::GiveHat()
 {
-	if ( IsObserver() )
+	if (IsObserver())
 	{
 		// Make sure we DO NOT have a hat as an observer
-		KnockOffHat( true );
+		KnockOffHat(true);
 		return;
 	}
 
@@ -864,13 +911,25 @@ void CGEPlayer::GiveHat()
 	if ( !hatModel || hatModel[0] == '\0' )
 		return;
 
+	SpawnHat( hatModel );
+}
+
+void CGEPlayer::SpawnHat( const char* hatModel, Vector offset, QAngle angOffset )
+{
+	if (IsObserver() && !IsAlive()) // Observers can't have any hats.  Need this here so direct hat assignment doesn't make floating hats.
+		return;
+
+	// Get rid of any hats we're currently wearing.
+	if (m_hHat.Get())
+		KnockOffHat(true);
+
 	// Simple check to ensure consistency
 	int setnum, boxnum;
-	if ( LookupHitbox( "hat", setnum, boxnum ) )
-		SetHitboxSet( setnum );
+	if (LookupHitbox("hat", setnum, boxnum))
+		SetHitboxSet(setnum);
 
-	CBaseEntity *hat = CreateNewHat( EyePosition(), GetAbsAngles(), hatModel );
-	hat->FollowEntity( this, true );
+	CBaseEntity *hat = CreateNewHat(EyePosition(), GetAbsAngles(), hatModel);
+	hat->FollowEntity(this, true);
 	m_hHat = hat;
 }
 
@@ -919,6 +978,14 @@ void CGEPlayer::Spawn()
 		m_iAttackListTimes[i] = 0.0;
 		m_iAttackList[i] = 0;
 	}
+
+	SetMaxSpeed(GE_NORM_SPEED * GEMPRules()->GetSpeedMultiplier(this));
+}
+
+void CGEPlayer::SetSpeedMultiplier(float mult)	
+{
+	m_flSpeedMultiplier = clamp(mult, 0.5f, 1.5f); 
+	SetMaxSpeed(GE_NORM_SPEED * GEMPRules()->GetSpeedMultiplier(this)); 
 }
 
 void CGEPlayer::HideBloodScreen( void )
@@ -956,7 +1023,6 @@ void CGEPlayer::FinishClientPutInServer()
 void CGEPlayer::StartInvul( float time )
 {
 	DevMsg( "%s was given spawn invuln for %0.2f seconds...\n", GetPlayerName(), time );
-	m_takedamage = DAMAGE_NO;
 	m_bInSpawnInvul = true;
 	m_flEndInvulTime = gpGlobals->curtime + time;
 }

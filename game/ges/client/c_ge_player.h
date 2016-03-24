@@ -64,6 +64,8 @@ public:
 	void CheckAimMode();
 	int GetAimModeState();
 
+	virtual void	RemoveAmmo(int iCount, int iAmmoIndex);
+
 	void SetZoom( int zoom, bool forced=false ); 
 	int GetZoomEnd();
 
@@ -101,7 +103,7 @@ private:
 	// Local state tracking
 	float m_flFullZoomTime;
 
-	// Used to tell clientthink what to set the zoom to.  -1 is force unzoom and -2 is no change.
+	// Used to tell clientthink what to set the zoom to.
 	int m_iNewZoomOffset;
 
 	bool m_bInSpecialMusic;

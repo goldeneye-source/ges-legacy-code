@@ -31,6 +31,8 @@ BEGIN_DATADESC( CGEAmmoCrate )
 	DEFINE_THINKFUNC( RefillThink ),
 END_DATADESC();
 
+ConVar ge_partialammopickups("ge_partialammopickups", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Allow players to pick up ammo from a crate without picking up all of it.");
+
 CGEAmmoCrate::CGEAmmoCrate( void )
 {
 	m_iAmmoID = -1;
@@ -174,11 +176,13 @@ bool CGEAmmoCrate::MyTouch( CBasePlayer *pPlayer )
 		return true;
 	}
 
-	// Subtract the amount that was actually given to the player
-	m_iAmmoAmount -= pPlayer->GiveAmmo( m_iAmmoAmount, m_iAmmoID );
+	if (ge_partialammopickups.GetBool()) // Subtract the amount that was actually given to the player if we want this behavior
+		m_iAmmoAmount -= pPlayer->GiveAmmo(m_iAmmoAmount, m_iAmmoID);
+	else if (pPlayer->GiveAmmo(m_iAmmoAmount, m_iAmmoID)) // Otherwise take all the ammo if we can take any of it.
+		m_iAmmoAmount = 0;
 
 	// Tell our token manager to give out any global ammo if we haven't this respawn cycle
-	if ( !m_bGaveGlobalAmmo && GEMPRules()->GetTokenManager()->GiveGlobalAmmo( pPlayer ) )
+	if (!m_bGaveGlobalAmmo && GEMPRules()->GetTokenManager()->GiveGlobalAmmo(pPlayer))
 		m_bGaveGlobalAmmo = true;
 
 	if ( !HasAmmo() || GERules()->ShouldForcePickup( pPlayer, this ) )

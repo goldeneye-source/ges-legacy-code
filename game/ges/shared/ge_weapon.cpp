@@ -192,10 +192,19 @@ void CGEWeapon::Equip( CBaseCombatCharacter *pOwner )
 	FinishReload();
 
 	CGEMPPlayer *pGEPlayer = ToGEMPPlayer(pOwner);
+
 	if (!pGEPlayer)
 		m_nSkin = 0;
 	else
 		m_nSkin = pGEPlayer->GetUsedWeaponSkin(GetWeaponID()); // We don't use setskin here because the player likely doesn't have the weapon out.
+
+	if ( GEMPRules()->InfAmmoEnabled() )
+	{
+		m_iClip1 = GetMaxClip1();
+#ifdef GAME_DLL
+		pGEPlayer->GiveAmmo(800, GetPrimaryAmmoType(), true);
+#endif
+	}
 }
 
 void CGEWeapon::Drop( const Vector &vecVelocity )

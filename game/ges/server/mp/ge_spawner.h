@@ -41,6 +41,7 @@ public:
 	bool		IsDisabled()	{ return m_bDisabled; }
 
 	virtual bool IsSpecial()	{ return m_iSlot == (MAX_WEAPON_SPAWN_SLOTS-1); }
+	virtual bool IsVerySpecial()	{ return false; }
 	const int	 GetSlot()		{ return m_iSlot; }
 
 	void SetEnabled( bool state );
@@ -65,6 +66,9 @@ protected:
 	// Ability for inheritors to set our base entity
 	void SetBaseEnt( const char *szClassname );
 	CBaseEntity *GetEnt() { return m_hCurrentEntity; }
+
+	COutputEvent m_OnPickedUp;
+	COutputEvent m_OnRespawn;
 
 private:
 	// KeyValues

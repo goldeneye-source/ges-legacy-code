@@ -4508,10 +4508,6 @@ void CGameMovement::HandleDuckingSpeedCrop( void )
 	#ifdef GE_DLL
 		// Increase ducked speed to be more in line with GE64
 		frac = 0.55f;
-
-		// Ducked players actually speed up a little when aimed
-		if ( ToGEPlayer(player)->IsInAimMode() )
-			frac = 0.75f;
 	#endif
 		mv->m_flForwardMove	*= frac;
 		mv->m_flSideMove	*= frac;

@@ -159,6 +159,7 @@ void CHudGameplay::OnGameplayDataUpdate( void )
 	else
 		m_pWeaponSetName->SetText( GEGameplayRes()->GetLoadoutName() );
 	m_pWeaponSetName->SetFont( m_hHeaderFont );
+	m_pWeaponSetName->SetFgColor( m_TextColor );
 	m_pWeaponSetName->SizeToContents();
 
 	// Set the weapons
@@ -237,6 +238,7 @@ void CHudGameplay::PerformLayout()
 	m_pWeaponSet->SetVisible( false );
 	m_pWeaponSet->SetPos( 0, 0 );
 	m_pWeaponSet->SetSize( wide - m_iTabWidth, tall );
+	m_pWeaponSet->SetFgColor(m_TextColor);
 
 	m_pGameplayHelp->SetVisible( false );
 	m_pGameplayHelp->SetPos( m_iTextX, m_iTextY );
@@ -251,9 +253,9 @@ void CHudGameplay::PerformLayout()
 
 	case GAMEPLAY_WEAPONSET:
 		m_pWeaponSet->SetVisible( true );
-		m_pWeaponSetName->SetPos( m_pWeaponSet->GetWide()/2 - m_pWeaponSetName->GetWide()/2, m_iTextY );
+		m_pWeaponSetName->SetPos( m_pWeaponSet->GetWide()/2 - m_pWeaponSetName->GetWide()/2, m_iTextY * 2 );
 
-		int x_in = m_iTextX, y_in = m_iTextY*4 + infoFontTall;
+		int x_in = m_iTextX, y_in = m_iTextY*8 + infoFontTall;
 
 		// We list weapons from lowest spawn slot to highest, top to bottom
 		for ( int i=0; i < MAX_WEAPON_SPAWN_SLOTS; ++i )

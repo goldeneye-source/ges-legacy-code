@@ -386,6 +386,16 @@ int	ClientModeGENormal::KeyInput( int down, ButtonCode_t keynum, const char *psz
 		}
 		return 0;
 	}
+	else if (pszCurrentBinding && Q_strcmp(pszCurrentBinding, "cl_ge_weapon_stats") == 0)
+	{
+		if (down)
+		{
+			CHudGameplay *elem = GET_HUDELEMENT( CHudGameplay );
+			if (elem)
+				elem->KeyboardInput(CHudGameplay::GAMEPLAY_WEAPONSTATS);
+		}
+		return 0;
+	}
 	else if ( pszCurrentBinding && Q_strcmp( pszCurrentBinding, "cl_ge_gameplay_stats" ) == 0 )
 	{
 		if ( down )

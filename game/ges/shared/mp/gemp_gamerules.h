@@ -88,8 +88,6 @@ public:
 
 	void AddTrapToList(CBaseEntity* pEnt) { m_vTrapList.AddToTail(pEnt); }
 
-	float FlArmorRespawnTime( CItem *pItem );
-
 	bool AmmoShouldRespawn();
 	bool ArmorShouldRespawn();
 	bool ItemShouldRespawn( const char *name );
@@ -154,6 +152,10 @@ public:
 	float GetRoundTimeRemaining();
 
 	int   GetTeamplayMode() { return m_iTeamplayMode; }
+
+	void  SetGlobalInfAmmoState( bool newstate )  { m_bGlobalInfAmmo = newstate; };
+	void  SetGamemodeInfAmmoState( bool newstate )  { m_bGamemodeInfAmmo = newstate; };
+	bool  InfAmmoEnabled()  { return m_bGlobalInfAmmo || m_bGamemodeInfAmmo; };
 
 	bool IsMultiplayer() { return true; }
 	bool IsTeamplay();
@@ -249,6 +251,8 @@ private:
 	CNetworkVar( int, m_iRandomSeedOffset );
 	CNetworkVar( float, m_flMapFloorHeight );
 	CNetworkVar( bool,	m_bTeamPlayDesired );
+	CNetworkVar( bool,  m_bGlobalInfAmmo );
+	CNetworkVar( bool,  m_bGamemodeInfAmmo );
 	CNetworkVar( int,	m_iTeamplayMode );
 
 	CNetworkHandle( CGEGameTimer, m_hMatchTimer );

@@ -673,17 +673,30 @@ void CBasePlayer::UpdateButtonState( int nUserCmdButtonMask )
 //-----------------------------------------------------------------------------
 void CBasePlayer::GetStepSoundVelocities( float *velwalk, float *velrun )
 {
-	// UNDONE: need defined numbers for run, walk, crouch, crouch run velocities!!!!	
+#ifdef GE_DLL
 	if ( ( GetFlags() & FL_DUCKING) || ( GetMoveType() == MOVETYPE_LADDER ) )
 	{
+		*velwalk = 110;
+		*velrun = 140;		
+	}
+	else
+	{
+		*velwalk = 150;
+		*velrun = 230;
+	}
+#else
+	// UNDONE: need defined numbers for run, walk, crouch, crouch run velocities!!!!	
+	if ((GetFlags() & FL_DUCKING) || (GetMoveType() == MOVETYPE_LADDER))
+	{
 		*velwalk = 60;		// These constants should be based on cl_movespeedkey * cl_forwardspeed somehow
-		*velrun = 80;		
+		*velrun = 80;
 	}
 	else
 	{
 		*velwalk = 90;
 		*velrun = 220;
 	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1426,9 +1439,9 @@ void CBasePlayer::ResetObserverMode()
 		if ( pIdealMode )
 		{
 			m_iObserverLastMode = atoi( pIdealMode );
-			if ( m_iObserverLastMode <= OBS_MODE_FIXED || m_iObserverLastMode > OBS_MODE_ROAMING )
+			if ( m_iObserverLastMode < OBS_MODE_FIXED || m_iObserverLastMode > OBS_MODE_ROAMING )
 			{
-				m_iObserverLastMode = OBS_MODE_IN_EYE;
+				m_iObserverLastMode = OBS_MODE_ROAMING;
 			}
 		}
 	}

@@ -67,7 +67,7 @@ void CGEMine::Spawn( void )
 
 	SetModel( "models/weapons/mines/w_mine.mdl" );
 
-	SetSolid( SOLID_BBOX );
+	SetSolid( SOLID_VPHYSICS );
 	SetMoveType( MOVETYPE_FLYGRAVITY );
 
 	SetCollisionGroup( COLLISION_GROUP_MINE );
@@ -191,8 +191,8 @@ void CGEMine::MineThink( void )
 			if ( pEntity->IsPlayer() )
 			{
 				CBasePlayer *pPlayer = ToBasePlayer( pEntity );
-				// Don't let teammates explode their team's proxy mines
-				if ( !GERules()->FPlayerCanTakeDamage( pPlayer, (CBasePlayer*)GetThrower() ) || pPlayer->IsObserver() )
+				// Don't let teammates explode their team's proxy mines.  Also stop observers, or people who have just spawned, from triggering any.
+				if ( !GERules()->FPlayerCanTakeDamage(pPlayer, (CBasePlayer*)GetThrower()) || pPlayer->IsObserver() || ToGEPlayer(pPlayer)->IsRadarCloaked() )
 					continue;
 
 				// Trace to the player's eyes, then their feet, then their midsection for a more robust detection code.

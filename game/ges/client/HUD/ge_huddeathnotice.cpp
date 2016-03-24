@@ -25,6 +25,9 @@
 
 using namespace vgui;
 
+ConVar cl_ge_killfeed_readskins("cl_ge_killfeed_readskins", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Use unique names for special weapon skins.");
+ConVar cl_ge_drawkillfeed("cl_ge_drawkillfeed", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Draw the killfeed.");
+
 enum InfoColor
 {
 	//COLOR_NORMAL = 1,
@@ -93,6 +96,7 @@ public:
 	virtual void CreateChatInputLine( void );
 	virtual void CreateChatLines( void );
 	virtual void Init( void );
+	virtual bool ShouldDraw();
 	virtual void Reset( void );
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 
@@ -122,6 +126,13 @@ CGEHudDeathNotice::CGEHudDeathNotice( const char *pElementName )
 
 	ListenForGameEvent( "player_death" );
 	ListenForGameEvent( "death_message" );
+}
+bool CGEHudDeathNotice::ShouldDraw(void)
+{
+	if (!cl_ge_drawkillfeed.GetBool())
+		return false;
+
+	return true;
 }
 //This pointer is used in base class, so it must be created even though it isn't used.
 void CGEHudDeathNotice::CreateChatInputLine( void )
@@ -212,13 +223,13 @@ void CGEHudDeathNotice::FireGameEvent( IGameEvent * event )
 	char killedwithskin[32];
 
 
-	// If our weapons has a skin try and find a unique name for it!
-	if (killedwithskinID)
+	// If our weapon has a skin try and find a unique name for it if we want one.
+	if (killedwithskinID && cl_ge_killfeed_readskins.GetBool())
 		Q_snprintf(killedwithskin, sizeof(killedwithskin), "%s%d", killedwith, killedwithskinID);
 	else
 		Q_strncpy(killedwithskin, killedwith, MAX_PLAYER_NAME_LENGTH);
 
-
+	
 
 	wchar_t *wszKilledWith = g_pVGuiLocalize->Find(killedwithskin);
 

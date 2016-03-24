@@ -309,13 +309,15 @@ void C_GEPlayer::ClientThink( void )
 		// We have to do this here rather than in aimmode land so gpGlobals->curtime reads off the correct value.
 		// But we have to check aimmode status in preframe because it needs to be called in the same function as on the server
 		// and the server has no ClientThink.
-		if (m_iNewZoomOffset != m_flZoomEnd)
+
+
+		if (!IsAlive()) //Force reset our zoom if we died right away, otherwise we wrap around to the next frame and can't reset zoom since we're already fully dead.
 		{
-			if (m_iNewZoomOffset == -1)
-				SetZoom(0, true);
-			else
-				SetZoom(m_iNewZoomOffset);
+			m_iNewZoomOffset = 0;
+			SetZoom(0, true);
 		}
+		else if (m_iNewZoomOffset != m_flZoomEnd)
+			SetZoom(m_iNewZoomOffset);
 
 		// Check if we should draw our hat
 		if ( m_hHat.Get() )
@@ -325,12 +327,29 @@ void C_GEPlayer::ClientThink( void )
 			else
 				m_hHat.Get()->RemoveEffects( EF_NODRAW );
 		}
-		
+
 		// Adjust the weapon's FOV based on our own FOV
-		if ( GetFOV() <= 35.0f )
-			v_viewmodel_fov.SetValue( 70.0f );
-		else if ( v_viewmodel_fov.GetFloat() != 54.0 )
-			v_viewmodel_fov.SetValue( 54.0f );
+		// This is basically a dinky fix for weapon FOV calculations sticking the FOV out of bounds and placing the weapon
+		// in the upper left corner of the screen.
+
+		C_BaseViewModel *vm = GetViewModel();
+
+		if (vm)
+		{
+			if (GetFOV() <= 35.0f)
+			{
+				v_viewmodel_fov.SetValue(70.0f);
+				vm->AddEffects(EF_NODRAW); //Prevents weapon jumping back onto the screen at certain zoom values.
+			}
+			else
+			{
+				if (v_viewmodel_fov.GetFloat() != 54.0)
+					v_viewmodel_fov.SetValue(54.0f);
+
+				if ( vm->GetEffects() & EF_NODRAW )
+					vm->RemoveEffects(EF_NODRAW);
+			}
+		}
 	}
 
 	BaseClass::ClientThink();

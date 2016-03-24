@@ -12,6 +12,7 @@
 #include "cbase.h"
 #include "modelentities.h"
 #include "entitylist.h"
+#include "ge_armorvest.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -27,6 +28,7 @@ public:
 	int m_iCustomCollideGroup; // Collision group of the brush
 
 	void Spawn();
+	virtual void	RemoveTouch(CBaseEntity *pOther);
 
 	void InputChangeCollideGroup(inputdata_t &inputdata);
 };
@@ -36,11 +38,14 @@ LINK_ENTITY_TO_CLASS(func_ge_brush, CGEBrush);
 BEGIN_DATADESC(CGEBrush)
 
 DEFINE_KEYFIELD(m_iCustomCollideGroup, FIELD_INTEGER, "CollisionGroup"),
+DEFINE_ENTITYFUNC(RemoveTouch),
 
 DEFINE_INPUTFUNC(FIELD_INTEGER, "SetCollideGroup", InputChangeCollideGroup),
 
 END_DATADESC()
 
+
+#define SF_REMOVE_TOUCHING 4
 
 CGEBrush::CGEBrush()
 {
@@ -53,6 +58,22 @@ void CGEBrush::Spawn(void)
 	BaseClass::Spawn();
 
 	SetCollisionGroup(m_iCustomCollideGroup);
+
+	if (HasSpawnFlags(SF_REMOVE_TOUCHING))
+		SetTouch(&CGEBrush::RemoveTouch);
+	else
+		SetTouch(NULL);
+}
+
+void CGEBrush::RemoveTouch(CBaseEntity *pOther)
+{
+	if (!pOther || pOther->IsPlayer() || pOther->IsNPC()) // Don't remove players or bots.
+		return;
+
+	if (!strncmp(pOther->GetClassname(), "item_armorvest", 14)) // We shouldn't remove armor, just force it to respawn.
+		((CGEArmorVest*)pOther)->Respawn();
+	else
+		UTIL_Remove(pOther);
 }
 
 void CGEBrush::InputChangeCollideGroup(inputdata_t &inputdata)

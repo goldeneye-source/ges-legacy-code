@@ -283,8 +283,8 @@ void CGEMPPlayer::InitialSpawn()
 
 	// Place the player on the spectator team until they choose a character to play with
 	ChangeTeam(TEAM_SPECTATOR);
-	SetObserverMode( OBS_MODE_FIXED );
-	GERules()->GetSpectatorSpawnSpot( this );
+	// If there are any spectator spots or no-one is playing, use a spawn point as the intro camera posistion.
+	ObserverTransistion();
 
 	SetMaxHealth( MAX_HEALTH );
 	SetMaxArmor( MAX_ARMOR );
@@ -301,13 +301,17 @@ void CGEMPPlayer::Spawn()
 	m_flNextModelChangeTime = 0.0f;
 	m_flNextTeamChangeTime = 0.0f;
 
+	RemoveAllItems(true);
+	KnockOffHat(true);
+
+
 	if ( (m_bPreSpawn && IsSpawnState( SS_INITIAL )) || GetTeamNumber() == TEAM_SPECTATOR )
 	{
 		// Prespawn and spectating always observer
 		if ( !IsObserver() )
 		{
 			State_Transition( STATE_OBSERVER_MODE );
-			GERules()->GetSpectatorSpawnSpot( this );
+			ObserverTransistion();
 		}
 	}
 	else if ( !GERules()->FPlayerCanRespawn(this) )
@@ -315,7 +319,7 @@ void CGEMPPlayer::Spawn()
 		if ( !IsObserver() )
 		{
 			State_Transition( STATE_OBSERVER_MODE );
-			GERules()->GetSpectatorSpawnSpot( this );
+			ObserverTransistion();
 		}
 
 		// Gameplay said NO SPAWN FOR YOU! Try again every second.
@@ -344,7 +348,6 @@ void CGEMPPlayer::Spawn()
 			if ( !IsSpawnState( SS_BLOCKED_NO_SPOT) )
 			{
 				// First time waiting, issue a message and find a spectator spawn spot
-				KnockOffHat( true );
 				GERules()->GetSpectatorSpawnSpot( this );
 				m_flNextSpawnWaitNotice = gpGlobals->curtime;
 			}
@@ -374,16 +377,6 @@ void CGEMPPlayer::Spawn()
 			State_Transition( STATE_OBSERVER_MODE );
 			GERules()->GetSpectatorSpawnSpot( this );
 			return;
-		}
-
-		// Don't do this next bit if this is the player's first spawn, and thus they haven't died yet.
-		// It would be better to do this based on roundtime however, since doing it by deaths shortchanges players who join late.
-		// We have to do it before GiveDefaultItems so that weaponsets like rocket arena don't apply the cloak to nearly full strength players.
-
-		if (GetRoundDeaths() > 0)
-		{
-			m_bInSpawnCloak = true;
-			m_flEndCloakTime = gpGlobals->curtime + 5.0;
 		}
 
 		// Create a dummy skin list, fill it out, and then transmit anything that changed.
@@ -439,10 +432,12 @@ void CGEMPPlayer::Spawn()
 		m_flLastMoveTime = gpGlobals->curtime;
 		m_flNextCampCheck = gpGlobals->curtime;
 
-		// Give us the invuln time defined by the gameplay
-		StartInvul( GEMPRules()->GetSpawnInvulnInterval() );
-		m_bInSpawnInvul = true;
-		
+		// Give us the invuln time defined by the gameplay, but only if it's not our first spawn since we don't want everyone invisible on the radar at the start of the round.
+
+		if (GetRoundDeaths() > 0)
+			StartInvul(GEMPRules()->GetSpawnInvulnInterval());
+		else
+			StopInvul();
 
 		SetMaxSpeed(GE_NORM_SPEED);
 		m_Local.m_bDucked = false;
@@ -821,12 +816,21 @@ CBaseEntity* CGEMPPlayer::EntSelectSpawnPoint()
 	int iSpawnerType = GEMPRules()->GetSpawnPointType( this );
 	CGEPlayerSpawn *pSpot = NULL;
 
-	if( iSpawnerType == SPAWN_PLAYER_SPECTATOR || IsObserver() )
+	if (iSpawnerType == SPAWN_PLAYER_SPECTATOR || IsObserver())
 	{
-		// Find us the next spectator spawn, skip the theatrics below
-		pSpot = (CGEPlayerSpawn*) EntFindSpawnPoint( m_iLastSpecSpawn, iSpawnerType, m_iLastSpecSpawn );
-		if ( pSpot )
+		if (GEMPRules()->GetSpawnersOfType(SPAWN_PLAYER_SPECTATOR)->Count()) // Find us the next spectator spawn, skip the theatrics below
+			pSpot = (CGEPlayerSpawn*)EntFindSpawnPoint(m_iLastSpecSpawn, iSpawnerType, m_iLastSpecSpawn);
+		else  // Didn't find one but we don't want to see the inside of dr.dean's head anymore so let's just grab the first deathmatch one.
+		{
+			DevMsg("Looking for DM Spawn!\n");
+			pSpot = (CGEPlayerSpawn*)GERules()->GetSpawnersOfType(SPAWN_PLAYER)->Element(0).Get();
+		}
+
+		if (pSpot)
+		{
+			DevMsg("Returning spectator spawn point!\n");
 			return pSpot;
+		}
 	}
 
 	if ( ge_debug_playerspawns.GetBool() )
@@ -928,11 +932,13 @@ CBaseEntity *CGEMPPlayer::EntFindSpawnPoint( int iStart, int iType, int &iReturn
 	int iRand = bRandomize ? (GERandom<int>(5) + 1) : 1;
 	int iNext = iStart + iRand;
 
-	if ( iNext >= vSpawns->Count() && bAllowWrap )
-		iNext = max( 0, vSpawns->Count() - iNext );
-	else if ( iNext >= vSpawns->Count() && !bAllowWrap )
-		iNext = -1;
-
+	if (iNext >= vSpawns->Count())
+	{
+		if ( bAllowWrap )
+			iNext = max(0, iNext % vSpawns->Count());
+		else
+			iNext = -1;
+	}
 	iReturn = iNext;
 	return iNext >= 0 ? (*vSpawns)[iNext].Get() : NULL;
 }
@@ -1013,14 +1019,7 @@ void CGEMPPlayer::GiveDefaultItems()
 
 	// Switch to the best given weapon
 	if (pGivenWeapon)
-	{
 		Weapon_Switch((CBaseCombatWeapon*)pGivenWeapon);
-
-		CGEWeapon *pGivenGEWeapon = ToGEWeapon((CBaseCombatWeapon*)pGivenWeapon);
-
-		if (pGivenGEWeapon && GetStrengthOfWeapon(pGivenGEWeapon->GetWeaponID()) > 4)
-			m_bInSpawnCloak = false;
-	}
 }
 
 void CGEMPPlayer::SetPlayerName( const char *name )
@@ -1374,6 +1373,29 @@ bool CGEMPPlayer::HandleCommand_JoinTeam( int team )
 	return true;
 }
 
+void CGEMPPlayer::ObserverTransistion()
+{
+	char specmode[16];
+	if (GEMPRules()->GetSpawnersOfType(SPAWN_PLAYER_SPECTATOR)->Count() || GEMPRules()->GetNumActivePlayers() < 1)
+	{
+		Q_snprintf(specmode, 16, "spec_mode %i", OBS_MODE_FIXED);
+		engine->ClientCommand(edict(), specmode);
+		SetObserverMode(OBS_MODE_FIXED);
+		GERules()->GetSpectatorSpawnSpot(this);
+	}
+	else // Otherwise follow someone around.
+	{
+		Q_snprintf(specmode, 16, "spec_mode %i", OBS_MODE_CHASE);
+		engine->ClientCommand(edict(), specmode);
+		CGEMPPlayer *pPlayer = ToGEMPPlayer(FindNextObserverTarget(false));
+		if (IsValidObserverTarget(pPlayer))
+		{
+			SetObserverMode(OBS_MODE_CHASE);
+			SetObserverTarget(pPlayer);
+		}
+	}
+}
+
 bool CGEMPPlayer::StartObserverMode( int mode )
 {
 	// Cache our current state
@@ -1550,8 +1572,8 @@ bool CGEMPPlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 		NotifyPickup( pWeapon->GetClassname(), 0 );
 
 		// Kill radar invisibility if this weapon is too powerful.
-		if (GetStrengthOfWeapon(pGEWeapon->GetWeaponID()) > 4)
-			m_bInSpawnCloak = false;
+		if (GetStrengthOfWeapon(pGEWeapon->GetWeaponID()) > 4 && GEMPRules()->GetSpawnInvulnCanBreak())
+			StopInvul();
 	}
 	
 	return ret;

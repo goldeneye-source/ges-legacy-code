@@ -169,6 +169,14 @@ float CGEPlayer::GetSequenceGroundSpeed( CStudioHdr *pStudioHdr, int iSequence )
 		return BaseClass::GetSequenceGroundSpeed( pStudioHdr, iSequence );
 }
 
+void CGEPlayer::RemoveAmmo(int iCount, int iAmmoIndex)
+{
+	if ( GEMPRules()->InfAmmoEnabled() )
+		return;
+
+	BaseClass::RemoveAmmo(iCount, iAmmoIndex);
+}
+
 void CGEPlayer::FireBullets( const FireBulletsInfo_t &info )
 {
 	FireBulletsInfo_t modinfo = info;
@@ -848,9 +856,9 @@ void CGEPlayer::ResetAimMode( bool forced /*=false*/ )
 #ifdef CLIENT_DLL
 	// Only the client needs to actually unzoom
 	if (forced)
-		m_iNewZoomOffset = -1;
-	else
-		m_iNewZoomOffset = 0;
+		SetZoom(0, true);
+
+	m_iNewZoomOffset = 0;
 #endif
 }
 

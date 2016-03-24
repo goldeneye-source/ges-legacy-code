@@ -62,6 +62,7 @@
 	void GETeamplay_Callback( IConVar *var, const char *pOldString, float flOldValue );
 	void GEBotThreshold_Callback( IConVar *var, const char *pOldString, float fOldValue );
 	void GEVelocity_Callback( IConVar *var, const char *pOldString, float fOldValue );
+	void GEInfAmmo_Callback(IConVar *var, const char *pOldString, float fOldValue);
 #endif
 
 #include "gemp_gamerules.h"
@@ -84,15 +85,11 @@ ConVar ge_teamautobalance	( "ge_teamautobalance", "1", FCVAR_REPLICATED|FCVAR_NO
 ConVar ge_tournamentmode	( "ge_tournamentmode",	"0", FCVAR_REPLICATED|FCVAR_NOTIFY, "Turns on tournament mode that disables certain gameplay checks" );
 ConVar ge_respawndelay		( "ge_respawndelay",	"6", FCVAR_REPLICATED, "Changes the minimum delay between respawns" );
 
-ConVar ge_armorrespawntime	( "ge_armorrespawntime",  "10", FCVAR_REPLICATED|FCVAR_NOTIFY, "Time in seconds between armor respawns (ge_dynamicarmorrespawn must be off!)" );
 ConVar ge_itemrespawntime	( "ge_itemrespawntime",	  "10", FCVAR_REPLICATED|FCVAR_NOTIFY, "Time in seconds between ammo respawns (ge_dynamicweaponrespawn must be off!)" );
 ConVar ge_weaponrespawntime	( "ge_weaponrespawntime", "10", FCVAR_REPLICATED|FCVAR_NOTIFY, "Time in seconds between weapon respawns (ge_dynamicweaponrespawn must be off!)" );
 
 ConVar ge_dynweaponrespawn		 ( "ge_dynamicweaponrespawn", "1", FCVAR_REPLICATED, "Changes the respawn delay for weapons and ammo to be based on how many players are connected" );
 ConVar ge_dynweaponrespawn_scale ( "ge_dynamicweaponrespawn_scale", "1.0", FCVAR_REPLICATED, "Changes the dynamic respawn delay scale for weapons and ammo" );
-
-ConVar ge_dynarmorrespawn		 ( "ge_dynamicarmorrespawn", "1", FCVAR_REPLICATED, "Changes the respawn delay for armor to be based on how many players are connected" );
-ConVar ge_dynarmorrespawn_scale  ( "ge_dynamicarmorrespawn_scale", "1.0", FCVAR_REPLICATED, "Changes the dynamic respawn delay scale for armor" );
 
 ConVar ge_radar_range			 ( "ge_radar_range", "1500", FCVAR_REPLICATED|FCVAR_NOTIFY, "Change the radar range (in inches), default is 125ft" );
 ConVar ge_radar_showenemyteam	 ( "ge_radar_showenemyteam", "1", FCVAR_REPLICATED|FCVAR_NOTIFY, "Allow the radar to show enemies during teamplay (useful for tournaments)" );
@@ -103,11 +100,12 @@ ConVar ge_bot_threshold			( "ge_bot_threshold", "0", FCVAR_REPLICATED|FCVAR_NOTI
 ConVar ge_bot_openslots			( "ge_bot_openslots", "0", FCVAR_REPLICATED, "Number of open slots to leave for incoming players." );
 ConVar ge_bot_strict_openslot	( "ge_bot_strict_openslot", "0", FCVAR_REPLICATED, "Count spectators in determining whether to leave an open player slot." );
 
-ConVar ge_roundtime	( "ge_roundtime", "240", FCVAR_REPLICATED, "Round time in seconds that can be played.", true, 0, true, 3000, GERoundTime_Callback );
-ConVar ge_rounddelay( "ge_rounddelay", "15", FCVAR_GAMEDLL, "Delay, in seconds, between rounds.", true, 3, true, 40 );
+ConVar ge_roundtime	( "ge_roundtime", "0", FCVAR_REPLICATED, "Round time in seconds that can be played.", true, 0, true, 3000, GERoundTime_Callback );
+ConVar ge_rounddelay( "ge_rounddelay", "10", FCVAR_GAMEDLL, "Delay, in seconds, between rounds.", true, 2, true, 40 );
 ConVar ge_roundcount( "ge_roundcount", "0", FCVAR_REPLICATED, "Number of rounds that should be held in the given match time (calculates ge_roundtime), use 0 to disable", GERoundCount_Callback );
 ConVar ge_teamplay	( "ge_teamplay", "0", FCVAR_REPLICATED, "Turns on team play if the current scenario supports it.", GETeamplay_Callback );
 ConVar ge_velocity	( "ge_velocity", "1.0", FCVAR_REPLICATED|FCVAR_NOTIFY, "Player movement velocity multiplier, applies in multiples of 0.25 [0.7 to 2.0]", true, 0.7, true, 2.0, GEVelocity_Callback );
+ConVar ge_infiniteammo( "ge_infiniteammo", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Players never run out of ammo!", GEInfAmmo_Callback );
 
 void GERoundTime_Callback( IConVar *var, const char *pOldString, float flOldValue )
 {
@@ -195,7 +193,40 @@ void GEVelocity_Callback( IConVar *var, const char *pOldString, float fOldValue 
 
 	Msg( "Velocity set to %0.2f times normal speed!\n", value );
 
+	FOR_EACH_PLAYER(pPlayer)
+		pPlayer->SetMaxSpeed( GE_NORM_SPEED * GEMPRules()->GetSpeedMultiplier(pPlayer) );
+	END_OF_PLAYER_LOOP()
+
 	denyReentrant = false;
+}
+
+void GEInfAmmo_Callback(IConVar *var, const char *pOldString, float flOldValue)
+{
+	if (!GEMPRules())
+		return;
+
+	ConVar *cVar = static_cast<ConVar*>(var);
+
+	bool newstate = cVar->GetBool();
+
+	GEMPRules()->SetGlobalInfAmmoState(newstate);
+
+	if (!newstate)
+		return;
+
+	const char* ammotypes[13] = { AMMO_9MM, AMMO_RIFLE, AMMO_BUCKSHOT, AMMO_MAGNUM, AMMO_GOLDENGUN, AMMO_MOONRAKER, AMMO_ROCKET, AMMO_SHELL, AMMO_TIMEDMINE, AMMO_REMOTEMINE, AMMO_TKNIFE, AMMO_GRENADE, AMMO_PROXIMITYMINE };
+	// Somewhat dinky way of still allowing ammo pickups for mines/knives/grenades during inf ammo.  Just give the player one less than the max!
+	int ammoamounts[13] = { AMMO_9MM_MAX, AMMO_RIFLE_MAX, AMMO_BUCKSHOT_MAX, AMMO_MAGNUM_MAX, AMMO_GOLDENGUN_MAX, AMMO_MOONRAKER_MAX, AMMO_ROCKET_MAX,
+							AMMO_SHELL_MAX, AMMO_TIMEDMINE_MAX - 1, AMMO_REMOTEMINE_MAX - 1, AMMO_TKNIFE_MAX - 1, AMMO_GRENADE_MAX - 1, AMMO_PROXIMITYMINE_MAX - 1};
+
+	FOR_EACH_PLAYER(pPlayer)
+		pPlayer->RemoveAllAmmo(); // First strip their ammo so if someone spazzes out on the console command they don't end up with max ammo for throwables.
+
+		for (int i = 0; i < 13; i++)
+		{
+			pPlayer->GiveAmmo(ammoamounts[i], GetAmmoDef()->Index(ammotypes[i]), true);
+		}
+	END_OF_PLAYER_LOOP()
 }
 
 void GEBotThreshold_Callback( IConVar *var, const char *pOldString, float fOldValue )
@@ -275,6 +306,8 @@ BEGIN_NETWORK_TABLE_NOBASE( CGEMPRules, DT_GEMPRules )
 #ifdef CLIENT_DLL
 	RecvPropInt( RECVINFO( m_iRandomSeedOffset ) ),
 	RecvPropBool( RECVINFO( m_bTeamPlayDesired ) ),
+	RecvPropBool( RECVINFO( m_bGlobalInfAmmo )),
+	RecvPropBool( RECVINFO( m_bGamemodeInfAmmo )),
 	RecvPropInt( RECVINFO( m_iTeamplayMode ) ),
 	RecvPropFloat(RECVINFO( m_flMapFloorHeight )),
 	RecvPropEHandle( RECVINFO( m_hMatchTimer ) ),
@@ -282,6 +315,8 @@ BEGIN_NETWORK_TABLE_NOBASE( CGEMPRules, DT_GEMPRules )
 #else
 	SendPropInt( SENDINFO( m_iRandomSeedOffset )),
 	SendPropBool( SENDINFO( m_bTeamPlayDesired ) ),
+	SendPropBool( SENDINFO( m_bGlobalInfAmmo ) ),
+	SendPropBool( SENDINFO( m_bGamemodeInfAmmo ) ),
 	SendPropInt( SENDINFO( m_iTeamplayMode ) ),
 	SendPropFloat( SENDINFO( m_flMapFloorHeight )),
 	SendPropEHandle( SENDINFO( m_hMatchTimer ) ),
@@ -367,6 +402,9 @@ CGEMPRules::CGEMPRules()
 	m_bUseTeamSpawns	 = true;
 	m_bSwappedTeamSpawns = false;
 
+	m_bGlobalInfAmmo = false;
+	m_bGamemodeInfAmmo = false;
+
 	m_bEnableAmmoSpawns	 = true;
 	m_bEnableArmorSpawns = true;
 	m_bEnableWeaponSpawns= true;
@@ -379,7 +417,7 @@ CGEMPRules::CGEMPRules()
 	m_flNextBotCheck		= 0;
 	m_flNextIntermissionCheck = 0;
 
-	m_flSpawnInvulnDuration = 2.0;
+	m_flSpawnInvulnDuration = 3.0;
 	m_bSpawnInvulnCanBreak = true;
 
 	m_flMapFloorHeight = 125.0;
@@ -658,16 +696,6 @@ QAngle CGEMPRules::VecItemRespawnAngles( CItem *pItem )
 	return pItem->GetOriginalSpawnAngles();
 }
 
-float CGEMPRules::FlArmorRespawnTime( CItem *pItem )
-{
-	// Use dynamic respawn calculation if provided
-	if ( ge_dynarmorrespawn.GetBool() )
-		return (15.4 - 1.8 * sqrt( (float)max(GetNumAlivePlayers(), 8) )) * ge_dynarmorrespawn_scale.GetFloat();
-
-	// Otherwise return the static delay
-	return ge_armorrespawntime.GetFloat();
-}
-
 float CGEMPRules::FlItemRespawnTime( CItem *pItem )
 {
 	// Use dynamic respawn calculation if provided
@@ -866,11 +894,6 @@ void CGEMPRules::GetTaggedConVarList( KeyValues *pCvarTagList )
 	key = new KeyValues( "ge_bot_threshold" );
 	key->SetString( "convar", "ge_bot_threshold" );
 	key->SetString( "tag", "BOTS" );
-	pCvarTagList->AddSubKey( key );
-
-	key = new KeyValues( "ge_velocity" );
-	key->SetString( "convar", "ge_velocity" );
-	key->SetString( "tag", "speed mod" );
 	pCvarTagList->AddSubKey( key );
 }
 
@@ -1623,7 +1646,7 @@ void CGEMPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info 
 			weaponid = pGEWeapon->GetWeaponID();
 			wepSkin = pGEWeapon->GetSkin();
 		}
-		else if (!(dmgType & DMG_NERVEGAS)) // Only do this if the Nervegas damage flag isn't set.
+		else
 		{
 			killer_weapon_name = pInflictor->GetClassname();  // it's just that easy
 		}
@@ -1643,8 +1666,16 @@ void CGEMPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info 
 	// We only need to check the classname if we didn't explicitly resolve the weapon above
 	if ( weaponid == WEAPON_NONE )
 	{
-		if (dmgType & DMG_NERVEGAS) // Make sure we're actually looking for a weapon first, if this flag is set we want to pretend there isn't one.
+		if (!Q_stricmp( killer_weapon_name, "player" ))
+		{
+			// Detects killbinds and displays a special message for them
+			dmgType = DMG_GENERIC;
+			killer_weapon_name = "self";
+		}
+		else if (dmgType & DMG_NERVEGAS) // Make sure we're actually looking for a weapon first, if this flag is set we want to pretend there isn't one.
+		{
 			killer_weapon_name = default_killer;
+		}
 		else if ( Q_stristr( killer_weapon_name, "npc_" ) && !pInflictor->IsNPC() )
 		{
 			CGEBaseGrenade *pNPC = ToGEGrenade( pInflictor );
@@ -1704,12 +1735,6 @@ void CGEMPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info 
 				killer_weapon_name = "#GE_Trap";
 
 			weaponid = WEAPON_TRAP;
-		}
-		else if (!Q_stricmp( killer_weapon_name, "player" ))
-		{
-			// Detects killbinds and displays a special message for them
-			dmgType = DMG_GENERIC;
-			killer_weapon_name = "self";
 		}
 		else if (dmgType & DMG_BLAST)
 		{
@@ -1847,7 +1872,6 @@ bool CGEMPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 
 	return BaseClass::ShouldCollide( collisionGroup0, collisionGroup1 ); 
 }
-
 
 bool CGEMPRules::IsTeamplay()
 {

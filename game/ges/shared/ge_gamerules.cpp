@@ -57,11 +57,11 @@ ConVar sv_report_client_settings("sv_report_client_settings", "0", FCVAR_GAMEDLL
 static CViewVectors g_GEViewVectors(
 	Vector( 0, 0, 64 ),        //m_vView
 							  
-	Vector(-12, -12, 0 ),	  //m_vHullMin
-	Vector( 12,  12,  72 ),	  //m_vHullMax
+	Vector(-12.5, -12.5, 0 ),	  //m_vHullMin
+	Vector( 12.5,  12.5,  72 ),	  //m_vHullMax
 							  
-	Vector(-12, -12, 0 ),	  //m_vDuckHullMin
-	Vector( 12,  12,  44 ),	  //m_vDuckHullMax
+	Vector(-12.5, -12.5, 0 ),	  //m_vDuckHullMin
+	Vector( 12.5,  12.5,  44 ),	  //m_vDuckHullMax
 	Vector( 0, 0, 36 ),		  //m_vDuckView
 							  
 	Vector(-10, -10, -10 ),	  //m_vObsHullMin

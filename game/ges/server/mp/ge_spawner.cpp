@@ -27,6 +27,9 @@ BEGIN_DATADESC( CGESpawner )
 	DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
 	DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
 	DEFINE_INPUTFUNC(FIELD_VOID, "Toggle", InputToggle),
+	// Outputs
+	DEFINE_OUTPUT( m_OnPickedUp, "OnPickedUp" ),
+	DEFINE_OUTPUT( m_OnRespawn, "OnRespawn" ),
 END_DATADESC();
 
 // Generic spawners, basically used as point entities
@@ -219,6 +222,7 @@ void CGESpawner::SpawnEnt( void )
 {
 	// Just in case
 	RemoveEnt();
+	m_OnRespawn.FireOutput(this, this);
 
 	if ( IsOverridden() )
 	{
@@ -226,6 +230,7 @@ void CGESpawner::SpawnEnt( void )
 		{
 			m_hCurrentEntity = CBaseEntity::Create( m_szOverrideEntity, GetAbsOrigin(), GetAbsAngles(), this );
 			OnEntSpawned( m_szOverrideEntity );
+			EmitSound("Item.Materialize");
 		}
 		// Don't try again even if we fail
 		m_fNextSpawnTime = 0;
@@ -236,6 +241,7 @@ void CGESpawner::SpawnEnt( void )
 		{
 			m_hCurrentEntity = CBaseEntity::Create( m_szBaseEntity, GetAbsOrigin(), GetAbsAngles(), this );	
 			OnEntSpawned( m_szBaseEntity );
+			EmitSound("Item.Materialize");
 		}
 		// Don't try again even if we fail
 		m_fNextSpawnTime = 0;
@@ -257,6 +263,8 @@ void CGESpawner::OnEntPicked( void )
 {
 	m_hCurrentEntity = NULL;
 	m_fNextSpawnTime = gpGlobals->curtime + GetRespawnInterval();
+
+	m_OnPickedUp.FireOutput(this, this);
 }
 
 void CGESpawner::OnEnabled( void )

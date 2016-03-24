@@ -509,20 +509,39 @@ void CGEBotPlayer::PostThink( void )
 
 void CGEBotPlayer::GiveHat()
 {
-	if ( m_hHat.Get() )
+	if (IsObserver())
+	{
+		// Make sure we DO NOT have a hat as an observer
+		KnockOffHat(true);
+		return;
+	}
+
+	if (m_hHat.Get())
 		return;
 
 	const char* hatModel = GECharacters()->Get(m_iCharIndex)->m_pSkins[m_iSkinIndex]->szHatModel;
-	if ( !hatModel || hatModel[0] == '\0' )
+	if (!hatModel || hatModel[0] == '\0')
 		return;
+
+	SpawnHat(hatModel);
+}
+
+void CGEBotPlayer::SpawnHat(const char* hatModel, Vector offset, QAngle angOffset)
+{
+	if (IsObserver() && !IsAlive()) // Observers can't have any hats.  Need this here so direct hat assignment doesn't make floating hats.
+		return;
+
+	// Get rid of any hats we're currently wearing.
+	if (m_hHat.Get())
+		KnockOffHat(true);
 
 	// Simple check to ensure consistency
 	int setnum, boxnum;
-	if ( m_pNPC->LookupHitbox( "hat", setnum, boxnum ) )
-		m_pNPC->SetHitboxSet( setnum );
+	if (m_pNPC->LookupHitbox("hat", setnum, boxnum))
+		m_pNPC->SetHitboxSet(setnum);
 
-	CBaseEntity *hat = CreateNewHat( EyePosition(), GetAbsAngles(), hatModel );
-	hat->FollowEntity( m_pNPC, true );
+	CBaseEntity *hat = CreateNewHat(EyePosition(), GetAbsAngles(), hatModel);
+	hat->FollowEntity(m_pNPC, true);
 	m_hHat = hat;
 }
 
@@ -592,14 +611,7 @@ void CGEBotPlayer::GiveDefaultItems( void )
 
 	// Switch to the best given weapon
 	if ( pGivenWeapon )
-	{
 		m_pNPC->Weapon_Switch((CBaseCombatWeapon*)pGivenWeapon);
-
-		CGEWeapon *pGivenGEWeapon = ToGEWeapon((CBaseCombatWeapon*)pGivenWeapon);
-
-		if (pGivenGEWeapon && GetStrengthOfWeapon(pGivenGEWeapon->GetWeaponID()) > 4)
-			m_bInSpawnCloak = false;
-	}
 }
 
 CBaseCombatWeapon *CGEBotPlayer::GetActiveWeapon()

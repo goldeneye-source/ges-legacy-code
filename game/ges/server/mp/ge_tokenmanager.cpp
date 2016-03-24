@@ -717,6 +717,29 @@ int CGETokenManager::FilterSpawnersForToken( int spawner_type, int count, CUtlVe
 		}
 	}
 
+	// If our mapper has marked any special weapon spawns, we want to use those instead of the high level weapon spawns.
+	if (spawner_type == SPAWN_WEAPON && spawns.Count() > 1)
+	{
+		CUtlVector<EHANDLE> specialSpawns;
+
+		for ( int i = 0; i < spawns.Count(); i++ )
+		{
+			CGESpawner *pSpawn = (CGESpawner*)spawns[i].Get();
+			if (pSpawn->IsVerySpecial())
+			{
+				specialSpawns.AddToTail( pSpawn );
+			}
+		}
+
+		// Just because we had more than one viable spawner doesn't mean any of them were marked by the mapper.
+		// If we actually have any, wipe our spawns vector and replace it with the specialspawns vector.
+		if (specialSpawns.Count() > 0)
+		{
+			spawns.RemoveAll();
+			spawns.AddVectorToTail(specialSpawns);
+		}
+	}
+
 	// Find spawners at random using whatevers left from the pruning
 	int num_found = 0;
 

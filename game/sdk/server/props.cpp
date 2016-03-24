@@ -5827,7 +5827,7 @@ void CPhysicsPropRespawnable::Materialize( void )
 	Vector max = m_vOriginalMaxs;
 	for ( CEntitySphereQuery sphere( GetAbsOrigin(), max.NormalizeInPlace() ); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity() )
 	{
-		if ( pEntity == this || pEntity->GetSolid() == SOLID_BSP || pEntity->GetSolidFlags() & FSOLID_NOT_SOLID || pEntity->GetMoveType() & MOVETYPE_NONE )
+		if ( pEntity == this || pEntity->GetSolid() == SOLID_NONE || pEntity->GetSolid() == SOLID_BSP || pEntity->GetSolidFlags() & FSOLID_NOT_SOLID || pEntity->GetMoveType() & MOVETYPE_NONE )
 			continue;
 
 		// Ignore props that can't move

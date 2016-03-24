@@ -37,6 +37,11 @@ END_DATADESC();
 
 #define AliveThinkInterval		1.0f
 
+ConVar ge_armorrespawntime("ge_armorrespawntime", "10", FCVAR_REPLICATED | FCVAR_NOTIFY, "Minimum time in seconds before armor respawns.");
+ConVar ge_armorrespawn_pc_scale("ge_armorrespawn_pc_scale", "15.0", FCVAR_REPLICATED, "Multiplier applied to playercount. ge_armorrespawntime * 10 - ge_armorrespawn_pc_scale * (playercount - 1)^ge_armorrespawn_pc_pow is the full equation.");
+ConVar ge_armorrespawn_pc_pow("ge_armorrespawn_pc_pow", "0.5", FCVAR_REPLICATED, "Power applied to playercount. ge_armorrespawntime * 10 - ge_armorrespawn_pc_scale * (playercount - 1)^ge_armorrespawn_pc_pow is the full equation.");
+
+
 CGEArmorVest::CGEArmorVest( void )
 {
 	m_bEnabled = true;
@@ -94,7 +99,14 @@ void CGEArmorVest::Precache( void )
 CBaseEntity *CGEArmorVest::Respawn(void)
 {
 	BaseClass::Respawn();
-	m_iSpawnpointsgoal = (int)(120 - 15 * sqrt((float)GEMPRules()->GetNumAlivePlayers()));
+
+	m_iSpawnpointsgoal = (int)(ge_armorrespawntime.GetInt() * 10 - ge_armorrespawn_pc_scale.GetFloat() * pow(max((float)GEMPRules()->GetNumAlivePlayers() - 1, 0), ge_armorrespawn_pc_pow.GetFloat()));
+
+	// Let interested developers know our new goal.
+
+	Vector curPos = GetAbsOrigin();
+	DevMsg("Spawnpoints goal for armor at location %f, %f, %f set to %d\n", curPos.x, curPos.y, curPos.z, m_iSpawnpointsgoal);
+
 	ClearAllSpawnProgress();
 	SetNextThink(gpGlobals->curtime + 1);
 	return this;
@@ -123,8 +135,6 @@ void CGEArmorVest::Materialize(void)
 {
 	// I repurposed the respawn -> materalize loop to demo the dynamic respawn concept.
 	// May cause issues, create seperate loop if so.
-
-	// If player dies near it, progress should go up.  If player gets hurt near it, progress should go down.  Ideally make it avoid spawning right on player death.
 
 	m_iSpawnpoints += CalcSpawnProgress();
 
@@ -204,7 +214,7 @@ int CGEArmorVest::CalcSpawnProgress()
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CGEMPPlayer *pPlayer = ToGEMPPlayer(UTIL_PlayerByIndex(i));
-		if (pPlayer && pPlayer->IsConnected())
+		if (pPlayer && pPlayer->IsConnected() && !pPlayer->IsObserver())
 		{
 			if (!pPlayer->CheckInPVS(this)) // We don't care about players who can't see us.
 				continue;
@@ -226,10 +236,16 @@ int CGEArmorVest::CalcSpawnProgress()
 
 	// Basically, 2 people being within the check distance of the armor with one of them within a quarter of it is the only way to get it to tick down at less than max rate.
 	// Discourages standing on top of the armor spawn in the middle of a fight because "oh man i need 3 gauges of health"
-	float metric = sqrt(m_flSpawnCheckHalfRadiusSqr - length1)*sqrt(m_flSpawnCheckRadiusSqr - length2);
 
-	// If 2 players are within 17% of the radius each the armor does not tick down at all.
-	return (int)clamp(10 - 11 * sqrt(metric) / m_flSpawnCheckRadius, 0, 10);
+	// It will never spawn if one of the players is standing right on top of it.
+	if (length1 < 48)
+		return 0;
+
+	// Otherwise we only care about length 2.  Linear falloff, the further they are the faster it respawns.
+	float metric = 1 - sqrt(length2) / m_flSpawnCheckRadius;
+
+	// If both players are within 17% of the radius the armor does not tick down at all.
+	return (int)clamp(10 - 12 * metric, 0, 10);
 }
 
 void CGEArmorVest::AddSpawnProgressMod(CBasePlayer *pPlayer, int amount)

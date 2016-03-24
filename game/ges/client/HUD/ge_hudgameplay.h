@@ -46,6 +46,7 @@ public:
 		GAMEPLAY_WEAPONSET,
 		GAMEPLAY_HELP,
 		GAMEPLAY_STATS,
+		GAMEPLAY_WEAPONSTATS,
 
 		MOVEMENT_SHOWING,
 		MOVEMENT_HIDING,
@@ -88,7 +89,26 @@ private:
 	vgui::Panel					*m_pWeaponSet;
 	vgui::Label					*m_pWeaponSetName;
 	CUtlVector<sWeaponLabel*>	m_vWeaponLabels;
+	/*
+	// Weapon Stats Panel
+	struct sWeaponLabel
+	{
+		sWeaponLabel(void) { pLabel = NULL; pImage = NULL; };
+		void SetPos(int x, int y) {
+			pLabel->SetPos(x, y);
+			pImage->SetPos(x + pLabel->GetWide(), y - pLabel->GetTall() / 3);
+		};
+		int GetWide(void) { return pLabel->GetWide() + pImage->GetWide(); };
+		int GetTall(void) { return max(pLabel->GetTall(), pImage->GetTall()); };
 
+		vgui::Label	*pLabel;
+		vgui::ImagePanel *pImage;
+	};
+	
+	vgui::Panel					*m_pWeaponSet;
+	vgui::Label					*m_pWeaponSetName;
+	CUtlVector<sWeaponLabel*>	m_vWeaponLabels;
+	*/
 	// Gameplay Help Panel
 	vgui::GECreditsText	*m_pGameplayHelp;
 	
@@ -97,10 +117,14 @@ private:
 	CPanelAnimationVarAliasType( int, m_iTextX, "text_xpad", "8", "proportional_int" );
 	CPanelAnimationVarAliasType( int, m_iTextY, "text_ypad", "8", "proportional_int" );
 	
+	/*
 	CPanelAnimationVar( vgui::HFont, m_hWeaponFont, "weapon_font", "Default" );
 	CPanelAnimationVar( vgui::HFont, m_hHelpFont, "help_font", "Default" );
-	CPanelAnimationVar( vgui::HFont, m_hHeaderFont, "header_font", "Default" );
-	CPanelAnimationVar( Color, m_TextColor, "fgcolor", "0 0 0 255" );
+	CPanelAnimationVar( vgui::HFont, m_hHeaderFont, "header_font", "Default" ); */
+	CPanelAnimationVar( vgui::HFont, m_hWeaponFont, "Scoreboard", "Default" );
+	CPanelAnimationVar( vgui::HFont, m_hHelpFont, "Scoreboard", "Default" );
+	CPanelAnimationVar( vgui::HFont, m_hHeaderFont, "Scoreboard", "Default" );
+	CPanelAnimationVar( Color, m_TextColor, "fgcolor", "96 219 96 255" );
 	CPanelAnimationVar( Color, m_BgColor, "bgcolor", "0 0 0 100" );
 	
 	// Define these to control specific parts of the HUD via a scripted animation

@@ -10,9 +10,9 @@ MACRO(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar
     SET_SOURCE_FILES_PROPERTIES(${Sources}
       PROPERTIES COMPILE_FLAGS "/Yu\"${PrecompiledHeader}\" /FI\"${PrecompiledHeader}\" /Fp\"${PrecompiledBinary}\""
       OBJECT_DEPENDS "${PrecompiledBinary}")
-    # Add precompiled header to SourcesVar
-    LIST(APPEND ${SourcesVar} ${PrecompiledSource})
   ENDIF(MSVC)
+  # Add precompiled header to SourcesVar
+  LIST(APPEND ${SourcesVar} ${PrecompiledSource})
 ENDMACRO(ADD_MSVC_PRECOMPILED_HEADER)
 
 # TODO: These are for server
@@ -43,7 +43,168 @@ set(SERVER_LIBS
   ${CMAKE_SOURCE_DIR}/lib/python/boost_python.a
 )
 
+# Call these out separately for precompiled header on windows
+set(GEPY_SOURCES
+  ges/server/py/ge_pyai.cpp
+  ges/server/py/ge_pyaiconstants.cpp
+  ges/server/py/ge_pyentity.cpp
+  ges/server/py/ge_pyfuncs.cpp
+  ges/server/py/ge_pygameplay.cpp
+  ges/server/py/ge_pygamerules.cpp
+  ges/server/py/ge_pyglobal.cpp
+  ges/server/py/ge_pymanager.cpp
+  ges/server/py/ge_pymodules.cpp
+  ges/server/py/ge_pyplayer.cpp
+  ges/server/py/ge_pyutil.cpp
+  ges/server/py/ge_pyweapon.cpp
+)
+
+set(SHARED_SOURCES
+  ../common/randoverride.cpp
+  ../public/ScratchPadUtils.cpp
+  ../public/SoundParametersInternal.cpp
+  ../public/bone_setup.cpp
+  ../public/collisionutils.cpp
+  ../public/dt_utlvector_common.cpp
+  ../public/filesystem_helpers.cpp
+  ../public/interpolatortypes.cpp
+  ../public/networkvar.cpp
+  ../public/rope_physics.cpp
+  ../public/scratchpad3d.cpp
+  ../public/simple_physics.cpp
+  ../public/stringregistry.cpp
+  ../public/studio.cpp
+  ../public/tier0/memoverride.cpp
+  ges/shared/ge_achievement.cpp
+  ges/shared/ge_bloodscreenvm.cpp
+  ges/shared/ge_character_data.cpp
+  ges/shared/ge_game_timer.cpp
+  ges/shared/ge_gamerules.cpp
+  ges/shared/ge_generictoken.cpp
+  ges/shared/ge_player_shared.cpp
+  ges/shared/ge_utils.cpp
+  ges/shared/ge_weapon.cpp
+  ges/shared/ge_weapon_parse.cpp
+  ges/shared/ge_weaponautomatic.cpp
+  ges/shared/ge_weaponmelee.cpp
+  ges/shared/ge_weaponpistol.cpp
+  ges/shared/ge_webrequest.cpp
+  ges/shared/mp/gemp_gamerules.cpp
+  ges/shared/mp/gemp_player_shared.cpp
+  ges/shared/script_parser.cpp
+  ges/shared/weapon_ar33.cpp
+  ges/shared/weapon_autoshotgun.cpp
+  ges/shared/weapon_cmag.cpp
+  ges/shared/weapon_d5k.cpp
+  ges/shared/weapon_dd44.cpp
+  ges/shared/weapon_goldengun.cpp
+  ges/shared/weapon_grenade.cpp
+  ges/shared/weapon_grenade_launcher.cpp
+  ges/shared/weapon_kf7.cpp
+  ges/shared/weapon_klobb.cpp
+  ges/shared/weapon_knife.cpp
+  ges/shared/weapon_knife_throwing.cpp
+  ges/shared/weapon_mines.cpp
+  ges/shared/weapon_moonraker.cpp
+  ges/shared/weapon_phantom.cpp
+  ges/shared/weapon_pp7.cpp
+  ges/shared/weapon_pp7_silenced.cpp
+  ges/shared/weapon_rcp90.cpp
+  ges/shared/weapon_rocket_launcher.cpp
+  ges/shared/weapon_shotgun.cpp
+  ges/shared/weapon_slappers.cpp
+  ges/shared/weapon_sniperrifle.cpp
+  ges/shared/weapon_zmg.cpp
+  sdk/shared/EntityParticleTrail_Shared.cpp
+  sdk/shared/GameStats.cpp
+  sdk/shared/Multiplayer/multiplayer_animstate.cpp
+  sdk/shared/SoundEmitterSystem.cpp
+  sdk/shared/Sprite.cpp
+  sdk/shared/SpriteTrail.cpp
+  sdk/shared/achievement_saverestore.cpp
+  sdk/shared/achievementmgr.cpp
+  sdk/shared/achievements_hlx.cpp
+  sdk/shared/activitylist.cpp
+  sdk/shared/ammodef.cpp
+  sdk/shared/animation.cpp
+  sdk/shared/base_playeranimstate.cpp
+  sdk/shared/baseachievement.cpp
+  sdk/shared/basecombatcharacter_shared.cpp
+  sdk/shared/basecombatweapon_shared.cpp
+  sdk/shared/baseentity_shared.cpp
+  sdk/shared/basegrenade_shared.cpp
+  sdk/shared/baseparticleentity.cpp
+  sdk/shared/baseplayer_shared.cpp
+  sdk/shared/baseviewmodel_shared.cpp
+  sdk/shared/beam_shared.cpp
+  sdk/shared/collisionproperty.cpp
+  sdk/shared/death_pose.cpp
+  sdk/shared/debugoverlay_shared.cpp
+  sdk/shared/decals.cpp
+  sdk/shared/effect_dispatch_data.cpp
+  sdk/shared/ehandle.cpp
+  sdk/shared/entitylist_base.cpp
+  sdk/shared/env_detail_controller.cpp
+  sdk/shared/env_wind_shared.cpp
+  sdk/shared/eventlist.cpp
+  sdk/shared/func_ladder.cpp
+  sdk/shared/gamemovement.cpp
+  sdk/shared/gamerules.cpp
+  sdk/shared/gamerules_register.cpp
+  sdk/shared/gamestringpool.cpp
+  sdk/shared/gamevars_shared.cpp
+  sdk/shared/hintmessage.cpp
+  sdk/shared/hintsystem.cpp
+  sdk/shared/hl2/basehlcombatweapon_shared.cpp
+  sdk/shared/hl2/hl2_usermessages.cpp
+  sdk/shared/hl2/hl_gamemovement.cpp
+  sdk/shared/hl2mp/hl2mp_player_shared.cpp
+  sdk/shared/hl2mp/hl2mp_playeranimstate.cpp
+  sdk/shared/hl2mp/hl2mp_weapon_parse.cpp
+  sdk/shared/hl2mp/weapon_hl2mpbase.cpp
+  sdk/shared/hl2mp/weapon_hl2mpbasehlmpcombatweapon.cpp
+  sdk/shared/igamesystem.cpp
+  sdk/shared/interval.cpp
+  sdk/shared/mapentities_shared.cpp
+  sdk/shared/movevars_shared.cpp
+  sdk/shared/mp_shareddefs.cpp
+  sdk/shared/multiplay_gamerules.cpp
+  sdk/shared/obstacle_pushaway.cpp
+  sdk/shared/particle_parse.cpp
+  sdk/shared/particlesystemquery.cpp
+  sdk/shared/physics_main_shared.cpp
+  sdk/shared/physics_saverestore.cpp
+  sdk/shared/physics_shared.cpp
+  sdk/shared/point_bonusmaps_accessor.cpp
+  sdk/shared/point_posecontroller.cpp
+  sdk/shared/precache_register.cpp
+  sdk/shared/predictableid.cpp
+  sdk/shared/predicted_viewmodel.cpp
+  sdk/shared/props_shared.cpp
+  sdk/shared/ragdoll_shared.cpp
+  sdk/shared/rope_helpers.cpp
+  sdk/shared/saverestore.cpp
+  sdk/shared/sceneentity_shared.cpp
+  sdk/shared/script_intro_shared.cpp
+  sdk/shared/sequence_Transitioner.cpp
+  sdk/shared/sheetsimulator.cpp
+  sdk/shared/simtimer.cpp
+  sdk/shared/singleplay_gamerules.cpp
+  sdk/shared/soundenvelope.cpp
+  sdk/shared/studio_shared.cpp
+  sdk/shared/takedamageinfo.cpp
+  sdk/shared/teamplay_gamerules.cpp
+  sdk/shared/test_ehandle.cpp
+  sdk/shared/usercmd.cpp
+  sdk/shared/usermessages.cpp
+  sdk/shared/util_shared.cpp
+  sdk/shared/vehicle_viewblend_shared.cpp
+  sdk/shared/weapon_parse.cpp
+  sdk/shared/weapon_parse_default.cpp
+)
+
 set(SERVER_SOURCES
+  ${SHARED_SOURCES}
   ../public/dt_send.cpp
   ../public/dt_utlvector_send.cpp
   ../public/editor_sendcommand.cpp
@@ -92,19 +253,6 @@ set(SERVER_SOURCES
   ges/server/mp/gemp_player.cpp
   ges/server/npc_tknife.cpp
   ges/server/prop_ge_dynamic.cpp
-  ges/server/py/ge_pyai.cpp
-  ges/server/py/ge_pyaiconstants.cpp
-  ges/server/py/ge_pyentity.cpp
-  ges/server/py/ge_pyfuncs.cpp
-  ges/server/py/ge_pygameplay.cpp
-  ges/server/py/ge_pygamerules.cpp
-  ges/server/py/ge_pyglobal.cpp
-  ges/server/py/ge_pymanager.cpp
-  ges/server/py/ge_pymodules.cpp
-  ges/server/py/ge_pyplayer.cpp
-  ges/server/py/ge_pyprecom.cpp
-  ges/server/py/ge_pyutil.cpp
-  ges/server/py/ge_pyweapon.cpp
   ges/server/sp/ent_envexplosion.cpp
   ges/server/sp/ent_geexplosion.cpp
   ges/server/sp/ent_hat.cpp
@@ -394,7 +542,6 @@ set(SERVER_SOURCES
   sdk/server/soundscape_system.cpp
   sdk/server/spotlightend.cpp
   sdk/server/sprite_perfmonitor.cpp
-  sdk/server/stdafx.cpp
   sdk/server/steamjet.cpp
   sdk/server/subs.cpp
   sdk/server/sun.cpp
@@ -471,6 +618,7 @@ set(SERVER_SOURCES
 )
 
 set(CLIENT_SOURCES
+  ${SHARED_SOURCES}
   ../common/compiledcaptionswap.cpp
   ../public/bone_accessor.cpp
   ../public/client_class.cpp
@@ -834,7 +982,6 @@ set(CLIENT_SOURCES
   sdk/client/smoke_fog_overlay.cpp
   sdk/client/splinepatch.cpp
   sdk/client/spritemodel.cpp
-  sdk/client/stdafx.cpp
   sdk/client/text_message.cpp
   sdk/client/texturescrollmaterialproxy.cpp
   sdk/client/timematerialproxy.cpp
@@ -879,162 +1026,23 @@ set(CLIENT_SOURCES
   v5_achievements.cpp
 )
 
-set(SHARED_SOURCES
-  ../common/randoverride.cpp
-  ../public/ScratchPadUtils.cpp
-  ../public/SoundParametersInternal.cpp
-  ../public/bone_setup.cpp
-  ../public/collisionutils.cpp
-  ../public/dt_utlvector_common.cpp
-  ../public/filesystem_helpers.cpp
-  ../public/interpolatortypes.cpp
-  ../public/networkvar.cpp
-  ../public/rope_physics.cpp
-  ../public/scratchpad3d.cpp
-  ../public/simple_physics.cpp
-  ../public/stringregistry.cpp
-  ../public/studio.cpp
-  ../public/tier0/memoverride.cpp
-  ges/shared/ge_achievement.cpp
-  ges/shared/ge_bloodscreenvm.cpp
-  ges/shared/ge_character_data.cpp
-  ges/shared/ge_game_timer.cpp
-  ges/shared/ge_gamerules.cpp
-  ges/shared/ge_generictoken.cpp
-  ges/shared/ge_player_shared.cpp
-  ges/shared/ge_utils.cpp
-  ges/shared/ge_weapon.cpp
-  ges/shared/ge_weapon_parse.cpp
-  ges/shared/ge_weaponautomatic.cpp
-  ges/shared/ge_weaponmelee.cpp
-  ges/shared/ge_weaponpistol.cpp
-  ges/shared/ge_webrequest.cpp
-  ges/shared/mp/gemp_gamerules.cpp
-  ges/shared/mp/gemp_player_shared.cpp
-  ges/shared/script_parser.cpp
-  ges/shared/weapon_ar33.cpp
-  ges/shared/weapon_autoshotgun.cpp
-  ges/shared/weapon_cmag.cpp
-  ges/shared/weapon_d5k.cpp
-  ges/shared/weapon_dd44.cpp
-  ges/shared/weapon_goldengun.cpp
-  ges/shared/weapon_grenade.cpp
-  ges/shared/weapon_grenade_launcher.cpp
-  ges/shared/weapon_kf7.cpp
-  ges/shared/weapon_klobb.cpp
-  ges/shared/weapon_knife.cpp
-  ges/shared/weapon_knife_throwing.cpp
-  ges/shared/weapon_mines.cpp
-  ges/shared/weapon_moonraker.cpp
-  ges/shared/weapon_phantom.cpp
-  ges/shared/weapon_pp7.cpp
-  ges/shared/weapon_pp7_silenced.cpp
-  ges/shared/weapon_rcp90.cpp
-  ges/shared/weapon_rocket_launcher.cpp
-  ges/shared/weapon_shotgun.cpp
-  ges/shared/weapon_slappers.cpp
-  ges/shared/weapon_sniperrifle.cpp
-  ges/shared/weapon_zmg.cpp
-  sdk/shared/EntityParticleTrail_Shared.cpp
-  sdk/shared/GameStats.cpp
-  sdk/shared/Multiplayer/multiplayer_animstate.cpp
-  sdk/shared/SoundEmitterSystem.cpp
-  sdk/shared/Sprite.cpp
-  sdk/shared/SpriteTrail.cpp
-  sdk/shared/achievement_saverestore.cpp
-  sdk/shared/achievementmgr.cpp
-  sdk/shared/achievements_hlx.cpp
-  sdk/shared/activitylist.cpp
-  sdk/shared/ammodef.cpp
-  sdk/shared/animation.cpp
-  sdk/shared/base_playeranimstate.cpp
-  sdk/shared/baseachievement.cpp
-  sdk/shared/basecombatcharacter_shared.cpp
-  sdk/shared/basecombatweapon_shared.cpp
-  sdk/shared/baseentity_shared.cpp
-  sdk/shared/basegrenade_shared.cpp
-  sdk/shared/baseparticleentity.cpp
-  sdk/shared/baseplayer_shared.cpp
-  sdk/shared/baseviewmodel_shared.cpp
-  sdk/shared/beam_shared.cpp
-  sdk/shared/collisionproperty.cpp
-  sdk/shared/death_pose.cpp
-  sdk/shared/debugoverlay_shared.cpp
-  sdk/shared/decals.cpp
-  sdk/shared/effect_dispatch_data.cpp
-  sdk/shared/ehandle.cpp
-  sdk/shared/entitylist_base.cpp
-  sdk/shared/env_detail_controller.cpp
-  sdk/shared/env_wind_shared.cpp
-  sdk/shared/eventlist.cpp
-  sdk/shared/func_ladder.cpp
-  sdk/shared/gamemovement.cpp
-  sdk/shared/gamerules.cpp
-  sdk/shared/gamerules_register.cpp
-  sdk/shared/gamestringpool.cpp
-  sdk/shared/gamevars_shared.cpp
-  sdk/shared/hintmessage.cpp
-  sdk/shared/hintsystem.cpp
-  sdk/shared/hl2/basehlcombatweapon_shared.cpp
-  sdk/shared/hl2/hl2_usermessages.cpp
-  sdk/shared/hl2/hl_gamemovement.cpp
-  sdk/shared/hl2mp/hl2mp_player_shared.cpp
-  sdk/shared/hl2mp/hl2mp_playeranimstate.cpp
-  sdk/shared/hl2mp/hl2mp_weapon_parse.cpp
-  sdk/shared/hl2mp/weapon_hl2mpbase.cpp
-  sdk/shared/hl2mp/weapon_hl2mpbasehlmpcombatweapon.cpp
-  sdk/shared/igamesystem.cpp
-  sdk/shared/interval.cpp
-  sdk/shared/mapentities_shared.cpp
-  sdk/shared/movevars_shared.cpp
-  sdk/shared/mp_shareddefs.cpp
-  sdk/shared/multiplay_gamerules.cpp
-  sdk/shared/obstacle_pushaway.cpp
-  sdk/shared/particle_parse.cpp
-  sdk/shared/particlesystemquery.cpp
-  sdk/shared/physics_main_shared.cpp
-  sdk/shared/physics_saverestore.cpp
-  sdk/shared/physics_shared.cpp
-  sdk/shared/point_bonusmaps_accessor.cpp
-  sdk/shared/point_posecontroller.cpp
-  sdk/shared/precache_register.cpp
-  sdk/shared/predictableid.cpp
-  sdk/shared/predicted_viewmodel.cpp
-  sdk/shared/props_shared.cpp
-  sdk/shared/ragdoll_shared.cpp
-  sdk/shared/rope_helpers.cpp
-  sdk/shared/saverestore.cpp
-  sdk/shared/sceneentity_shared.cpp
-  sdk/shared/script_intro_shared.cpp
-  sdk/shared/sequence_Transitioner.cpp
-  sdk/shared/sheetsimulator.cpp
-  sdk/shared/simtimer.cpp
-  sdk/shared/singleplay_gamerules.cpp
-  sdk/shared/soundenvelope.cpp
-  sdk/shared/studio_shared.cpp
-  sdk/shared/takedamageinfo.cpp
-  sdk/shared/teamplay_gamerules.cpp
-  sdk/shared/test_ehandle.cpp
-  sdk/shared/usercmd.cpp
-  sdk/shared/usermessages.cpp
-  sdk/shared/util_shared.cpp
-  sdk/shared/vehicle_viewblend_shared.cpp
-  sdk/shared/weapon_parse.cpp
-  sdk/shared/weapon_parse_default.cpp
-)
-
-ADD_MSVC_PRECOMPILED_HEADER("ge_pyprecom.h" "ge_pyprecom.cpp" SERVER_SOURCES)
-ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" SHARED_SOURCES)
+ADD_MSVC_PRECOMPILED_HEADER("ges/server/py/ge_pyprecom.h" "ges/server/py/ge_pyprecom.cpp" GEPY_SOURCES)
+ADD_MSVC_PRECOMPILED_HEADER("sdk/server/stdafx.h" "sdk/server/stdafx.cpp" SERVER_SOURCES)
+ADD_MSVC_PRECOMPILED_HEADER("sdk/client/stdafx.h" "sdk/client/stdafx.cpp" CLIENT_SOURCES)
 
 if(CMAKE_HOST_WIN32)
   # Windows build server and client
-  add_library(server SHARED ${SERVER_SOURCES} ${SHARED_SOURCES})
-  add_library(client SHARED ${CLIENT_SOURCES} ${SHARED_SOURCES})
+  add_library(server SHARED ${SERVER_SOURCES} ${GEPY_SOURCES})
+  target_link_libraries(server ${SHARED_LIBS})
+
+  add_library(client SHARED ${CLIENT_SOURCES})
+  target_link_libraries(client ${SHARED_LIBS})
 else()
   add_library(steam_api_i486 SHARED IMPORTED)
   set_target_properties(steam_api_i486 PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/linux_sdk/)
+  
   # Linux build server only
-  add_library(server_i486 SHARED ${SERVER_SOURCES} ${SHARED_SOURCES})
+  add_library(server_i486 SHARED ${SERVER_SOURCES} ${GEPY_SOURCES})
   set_target_properties(server_i486 PROPERTIES PREFIX "")
   target_link_libraries(server_i486 ${SHARED_LIBS} steam_api_i486)
   target_link_libraries(server_i486 ${SERVER_LIBS})

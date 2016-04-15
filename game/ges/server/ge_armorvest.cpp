@@ -29,6 +29,8 @@ BEGIN_DATADESC( CGEArmorVest )
 	DEFINE_KEYFIELD( m_flSpawnCheckRadius, FIELD_FLOAT, "CheckRadius"),
 	// Function Pointers
 	DEFINE_ENTITYFUNC( ItemTouch ),
+	DEFINE_THINKFUNC( AliveThink ),
+	DEFINE_THINKFUNC( RespawnThink ),
 	// Inputs
 	DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
 	DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
@@ -76,7 +78,7 @@ void CGEArmorVest::Spawn( void )
 
 	for (int i = 0; i < MAX_PLAYERS; i++)
 	{
-		m_iPlayerDamagePenalty[i] = 0;
+		m_iPlayerPointContribution[i] = 0;
 	}
 
 	// Override base's ItemTouch for NPC's
@@ -108,8 +110,19 @@ CBaseEntity *CGEArmorVest::Respawn(void)
 	DevMsg("Spawnpoints goal for armor at location %f, %f, %f set to %d\n", curPos.x, curPos.y, curPos.z, m_iSpawnpointsgoal);
 
 	ClearAllSpawnProgress();
+	SetThink(&CGEArmorVest::RespawnThink);
 	SetNextThink(gpGlobals->curtime + 1);
 	return this;
+}
+
+void CGEArmorVest::RespawnThink(void)
+{
+	m_iSpawnpoints += CalcSpawnProgress();
+
+	if (m_iSpawnpointsgoal < m_iSpawnpoints)
+		Materialize();
+	else
+		SetNextThink(gpGlobals->curtime + 1);
 }
 
 void CGEArmorVest::AliveThink(void)
@@ -133,26 +146,16 @@ void CGEArmorVest::AliveThink(void)
 
 void CGEArmorVest::Materialize(void)
 {
-	// I repurposed the respawn -> materalize loop to demo the dynamic respawn concept.
-	// May cause issues, create seperate loop if so.
-
-	m_iSpawnpoints += CalcSpawnProgress();
-
-	if (m_iSpawnpointsgoal < m_iSpawnpoints)
+	// Only materialize if we are enabled and allowed
+	if (GEMPRules()->ArmorShouldRespawn() && m_bEnabled)
 	{
-		// Only materialize if we are enabled and allowed
-		if (GEMPRules()->ArmorShouldRespawn() && m_bEnabled)
-		{
-			BaseClass::Materialize();
-			// Override base's ItemTouch for NPC's
-			SetTouch(&CGEArmorVest::ItemTouch);
+		BaseClass::Materialize();
+		// Override base's ItemTouch for NPC's
+		SetTouch(&CGEArmorVest::ItemTouch);
 
-			SetThink(&CGEArmorVest::AliveThink);
-			SetNextThink(gpGlobals->curtime + AliveThinkInterval);
-		}
+		SetThink(&CGEArmorVest::AliveThink);
+		SetNextThink(gpGlobals->curtime + AliveThinkInterval);
 	}
-	else
-		SetNextThink(gpGlobals->curtime + 1);
 }
 
 void CGEArmorVest::ItemTouch( CBaseEntity *pOther )
@@ -250,15 +253,15 @@ int CGEArmorVest::CalcSpawnProgress()
 
 void CGEArmorVest::AddSpawnProgressMod(CBasePlayer *pPlayer, int amount)
 {
-	int cappedamount = min(amount, m_iSpawnpoints);
+	int cappedamount = min(amount, m_iSpawnpoints * -1); // Can't put the armor below 0 spawn points.
 
 	if (pPlayer)
 	{
 		int iPID = pPlayer->GetUserID();
-		m_iPlayerDamagePenalty[iPID] += cappedamount;
+		m_iPlayerPointContribution[iPID] += cappedamount;
 	}
 
-	m_iSpawnpoints -= cappedamount;
+	m_iSpawnpoints += cappedamount;
 }
 
 void CGEArmorVest::ClearSpawnProgressMod(CBasePlayer *pPlayer)
@@ -269,9 +272,9 @@ void CGEArmorVest::ClearSpawnProgressMod(CBasePlayer *pPlayer)
 	int iPID = pPlayer->GetUserID();
 
 	if (m_iSpawnpoints < m_iSpawnpointsgoal - 20) // Only do this next bit if we won't subtract points.
-		m_iSpawnpoints = min(m_iSpawnpoints + m_iPlayerDamagePenalty[iPID], m_iSpawnpointsgoal - 20); // Add back all the spawn points that we stole but avoid having the armor respawn instantly after we died.
+		m_iSpawnpoints = min(m_iSpawnpoints - m_iPlayerPointContribution[iPID], m_iSpawnpointsgoal - 20); // Add back all the spawn points that we stole but avoid having the armor respawn instantly after we died.
 
-	m_iPlayerDamagePenalty[iPID] = 0;
+	m_iPlayerPointContribution[iPID] = 0;
 }
 
 void CGEArmorVest::ClearAllSpawnProgress()
@@ -280,14 +283,15 @@ void CGEArmorVest::ClearAllSpawnProgress()
 
 	for (int i = 0; i < MAX_PLAYERS; i++)
 	{
-		m_iPlayerDamagePenalty[i] = 0;
+		m_iPlayerPointContribution[i] = 0;
 	}
 }
 
 void CGEArmorVest::OnEnabled( void )
 {
-	// Respawn and wait for materialize
+	// Respawn and instantly materialize
 	Respawn();
+	Materialize();
 }
 
 void CGEArmorVest::OnDisabled( void )

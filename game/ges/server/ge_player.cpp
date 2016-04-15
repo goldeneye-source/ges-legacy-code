@@ -308,6 +308,11 @@ void CGEPlayer::PostThink( void )
 		DevMsg("~~Frame damage output is %d in postframe~~ \n", m_iFrameDamageOutput);
 		PlayHitsound(m_iFrameDamageOutput, m_iFrameDamageOutputType);
 	}
+	else if (m_iFrameDamageOutput == -1)
+	{
+		DevMsg("~~Frame damage output is 0 in postframe~~ \n");
+		PlayHitsound(0, DMG_BULLET);
+	}
 
 	// Reset our damage statistics
 	m_iViewPunchScale = 0;
@@ -508,7 +513,7 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 		DevMsg( "%s took %0.1f damage to hitbox %i, %i HP / %i AP remaining.\n", GetPlayerName(), adjdmg, LastHitGroup(), GetHealth(), ArmorValue() );
 
 		// Tell our attacker that they damaged me
-		pGEAttacker->Event_DamagedOther(this, adjdmg, inputinfo);
+		pGEAttacker->Event_DamagedOther(this, adjdmg, info);
 
 		// Play our hurt sound
 		HurtSound( inputinfo );
@@ -531,7 +536,8 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 	}
 	else
 	{
-		pGEAttacker->PlayHitsound(0, DMG_BULLET);
+		// Tell our attacker that they didn't damage me but still hit me
+		pGEAttacker->Event_DamagedOther(this, 0, info);
 
 		// Upset accuracy based on how many half gauges of life would have been lost. 
 		// More substancial than you'd think because of the exponential nature of the accuracy recovery
@@ -730,9 +736,18 @@ void CGEPlayer::Event_DamagedOther( CGEPlayer *pOther, int dmgTaken, const CTake
 	if (pOther == this)
 		return;
 
-	m_iFrameDamageOutput += dmgTaken;
+	if (dmgTaken <= 0) // We hit someone but didn't actually do any damage.
+	{
+		if (!m_iFrameDamageOutput)  // We haven't hit anyone yet, add a flag that says we hit someone in invuln.
+			m_iFrameDamageOutput = -1;
+	}
+	else
+	{
+		m_iFrameDamageOutput = max(m_iFrameDamageOutput, 0);  //Get rid of any invuln hit flags.
+		m_iFrameDamageOutput += dmgTaken;
+	}
+
 	m_iFrameDamageOutputType = inputInfo.GetDamageType();
-	
 	// TraceBleed occurs in TraceAttack and is defined in baseentity_shared.cpp
 	// SpawnBlood occurs in TraceAttack and is defined as UTIL_BloodDrips in util_shared.cpp
 	// GE:S spawns blood on the client, the server blood is for all other players
@@ -980,6 +995,7 @@ void CGEPlayer::Spawn()
 	}
 
 	SetMaxSpeed(GE_NORM_SPEED * GEMPRules()->GetSpeedMultiplier(this));
+	ResetAimMode();
 }
 
 void CGEPlayer::SetSpeedMultiplier(float mult)	

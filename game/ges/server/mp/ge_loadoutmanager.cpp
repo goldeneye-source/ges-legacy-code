@@ -10,6 +10,7 @@
 
 #include "ge_gamerules.h"
 #include "gemp_gamerules.h"
+#include "ge_mapmanager.h"
 #include "gemp_player.h"
 #include "ge_spawner.h"
 #include "ge_gameplayresource.h"
@@ -306,10 +307,28 @@ bool CGELoadoutManager::SpawnWeapons( void )
 		{
 			// We have a set, go through and find a random loadout from the set
 			const GameplaySet *set = m_GameplaySets[idx];
-			CUtlVector<int> weights, groups;
+			CUtlVector<int> weights, groups, weightoverrides;
+			CUtlVector<char*> blacklist;
 
 			weights = set->weights;
 			groups = set->groups;
+
+			GEMPRules()->GetMapManager()->GetSetBlacklist(blacklist, weightoverrides);
+
+			if (blacklist.Count())
+			{
+				for (int b = 0; b < blacklist.Count(); b++)
+				{
+					for (int l = 0; l < set->loadouts.Count(); l++)
+					{
+						if (!Q_strcmp(set->loadouts[l], blacklist[b]))
+						{
+							weights[l] = weightoverrides[b];
+							break;
+						}
+					}
+				}
+			}
 
 			if (AdjustWeights(groups, weights)) //Adjust the weights based on recently used groups, if no other groups use old method.
 			{
@@ -339,7 +358,8 @@ bool CGELoadoutManager::SpawnWeapons( void )
 		{
 			// No set, choose from the global pool (weight != 0)
 			CUtlVector<CGELoadout*> loadouts;
-			CUtlVector<int> weights, groups;
+			CUtlVector<int> weights, groups, weightoverrides;
+			CUtlVector<char*> blacklist;
 
 			GetLoadouts( loadouts );
 
@@ -348,6 +368,26 @@ bool CGELoadoutManager::SpawnWeapons( void )
 
 			for (int i = 0; i < loadouts.Count(); i++)
 				groups.AddToTail(loadouts[i]->GetGroup());
+
+			// This is done twice in two very similar ways, because loadouts[]->GetIdent() returns const char* and sets->loadouts just returns char*
+			// Setting up a function to take both would probably take more resources than just sticking them both in directly.
+
+			GEMPRules()->GetMapManager()->GetSetBlacklist(blacklist, weightoverrides);
+
+			if (blacklist.Count())
+			{
+				for (int b = 0; b < blacklist.Count(); b++)
+				{
+					for (int l = 0; l < loadouts.Count(); l++)
+					{
+						if (!Q_strcmp(loadouts[l]->GetIdent(), blacklist[b]))
+						{
+							weights[l] = weightoverrides[b];
+							break;
+						}
+					}
+				}
+			}
 
 			if (AdjustWeights(groups, weights)) //Adjust the weights based on recently used groups, if only one group then use old method.
 			{
@@ -540,11 +580,6 @@ void CGELoadoutManager::GetWeaponLists( CUtlVector<int> &vWeaponIds, CUtlVector<
 
 bool CGELoadoutManager::AdjustWeights(CUtlVector<int> &groups, CUtlVector<int> &weights)
 {
-	static CUtlVector<int> validgroups, validweights;
-	validgroups.RemoveAll();
-	validweights.RemoveAll();
-
-
 	// Check to make sure there's more than one group
 	for (int i = 0; i < groups.Count(); i++)
 	{

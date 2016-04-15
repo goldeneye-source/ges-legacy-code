@@ -40,6 +40,7 @@
 	#include "ge_gameplayresource.h"
 	#include "ge_tokenmanager.h"
 	#include "ge_loadoutmanager.h"
+	#include "ge_mapmanager.h"
 	#include "ge_stats_recorder.h"
 	#include "ge_bot.h"
 
@@ -405,6 +406,8 @@ CGEMPRules::CGEMPRules()
 	m_bGlobalInfAmmo = false;
 	m_bGamemodeInfAmmo = false;
 
+	m_bAllowSuperfluousAreas = true;
+
 	m_bEnableAmmoSpawns	 = true;
 	m_bEnableArmorSpawns = true;
 	m_bEnableWeaponSpawns= true;
@@ -446,6 +449,10 @@ CGEMPRules::CGEMPRules()
 	// Create the weapon loadout manager
 	m_pLoadoutManager = new CGELoadoutManager;
 	m_pLoadoutManager->ParseLoadouts();
+
+	// Create map manager
+	m_pMapManager = new CGEMapManager;
+	m_pMapManager->ParseMapSelectionData();
 
 	// Figure out what day it is
 	int day, month, year;
@@ -935,6 +942,12 @@ const char *CGEMPRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
 
 void CGEMPRules::LevelInitPreEntity()
 {
+	// Tell the map manager to grab the map settings.
+	if (m_pMapManager)
+		m_pMapManager->ParseCurrentMapData();
+	else
+		Warning( "No Map Manager On Level Init!\n" );
+
 	// Create the Gameplay Manager if not existing already
 	if ( !GEGameplay() )
 		CreateGameplayManager();
@@ -1139,7 +1152,14 @@ void CGEMPRules::SetupChangeLevel( const char *next_level /*= NULL*/ )
 		if ( *nextlevel.GetString() )
 			Q_strncpy( m_szNextLevel, nextlevel.GetString(), sizeof(m_szNextLevel) );
 		else
-			GetNextLevelName( m_szNextLevel, sizeof(m_szNextLevel) );
+		{
+			const char* GESNewMap = m_pMapManager->SelectNewMap();
+
+			if (GESNewMap)
+				Q_strncpy(m_szNextLevel, GESNewMap, sizeof(m_szNextLevel));
+			else
+				GetNextLevelName(m_szNextLevel, sizeof(m_szNextLevel));
+		}
 	}
 
 	// Tell our players what the next map will be

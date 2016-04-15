@@ -381,15 +381,11 @@ bool CGERules::FShouldSwitchWeapon( CBasePlayer *pPlayer, CBaseCombatWeapon *pWe
 			return false;
 		} 
 		
-		// Also never automatically switch to explosives
-		if (weapid == WEAPON_GRENADE_LAUNCHER || weapid == WEAPON_ROCKET_LAUNCHER || weapid == WEAPON_GRENADE ||
-			weapid == WEAPON_REMOTEMINE || weapid == WEAPON_PROXIMITYMINE || weapid == WEAPON_TIMEDMINE)
+		// Also never automatically switch to esoteric explosives.
+		if (weapid == WEAPON_GRENADE || weapid == WEAPON_REMOTEMINE || weapid == WEAPON_PROXIMITYMINE || weapid == WEAPON_TIMEDMINE)
 		{
 			return false;
 		}
-
-		
-
 	}
 
 	// Use the MultiplayerGameRules to sort out the rest

@@ -285,9 +285,9 @@ void CBaseDoor::Spawn()
 
 #ifdef GE_DLL
 	if (HasSpawnFlags(SF_DOOR_LOCKSOUNDORIGIN))
-	{
 		m_pSoundOrigin = Create("info_target", m_vecPosition1, GetAbsAngles());
-	}
+	else
+		m_pSoundOrigin = NULL;
 #endif
 
 	SetMoveType( MOVETYPE_PUSH );
@@ -343,7 +343,11 @@ void CBaseDoor::Spawn()
 
 void CBaseDoor::MovingSoundThink( void )
 {
-	CPASAttenuationFilter filter( this );
+#ifdef GE_DLL
+	CPASAttenuationFilter filter(m_pSoundOrigin ? m_pSoundOrigin : this);
+#else
+	CPASAttenuationFilter filter(this);
+#endif
 	filter.MakeReliable();
 
 	EmitSound_t ep;
@@ -359,7 +363,7 @@ void CBaseDoor::MovingSoundThink( void )
 	ep.m_flVolume = 1;
 	ep.m_SoundLevel = SNDLVL_NORM;
 #ifdef GE_DLL
-	if (HasSpawnFlags(SF_DOOR_LOCKSOUNDORIGIN))
+	if (m_pSoundOrigin)
 		EmitSound(filter, m_pSoundOrigin->entindex(), ep);
 	else
 #endif
@@ -395,7 +399,7 @@ void CBaseDoor::StopMovingSound(void)
 	SetContextThink(NULL, gpGlobals->curtime, "MovingSound");
 #ifdef GE_DLL
 	// We have to always stop both sounds because we can change direction mid motion and have the wrong sound be playing when we stop.
-	if (HasSpawnFlags(SF_DOOR_LOCKSOUNDORIGIN))
+	if (m_pSoundOrigin)
 	{
 		StopSound(m_pSoundOrigin->entindex(), CHAN_STATIC, (char*)STRING(m_NoiseMoving));
 		StopSound(m_pSoundOrigin->entindex(), CHAN_STATIC, (char*)STRING(m_NoiseMovingClosed));
@@ -1027,7 +1031,11 @@ void CBaseDoor::DoorHitTop( void )
 {
 	if ( !HasSpawnFlags( SF_DOOR_SILENT ) )
 	{
+#ifdef GE_DLL
+		CPASAttenuationFilter filter( m_pSoundOrigin ? m_pSoundOrigin : this );
+#else
 		CPASAttenuationFilter filter( this );
+#endif
 		filter.MakeReliable();
 		StopMovingSound();
 
@@ -1037,7 +1045,7 @@ void CBaseDoor::DoorHitTop( void )
 		ep.m_flVolume = 1;
 		ep.m_SoundLevel = SNDLVL_NORM;
 #ifdef GE_DLL
-		if (HasSpawnFlags(SF_DOOR_LOCKSOUNDORIGIN))
+		if (m_pSoundOrigin)
 			EmitSound(filter, m_pSoundOrigin->entindex(), ep);
 		else
 #endif
@@ -1113,7 +1121,11 @@ void CBaseDoor::DoorHitBottom( void )
 {
 	if ( !HasSpawnFlags( SF_DOOR_SILENT ) )
 	{
-		CPASAttenuationFilter filter( this );
+#ifdef GE_DLL
+		CPASAttenuationFilter filter(m_pSoundOrigin ? m_pSoundOrigin : this);
+#else
+		CPASAttenuationFilter filter(this);
+#endif
 		filter.MakeReliable();
 
 		StopMovingSound();
@@ -1127,7 +1139,7 @@ void CBaseDoor::DoorHitBottom( void )
 		ep.m_flVolume = 1;
 		ep.m_SoundLevel = SNDLVL_NORM;
 #ifdef GE_DLL
-		if (HasSpawnFlags(SF_DOOR_LOCKSOUNDORIGIN))
+		if (m_pSoundOrigin)
 			EmitSound(filter, m_pSoundOrigin->entindex(), ep);
 		else
 #endif

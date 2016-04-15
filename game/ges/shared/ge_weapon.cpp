@@ -193,11 +193,6 @@ void CGEWeapon::Equip( CBaseCombatCharacter *pOwner )
 
 	CGEMPPlayer *pGEPlayer = ToGEMPPlayer(pOwner);
 
-	if (!pGEPlayer)
-		m_nSkin = 0;
-	else
-		m_nSkin = pGEPlayer->GetUsedWeaponSkin(GetWeaponID()); // We don't use setskin here because the player likely doesn't have the weapon out.
-
 	if ( GEMPRules()->InfAmmoEnabled() )
 	{
 		m_iClip1 = GetMaxClip1();
@@ -215,6 +210,11 @@ void CGEWeapon::Drop( const Vector &vecVelocity )
 
 	SetEnableGlow( m_bServerGlow );
 #endif
+
+	CGEMPPlayer *pGEMPPlayer = ToGEMPPlayer(GetOwner());
+
+	if (pGEMPPlayer)
+		m_nSkin = pGEMPPlayer->GetUsedWeaponSkin(GetWeaponID()); // Just in case the player never pulled it out.
 
 	BaseClass::Drop( vecVelocity );
 

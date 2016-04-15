@@ -18,6 +18,7 @@
 #include "ge_loadoutmanager.h"
 #include "ge_tokenmanager.h"
 #include "ge_spawner.h"
+#include "ge_armorvest.h"
 #include "gemp_gamerules.h"
 #include "gemp_player.h"
 #include "ge_gameplayresource.h"
@@ -167,6 +168,7 @@ void pyEnableArmorSpawns()
 	{
 		// Respawn the armors
 		pArmor->Respawn();
+		((CGEArmorVest*)pArmor)->Materialize();
 		pArmor = gEntList.FindEntityByClassname(pArmor, "item_armorvest*");
 	}
 }
@@ -185,6 +187,16 @@ void pyEnableInfiniteAmmo()
 void pyDisableInfiniteAmmo()
 {
 	GEMPRules()->SetGamemodeInfAmmoState(false);
+}
+
+void pyEnableSuperfluousAreas()
+{
+	GEMPRules()->SetSuperfluousAreasState(true);
+}
+
+void pyDisableSuperfluousAreas()
+{
+	GEMPRules()->SetSuperfluousAreasState(false);
 }
 
 int pyGetWeaponInSlot( int iSlot )
@@ -449,7 +461,10 @@ BOOST_PYTHON_MODULE(GEMPGameRules)
 
 	def("EnableInfiniteAmmo", pyEnableInfiniteAmmo);
 	def("DisableInfiniteAmmo", pyDisableInfiniteAmmo);
-	
+
+	def("EnableSuperfluousAreas", pyEnableSuperfluousAreas);
+	def("DisableSuperfluousAreas", pyDisableSuperfluousAreas);
+
 	def("GetWeaponInSlot", pyGetWeaponInSlot);
 	def("GetWeaponLoadout", pyGetWeaponLoadout, pyGetWeaponLoadout_overloads());
 

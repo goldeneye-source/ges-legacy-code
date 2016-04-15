@@ -309,10 +309,9 @@ void CGEMPPlayer::Spawn()
 	{
 		// Prespawn and spectating always observer
 		if ( !IsObserver() )
-		{
 			State_Transition( STATE_OBSERVER_MODE );
-			ObserverTransistion();
-		}
+
+		ObserverTransistion(); // Always do this to generate valid spectator view settings.
 	}
 	else if ( !GERules()->FPlayerCanRespawn(this) )
 	{
@@ -321,7 +320,6 @@ void CGEMPPlayer::Spawn()
 			State_Transition( STATE_OBSERVER_MODE );
 			ObserverTransistion();
 		}
-
 		// Gameplay said NO SPAWN FOR YOU! Try again every second.
 		SetSpawnState( SS_BLOCKED_GAMEPLAY );
 		m_flNextSpawnTry = gpGlobals->curtime + 1.0f;
@@ -1163,6 +1161,8 @@ bool CGEMPPlayer::ClientCommand( const CCommand &args )
 			{
 				// Find us a place to reside
 				m_hObserverTarget.Set( 0 );
+				SetViewOffset(0);
+				ClearFlags();
 				GERules()->GetSpectatorSpawnSpot( this );
 			}
 		}
@@ -1189,6 +1189,9 @@ bool CGEMPPlayer::ClientCommand( const CCommand &args )
 		else if ( GetObserverMode() == OBS_MODE_FIXED )
 		{
 			// Find us a place to reside
+			m_hObserverTarget.Set(0);
+			SetViewOffset(0);
+			ClearFlags();
 			GERules()->GetSpectatorSpawnSpot( this );
 		}
 		
@@ -1208,6 +1211,9 @@ bool CGEMPPlayer::ClientCommand( const CCommand &args )
 		else if ( GetObserverMode() == OBS_MODE_FIXED )
 		{
 			// Find us a place to reside
+			m_hObserverTarget.Set(0);
+			SetViewOffset(0);
+			ClearFlags();
 			GERules()->GetSpectatorSpawnSpot( this );
 		}
 		
@@ -1382,6 +1388,9 @@ void CGEMPPlayer::ObserverTransistion()
 		engine->ClientCommand(edict(), specmode);
 		SetObserverMode(OBS_MODE_FIXED);
 		GERules()->GetSpectatorSpawnSpot(this);
+		SetObserverTarget(NULL);
+		SetViewOffset(0);
+		ClearFlags();
 	}
 	else // Otherwise follow someone around.
 	{

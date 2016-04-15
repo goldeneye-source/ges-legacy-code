@@ -46,6 +46,7 @@ END_DATADESC()
 
 
 #define SF_REMOVE_TOUCHING 4
+#define SF_IGNORE_TRIGGERS 8
 
 CGEBrush::CGEBrush()
 {
@@ -67,6 +68,9 @@ void CGEBrush::Spawn(void)
 
 void CGEBrush::RemoveTouch(CBaseEntity *pOther)
 {
+	if (HasSpawnFlags(SF_IGNORE_TRIGGERS) && !g_pGameRules->ShouldCollide(GetCollisionGroup(), pOther->GetCollisionGroup()))
+		return;
+
 	if (!pOther || pOther->IsPlayer() || pOther->IsNPC()) // Don't remove players or bots.
 		return;
 

@@ -2272,7 +2272,7 @@ void CGameMovement::FullWalkMove( )
 
 		//If the player is on the ground, start reducing their jumppenalty
 		if (jumppenalty > 0 && player->GetGroundEntity() != NULL)
-			((CGEMPPlayer*)player)->SetJumpPenalty(max(jumppenalty - gpGlobals->frametime* (2400 / (jumppenalty + 20)), 0)); //The lower it is the faster it decays
+			((CGEMPPlayer*)player)->SetJumpPenalty(max(jumppenalty - gpGlobals->frametime* (3600 / (jumppenalty + 40)), 0)); //The lower it is the faster it decays
 	#endif
 
 		// Was jump button pressed?
@@ -4091,6 +4091,9 @@ void CGameMovement::CheckFalling( void )
 			#ifdef GE_DLL
 			float fallvalue = player->m_Local.m_flFallVelocity - PLAYER_FALL_PUNCH_THRESHOLD;
 
+			if (player->IsDucked()) // Landing while ducked squares our fall penalty.
+				fallvalue *= 1.22; //sqrt(1.5) since it gets squared later and we only want to multiply the final value by 1.5
+
 			((CGEMPPlayer*)player)->SetJumpPenalty(min(((CGEMPPlayer*)player)->GetJumpPenalty() + fallvalue*fallvalue / 4624, 100)); //vel^2 / ((800-120)^2/100)
 			((CGEMPPlayer*)player)->SetLastLandingVelocity(player->m_Local.m_flFallVelocity);
 
@@ -4242,6 +4245,10 @@ bool CGameMovement::CanUnduck()
 	}
 	else
 	{
+#ifdef GE_DLL
+		// If we're in midair we're not allowed to uncrouch.
+		return false;
+#else
 		// If in air an letting go of crouch, make sure we can offset origin to make
 		//  up for uncrouching
 		Vector hullSizeNormal = VEC_HULL_MAX - VEC_HULL_MIN;
@@ -4249,6 +4256,7 @@ bool CGameMovement::CanUnduck()
 		Vector viewDelta = ( hullSizeNormal - hullSizeCrouch );
 		viewDelta.Negate();
 		VectorAdd( newOrigin, viewDelta, newOrigin );
+#endif
 	}
 
 	bool saveducked = player->m_Local.m_bDucked;

@@ -47,6 +47,8 @@ public:
 private:
 	void ParseGameplayAffinity( void );
 	void ClearLoadouts( void );
+
+	// Adjusts weights according to weaponset grouping rules.
 	bool AdjustWeights(CUtlVector<int> &groups, CUtlVector<int> &weights);
 
 	struct GameplaySet

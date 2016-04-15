@@ -25,6 +25,7 @@ public:
 	virtual void Precache( void );
 
 	virtual CBaseEntity *Respawn( void );
+	virtual void RespawnThink( void );
 	virtual void Materialize( void );
 
 	virtual void AliveThink();
@@ -47,7 +48,7 @@ public:
 	int m_flSpawnCheckRadiusSqr;
 	int m_flSpawnCheckHalfRadiusSqr;
 
-	int m_iPlayerDamagePenalty[MAX_PLAYERS];
+	int m_iPlayerPointContribution[MAX_PLAYERS];
 
 protected:
 	void OnEnabled();

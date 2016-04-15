@@ -45,6 +45,8 @@ public:
 	//Gamemode check outputs.
 	COutputEvent m_OnGameplayTrue;
 	COutputEvent m_OnGameplayFalse;
+	COutputEvent m_OnSuperfluousAreasEnabled;
+	COutputEvent m_OnSuperfluousAreasDisabled;
 };
 
 LINK_ENTITY_TO_CLASS( ge_gameplayinfo, CGEGameplayInfo );
@@ -69,6 +71,8 @@ BEGIN_DATADESC( CGEGameplayInfo )
 	DEFINE_OUTPUT( m_outRoundEnd, "RoundEnd"),
 	DEFINE_OUTPUT( m_OnGameplayTrue, "OnGameplayMatch"),
 	DEFINE_OUTPUT( m_OnGameplayFalse, "OnNoGameplayMatch"),
+	DEFINE_OUTPUT( m_OnSuperfluousAreasEnabled, "OnSuperfluousAreasEnabled"),
+	DEFINE_OUTPUT( m_OnSuperfluousAreasDisabled, "OnSuperfluousAreasDisabled"),
 END_DATADESC()
 
 CGEGameplayInfo::CGEGameplayInfo()
@@ -114,6 +118,12 @@ void CGEGameplayInfo::OnGameplayEvent( GPEvent event )
 		GEMPRules()->SetMapFloorHeight(m_fFloorHeight);
 
 		DevMsg("Set Map Floorheight to %f \n", m_fFloorHeight);
+
+		// Check to see if we should seal areas off
+		if (GEMPRules()->SuperfluousAreasEnabled())
+			m_OnSuperfluousAreasEnabled.FireOutput(this, this);
+		else
+			m_OnSuperfluousAreasDisabled.FireOutput(this, this);
 
 		// We have to check the gamemode here instead of scenario init because that event happens before the world reload
 		// and thus any outputs we fire then would be instantly undone.

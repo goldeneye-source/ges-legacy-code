@@ -61,6 +61,7 @@ ConVar cl_ge_nohitothersound( "cl_ge_nohitsound", "0", FCVAR_ARCHIVE | FCVAR_USE
 C_GEPlayer::C_GEPlayer()
 {
 	ListenForGameEvent( "specialmusic_setup" );
+	ListenForGameEvent( "round_end" );
 
 	m_bInSpecialMusic = false;
 	m_flEndSpecialMusic = 0.0f;
@@ -223,6 +224,10 @@ void C_GEPlayer::FireGameEvent( IGameEvent *event )
 			SetupSpecialMusic( duration );
 		}
 	}
+	else if (!Q_stricmp(name, "round_end"))
+	{
+		m_iNewZoomOffset = 0;  // When the round ends, unzoom.
+	}
 }
 
 void C_GEPlayer::SetupSpecialMusic( float duration )
@@ -322,7 +327,7 @@ void C_GEPlayer::ClientThink( void )
 		// Check if we should draw our hat
 		if ( m_hHat.Get() )
 		{
-			if ( IsAlive() )
+			if ( !ShouldDrawLocalPlayer() ) //IsAlive()
 				m_hHat.Get()->AddEffects( EF_NODRAW );
 			else
 				m_hHat.Get()->RemoveEffects( EF_NODRAW );
@@ -366,6 +371,7 @@ void C_GEPlayer::PostDataUpdate( DataUpdateType_t updateType )
 				m_flEndSpecialMusic = gpGlobals->curtime;
 
 			GEViewEffects()->ResetBreath();
+			m_iNewZoomOffset = 0;
 		}
 	}
 

@@ -19,6 +19,7 @@
 #include "ge_stats_recorder.h"
 #include "gemp_player.h"
 #include "gemp_gamerules.h"
+#include "ge_mapmanager.h"
 
 #include "team.h"
 #include "script_parser.h"
@@ -66,8 +67,10 @@ void GEGPCVar_Callback( IConVar *var, const char *pOldString, float flOldValue )
 ConVar ge_gp_cyclefile( "ge_gp_cyclefile", "gameplaycycle.txt", FCVAR_GAMEDLL, "The gameplay cycle to use for random gameplay or ordered gameplay" );
 ConVar ge_autoteam( "ge_autoteam", "0", FCVAR_REPLICATED|FCVAR_NOTIFY, "Automatically toggles teamplay based on the player count (supplied value) [4-32]",  true, 0, true, MAX_PLAYERS );
 
+ConVar ge_autoautoteam("ge_autoautoteam", "1", FCVAR_GAMEDLL, "If set to 1, server will set ge_autoteam to the value specified in the current map script file.");
 ConVar ge_gameplay_mode( "ge_gameplay_mode", "0", FCVAR_GAMEDLL, "Mode to choose next gameplay: \n\t0=Same as last map, \n\t1=Random from Gameplay Cycle file, \n\t2=Ordered from Gameplay Cycle file" );
 ConVar ge_gameplay( "ge_gameplay", "DeathMatch", FCVAR_GAMEDLL, "Sets the current gameplay mode.\nDefault is 'deathmatch'", GEGameplay_Callback );
+
 
 #define GAMEPLAY_MODE_FIXED		0
 #define GAMEPLAY_MODE_RANDOM	1
@@ -308,17 +311,46 @@ const char *CGEBaseGameplayManager::GetNextScenario()
 	int mode = ge_gameplay_mode.GetInt();
 	int count = m_vScenarioCycle.Count();
 
+	// Figure out teamplay related stuff here since it factors into the gamemode we choose.
+
+	MapSelectionData *pMapData = GEMPRules()->GetMapManager()->GetCurrentMapSelectionData();
+	int teamthresh = -1;
+
+	if (ge_autoautoteam.GetBool() && pMapData)
+	{
+		teamthresh = pMapData->teamthreshold;
+		ge_autoteam.SetValue(teamthresh);
+	}
+	else if (!ge_autoautoteam.GetBool())
+		teamthresh = ge_autoteam.GetInt();
+
 	if ( mode == GAMEPLAY_MODE_RANDOM )
 	{
-		// Random game mode, pick a scenario in our list
-		if ( count > 0 )
-		{
-			int cur = g_iScenarioIndex;
-			do {
-				g_iScenarioIndex = GERandom<int>( count );
-			} while ( count > 1 && g_iScenarioIndex != cur );
+		CUtlVector<char*>	gamemodes;
+		CUtlVector<int>		weights;
 
-			return m_vScenarioCycle[ g_iScenarioIndex ].ToCStr();
+		int iNumConnections = 0;
+
+		// Find out how many people are actually connected to the server.
+		for (int i = 0; i < gpGlobals->maxClients; i++)
+		{
+			if (engine->GetPlayerNetInfo(i))
+				iNumConnections++;
+		}
+
+		// Random game mode according to map script.  
+		GEMPRules()->GetMapManager()->GetMapGameplayList(gamemodes, weights, iNumConnections >= teamthresh);
+
+		ge_teamplay.SetValue(iNumConnections >= teamthresh); // Premptively go into teamplay if we picked a teamplay mode.
+
+		if (gamemodes.Count())
+		{
+			return GERandomWeighted<char*>(gamemodes.Base(), weights.Base(), gamemodes.Count());
+		}
+		else
+		{
+			Warning("No gamemodes found in map script, defaulting to first gameplay in scenariocycle!\n");
+			return m_vScenarioCycle[0].ToCStr();
 		}
 	}
 	else if ( mode == GAMEPLAY_MODE_CYCLE )

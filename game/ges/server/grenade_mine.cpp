@@ -60,6 +60,8 @@ CGEMine::~CGEMine( void )
 {
 }
 
+extern ConVar sv_gravity;
+
 void CGEMine::Spawn( void )
 {
 	Precache();
@@ -271,19 +273,23 @@ void CGEMine::MineTouch( CBaseEntity *pOther )
 	if ( !PassServerEntityFilter( this, pOther) )
 		return;
 
-	if (!g_pGameRules->ShouldCollide(GetCollisionGroup(), pOther->GetCollisionGroup()))
+	if ( !g_pGameRules->ShouldCollide(GetCollisionGroup(), pOther->GetCollisionGroup()) )
 		return;
 
-	//If we can't align it properly, must have barely touched it, let it continue.
-	if (!AlignToSurf(pOther))
-		return;
+	//Mines can collide in midair but only bounce off of eachother.
+	if (!strncmp(pOther->GetClassname(), "npc_mine_", 9) && (((CGEMine*)pOther)->m_bInAir || ((CGEMine*)pOther->GetRootMoveParent())->m_bInAir))
+	{
+		pOther->SetAbsVelocity(GetAbsVelocity() + pOther->GetAbsVelocity());
 
-	m_bInAir = false;
-	m_flAttachTime = gpGlobals->curtime;
+		if ( GetParent() || pOther->GetParent() || FirstMoveChild() || pOther->FirstMoveChild() ) //Only independant mines can attach to eachother.
+		{
+			g_EventQueue.AddEvent(this, "Explode", 0, GetOwnerEntity(), this);
+			return;
+		}
+	}
 
-	EmitSound("weapon_mines.Attach");
-
-	RemoveFlag(FL_DONTTOUCH);
+	//If we passed all the checks let's try to attach to it.  This can still fail.
+	AlignToSurf(pOther);
 }
 
 int CGEMine::OnTakeDamage( const CTakeDamageInfo &inputInfo )
@@ -314,6 +320,40 @@ const char* CGEMine::GetPrintName( void )
 		return "#GE_TimedMine";
 	else
 		return "Mine";
+}
+
+void CGEMine::MineAttach(CBaseEntity *pEntity)
+{
+	//Mines can collide in midair but only bounce off of eachother.
+	if (!strncmp(pEntity->GetClassname(), "npc_mine_", 9) && (GetParent() || FirstMoveChild()))
+	{
+		g_EventQueue.AddEvent(this, "Explode", 0, GetOwnerEntity(), this); //If we picked up a mine in midair then we're not in a good spot to add ourselves to another higherarchy.
+		return;
+	}
+
+	// If this is true we must have hit a prop so make sure we follow it if it moves!
+	if (pEntity->GetMoveType() != MOVETYPE_NONE)
+	{
+		SetMoveType(MOVETYPE_VPHYSICS);
+		FollowEntity(pEntity, false);
+		CreateVPhysics();
+		AddSolidFlags(FSOLID_TRIGGER); //This lets us shoot our own mines.
+		SetAbsVelocity(Vector(0, 0, 0));
+	}
+	else
+	{
+		CreateVPhysics();
+		SetMoveType(MOVETYPE_NONE); //Make sure we can't knock the mines off a wall.
+		AddSolidFlags(FSOLID_TRIGGER);
+		SetAbsVelocity(Vector(0, 0, 0));
+	}
+
+	m_bInAir = false;
+	m_flAttachTime = gpGlobals->curtime;
+
+	EmitSound("weapon_mines.Attach");
+
+	RemoveFlag(FL_DONTTOUCH);
 }
 
 bool CGEMine::AlignToSurf( CBaseEntity *pSurface )
@@ -368,22 +408,8 @@ bool CGEMine::AlignToSurf( CBaseEntity *pSurface )
 
 			SetAbsAngles(angles);
 
-			// If this is true we must have hit a prop so make sure we follow it if it moves!
-			if ( pEntity->GetMoveType() != MOVETYPE_NONE )
-			{
-				SetMoveType(MOVETYPE_VPHYSICS);
-				FollowEntity( pEntity, false );
-				CreateVPhysics();
-				AddSolidFlags(FSOLID_TRIGGER); //This lets us shoot our own mines.
-				SetAbsVelocity(Vector(0, 0, 0));
-			}
-			else
-			{
-				CreateVPhysics();
-				SetMoveType(MOVETYPE_NONE); //Make sure we can't knock the mines off a wall.
-				AddSolidFlags(FSOLID_TRIGGER);
-				SetAbsVelocity( Vector(0, 0, 0) );
-			}
+			MineAttach(pEntity);
+
 			return true;
 		}
 	}

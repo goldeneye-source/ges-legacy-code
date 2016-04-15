@@ -21,6 +21,7 @@
 
 	class CGETokenManager;
 	class CGELoadoutManager;
+	class CGEMapManager;
 #endif
 
 class CGEGameTimer;
@@ -95,6 +96,7 @@ public:
 
 	CGELoadoutManager *GetLoadoutManager()  { return m_pLoadoutManager; }
 	CGETokenManager   *GetTokenManager()	{ return m_pTokenManager;	}
+	CGEMapManager	  *GetMapManager()		{ return m_pMapManager; }
 
 	int	  GetSpawnPointType( CGEPlayer *pPlayer );
 	float GetSpeedMultiplier( CGEPlayer *pPlayer );
@@ -119,6 +121,9 @@ public:
 	void SetWeaponSpawnState( bool state )	{ m_bEnableWeaponSpawns = state; }
 	void SetAmmoSpawnState( bool state )	{ m_bEnableAmmoSpawns = state; }
 	void SetArmorSpawnState( bool state )	{ m_bEnableArmorSpawns = state; }
+
+	void SetSuperfluousAreasState(bool state)	{ m_bAllowSuperfluousAreas = state; }
+	bool SuperfluousAreasEnabled()				{ return m_bAllowSuperfluousAreas; }
 
 	// These accessors control the use of team spawns (if available and team play enabled)
 	bool IsTeamSpawn()				{ return m_bUseTeamSpawns; }
@@ -210,12 +215,15 @@ private:
 
 	CGELoadoutManager	*m_pLoadoutManager;
 	CGETokenManager		*m_pTokenManager;
+	CGEMapManager		*m_pMapManager;
 
 	ConVar				*m_pAllTalkVar;
 
 	bool m_bEnableAmmoSpawns;
 	bool m_bEnableWeaponSpawns;
 	bool m_bEnableArmorSpawns;
+
+	bool m_bAllowSuperfluousAreas;
 
 	float m_flIntermissionEndTime;
 	float m_flNextTeamBalance;

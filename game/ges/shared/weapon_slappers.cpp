@@ -105,6 +105,7 @@ acttable_t	CWeaponSlappers::m_acttable[] =
 	{ ACT_GES_DRAW,						ACT_GES_GESTURE_DRAW_KNIFE,				false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_SLAPPERS,					false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_SLAPPERS,					false },
 };
 IMPLEMENT_ACTTABLE(CWeaponSlappers);
 

@@ -2,8 +2,7 @@
 #include "ge_shareddefs.h"
 
 //-----------------------------------------------------------------------------
-// Purpose: Hurts anything that touches it. If the trigger has a targetname,
-//			firing it will toggle state.
+// Purpose: Hurts anything that touches it. If it kills someone it will fire off custom kill messages and assign points to the activator.
 //-----------------------------------------------------------------------------
 class CTriggerTrap : public CTriggerHurt
 {

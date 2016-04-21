@@ -107,6 +107,7 @@ acttable_t	CWeaponKnife::m_acttable[] =
 	{ ACT_MP_RELOAD_CROUCH,				ACT_HL2MP_GESTURE_RELOAD_MELEE,			false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_KNIFE,						false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_KNIFE,					false },
 };
 IMPLEMENT_ACTTABLE(CWeaponKnife);
 

@@ -69,6 +69,7 @@ acttable_t CWeaponPhantom::m_acttable[] =
 	{ ACT_MP_RELOAD_CROUCH,				ACT_GES_GESTURE_RELOAD_PHANTOM,			false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_PHANTOM,					false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_PHANTOM,					false },
 };
 IMPLEMENT_ACTTABLE( CWeaponPhantom );
 

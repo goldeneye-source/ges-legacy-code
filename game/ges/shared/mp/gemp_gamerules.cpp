@@ -71,6 +71,9 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#define GES_DEFAULT_SPAWNINVULN		3.0f
+#define GES_DEFAULT_SPAWNBREAK		true
+
 // -----------------------
 // Console Variables
 //
@@ -107,6 +110,7 @@ ConVar ge_roundcount( "ge_roundcount", "0", FCVAR_REPLICATED, "Number of rounds 
 ConVar ge_teamplay	( "ge_teamplay", "0", FCVAR_REPLICATED, "Turns on team play if the current scenario supports it.", GETeamplay_Callback );
 ConVar ge_velocity	( "ge_velocity", "1.0", FCVAR_REPLICATED|FCVAR_NOTIFY, "Player movement velocity multiplier, applies in multiples of 0.25 [0.7 to 2.0]", true, 0.7, true, 2.0, GEVelocity_Callback );
 ConVar ge_infiniteammo( "ge_infiniteammo", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Players never run out of ammo!", GEInfAmmo_Callback );
+ConVar ge_nextnextmap("ge_nextnextmap", "", FCVAR_GAMEDLL, "Map to switch to immediately upon loading next map");
 
 void GERoundTime_Callback( IConVar *var, const char *pOldString, float flOldValue )
 {
@@ -420,8 +424,8 @@ CGEMPRules::CGEMPRules()
 	m_flNextBotCheck		= 0;
 	m_flNextIntermissionCheck = 0;
 
-	m_flSpawnInvulnDuration = 3.0;
-	m_bSpawnInvulnCanBreak = true;
+	m_flSpawnInvulnDuration = GES_DEFAULT_SPAWNINVULN;
+	m_bSpawnInvulnCanBreak = GES_DEFAULT_SPAWNBREAK;
 
 	m_flMapFloorHeight = 125.0;
 	m_iRandomSeedOffset = 0;
@@ -538,6 +542,9 @@ void CGEMPRules::OnScenarioInit()
 	SetWeaponSpawnState( true );
 	SetArmorSpawnState( true );
 	SetTeamSpawn( true );
+
+	SetSpawnInvulnInterval(GES_DEFAULT_SPAWNINVULN);
+	SetSpawnInvulnCanBreak(GES_DEFAULT_SPAWNBREAK);
 
 	// Make sure the round timer is enabled
 	// NOTE: The match timer can not be disabled
@@ -959,6 +966,19 @@ void CGEMPRules::LevelInitPreEntity()
 		CreateAiManager();
 	else
 		Warning( "[GERules] Ai manager already existed!\n" );
+
+
+	if ( Q_strcmp(ge_nextnextmap.GetString(), "") )
+	{
+		const char *nextmapname = ge_nextnextmap.GetString();
+
+		if (engine->IsMapValid(nextmapname))
+		{
+			Msg("Nextnextmap switch triggered, going to %s\n", nextmapname);
+			GEMPRules()->SetupChangeLevel(nextmapname);
+			ge_nextnextmap.SetValue("");
+		}
+	}
 }
 
 void CGEMPRules::FrameUpdatePreEntityThink()
@@ -1170,6 +1190,15 @@ void CGEMPRules::SetupChangeLevel( const char *next_level /*= NULL*/ )
 		gameeventmanager->FireEvent( event );
 	}
 
+	MapSelectionData *curMapData = m_pMapManager->GetCurrentMapSelectionData();
+	MapSelectionData *nextMapData = m_pMapManager->GetMapSelectionData(m_szNextLevel);
+
+	if ( nextMapData && curMapData && nextMapData->resintensity + curMapData->resintensity >= 10 )
+	{
+		ge_nextnextmap.SetValue(m_szNextLevel);
+		Q_strncpy(m_szNextLevel, "es_devland", sizeof(m_szNextLevel));
+	}
+	
 	// Notify everyone
 	Msg( "CHANGE LEVEL: %s\n", m_szNextLevel );
 

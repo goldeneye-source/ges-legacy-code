@@ -282,6 +282,7 @@ acttable_t CWeaponRemoteMine::m_acttable_mine[] =
 	{ ACT_GES_DRAW,						ACT_GES_GESTURE_DRAW_MINE,			false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_MINE,					false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_MINE,					false },
 };
 
 acttable_t CWeaponRemoteMine::m_acttable_watch[] = 
@@ -297,6 +298,7 @@ acttable_t CWeaponRemoteMine::m_acttable_watch[] =
 	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE,	ACT_GES_GESTURE_RANGE_ATTACK_WATCH,	true },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_WATCH,					false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_WATCH,				false },
 };
 
 // Explicitly define these so we can switch our activity table based on the state of the weapon
@@ -561,6 +563,7 @@ acttable_t CWeaponProximityMine::m_acttable[] =
 	{ ACT_GES_DRAW,						ACT_GES_GESTURE_DRAW_MINE,			false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_MINE,					false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_MINE,					false },
 };
 IMPLEMENT_ACTTABLE( CWeaponProximityMine );
 
@@ -613,6 +616,7 @@ acttable_t CWeaponTimedMine::m_acttable[] =
 	{ ACT_GES_DRAW,						ACT_GES_GESTURE_DRAW_MINE,			false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_MINE,					false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_MINE,					false },
 };
 IMPLEMENT_ACTTABLE( CWeaponTimedMine );
 

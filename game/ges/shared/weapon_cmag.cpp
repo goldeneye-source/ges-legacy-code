@@ -102,6 +102,7 @@ acttable_t CWeaponCMag::m_acttable[] =
 	{ ACT_MP_RELOAD_CROUCH,				ACT_GES_GESTURE_RELOAD_CMAG,			false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_CMAG,						false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_CMAG,						false },
 };
 IMPLEMENT_ACTTABLE( CWeaponCMag );
 

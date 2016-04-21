@@ -110,10 +110,10 @@ void CGEGameplayInfo::OnGameplayEvent( GPEvent event )
 			m_outTeamSpawnsOff.FireOutput(this, this);
 
 		// Call players output
-		m_outPlayerCount.Set( GEMPRules()->GetNumActivePlayers(), this, this );
+		// m_outPlayerCount.Set( GEMPRules()->GetNumActivePlayers(), this, this );
 
 		// Call num rounds output
-		m_outRoundCount.Set( GEGameplay()->GetRoundCount(), this, this );
+		// m_outRoundCount.Set( GEGameplay()->GetRoundCount(), this, this );
 
 		GEMPRules()->SetMapFloorHeight(m_fFloorHeight);
 

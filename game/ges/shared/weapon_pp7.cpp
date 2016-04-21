@@ -79,6 +79,7 @@ acttable_t CWeaponPP7::m_acttable[] =
 	{ ACT_MP_RELOAD_CROUCH,				ACT_GES_GESTURE_RELOAD_PISTOL,			false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_PISTOL,					false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_PISTOL,					false },
 };
 IMPLEMENT_ACTTABLE( CWeaponPP7 );
 
@@ -142,6 +143,7 @@ acttable_t CWeaponPP7Silver::m_acttable[] =
 	{ ACT_MP_RELOAD_CROUCH,				ACT_GES_GESTURE_RELOAD_PISTOL,				false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_PISTOL,						false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_PISTOL,						false },
 };
 IMPLEMENT_ACTTABLE( CWeaponPP7Silver );
 
@@ -205,5 +207,6 @@ acttable_t CWeaponPP7Gold::m_acttable[] =
 	{ ACT_MP_RELOAD_CROUCH,				ACT_GES_GESTURE_RELOAD_PISTOL,				false },
 
 	{ ACT_MP_JUMP,						ACT_HL2MP_JUMP_PISTOL,						false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_PISTOL,						false },
 };
 IMPLEMENT_ACTTABLE( CWeaponPP7Gold );

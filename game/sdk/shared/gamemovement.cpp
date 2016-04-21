@@ -2292,7 +2292,29 @@ void CGameMovement::FullWalkMove( )
 			mv->m_vecVelocity[2] = 0.0;
 			Friction();
 		}
+#ifdef GE_DLL
+		// Calculate slipnslide acceleration values.  No other material has a friction value this low so we should be able to get away with this.
+		// If you want to make this system more robust, use gradiants to find the steepest angle up the slope from the endtrace point
+		// Then accelerate the player in the opposite direction from that.  Also add a special flag or something to make slip surfaces
+		// idenfiable beyond the low friction coefficient, this will allow for higher friction surfaces.  I just don't see this being used
+		// enough at the moment to justify doing all of that.  Have fun!
+		if (player->GetGroundEntity() != NULL && player->m_surfaceFriction < 0.25)
+		{
+			trace_t bt, lt;
+			TracePlayerBBox(mv->GetAbsOrigin(), mv->GetAbsOrigin() + Vector(0, 0, -32), PlayerSolidMask(), player->GetCollisionGroup(), bt);
 
+			if (bt.fraction != 1.0 && bt.plane.normal.z != 1)
+			{
+				// Yeah we probably should use gradiants for this but for the very limited purpose this has it's probably not worth it.
+				float speed = bt.plane.normal.z * sv_gravity.GetInt(); // Cosine of the angle of the vector from the z axis multiplied by gravity.  The higher the angle the slower we go.
+				Vector movedir = bt.plane.normal;
+				movedir.z = 0;
+				movedir.NormalizeInPlace();
+				
+				mv->m_vecVelocity += speed * movedir * gpGlobals->frametime * 0.4; // Dampened slightly to cover up the dinkyness.
+			}
+		}
+#endif
 		// Make sure velocity is valid.
 		CheckVelocity();
 

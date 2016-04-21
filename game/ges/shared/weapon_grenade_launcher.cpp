@@ -114,6 +114,7 @@ acttable_t	CGEWeaponGrenadeLauncher::m_acttable[] =
 	{ ACT_MP_RELOAD_CROUCH,				ACT_GES_GESTURE_RELOAD_AUTOSHOTGUN,			false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_AUTOSHOTGUN,					false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_AUTOSHOTGUN,					false },
 };
 IMPLEMENT_ACTTABLE(CGEWeaponGrenadeLauncher);
 

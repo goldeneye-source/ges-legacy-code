@@ -69,6 +69,7 @@ acttable_t CWeaponRCP90::m_acttable[] =
 	{ ACT_MP_RELOAD_CROUCH,				ACT_HL2MP_GESTURE_RELOAD_AR2,			false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_RCP90,						false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_RCP90,					false },
 };
 IMPLEMENT_ACTTABLE( CWeaponRCP90 );
 

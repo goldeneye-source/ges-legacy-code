@@ -484,6 +484,11 @@ bool CHL2MPPlayerAnimState::HandleJumping( Activity &idealActivity )
 			}
 			else
 			{
+#ifdef GE_DLL
+				if (m_pHL2MPPlayer->GetFlags() & FL_DUCKING)
+					idealActivity = ACT_GES_CJUMP;
+				else
+#endif
 				idealActivity = ACT_MP_JUMP;
 			}
 		}

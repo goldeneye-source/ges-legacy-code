@@ -88,6 +88,7 @@ acttable_t CWeaponAR33::m_acttable[] =
 	{ ACT_MP_RELOAD_CROUCH,				ACT_GES_GESTURE_RELOAD_AR33,			false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_AR33,						false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_AR33,						false },
 };
 IMPLEMENT_ACTTABLE( CWeaponAR33 );
 

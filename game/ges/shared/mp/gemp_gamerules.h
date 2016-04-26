@@ -78,7 +78,12 @@ public:
 
 	void SetRoundTimerEnabled( bool state );
 	void StartRoundTimer( float time_sec=-1 );
-	void ChangeRoundTimer( float new_time_sec );
+	// Change total length of round timer, increase current time by difference between the new value and the old one.
+	void ChangeRoundTimer( float new_time_sec, bool announce = true );
+	// Set current and total value of round timer.
+	void SetRoundTimer(float new_time_sec, bool announce = true);
+	// Add time to current value of round timer.
+	void AddToRoundTimer(float new_time_sec, bool announce = true );
 	void SetRoundTimerPaused( bool state );
 	void StopRoundTimer();
 	

@@ -321,6 +321,11 @@ void C_GEPlayer::ClientThink( void )
 			m_iNewZoomOffset = 0;
 			SetZoom(0, true);
 		}
+		else if (GetActiveWeapon() && m_iNewZoomOffset != 0 && m_iNewZoomOffset != ToGEWeapon(GetActiveWeapon())->GetZoomOffset()) // Dinky fix because dangit I give up.  Sometimes the reset zoom conditions just flat out fail and the client stays zoomed.
+		{
+			m_iNewZoomOffset = StartedAimMode() ? ToGEWeapon(GetActiveWeapon())->GetZoomOffset() : 0;
+			SetZoom(m_iNewZoomOffset);
+		}
 		else if (m_iNewZoomOffset != m_flZoomEnd)
 			SetZoom(m_iNewZoomOffset);
 
@@ -341,19 +346,10 @@ void C_GEPlayer::ClientThink( void )
 
 		if (vm)
 		{
-			if (GetFOV() <= 35.0f)
-			{
-				v_viewmodel_fov.SetValue(70.0f);
-				vm->AddEffects(EF_NODRAW); //Prevents weapon jumping back onto the screen at certain zoom values.
-			}
-			else
-			{
-				if (v_viewmodel_fov.GetFloat() != 54.0)
-					v_viewmodel_fov.SetValue(54.0f);
-
-				if ( vm->GetEffects() & EF_NODRAW )
-					vm->RemoveEffects(EF_NODRAW);
-			}
+			if (54.0f + GetZoom() <= 0)
+				v_viewmodel_fov.SetValue(GetZoom() * -1 + 5);
+			else if (v_viewmodel_fov.GetFloat() != 54.0)
+				v_viewmodel_fov.SetValue(54.0f);
 		}
 	}
 

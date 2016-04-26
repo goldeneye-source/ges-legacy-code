@@ -49,6 +49,7 @@ public:
 private:
 	float m_flNextAnim;
 	float m_flNextThink;
+	float m_iPrevValue;
 };
 
 DECLARE_HUDELEMENT( CGEHudRoundTimer );
@@ -62,6 +63,7 @@ CGEHudRoundTimer::CGEHudRoundTimer( const char *pElementName ) :
 	SetIsTime(true);
 	m_flNextAnim = 0;
 	m_flNextThink = 0;
+	m_iPrevValue = 0;
 }
 
 void CGEHudRoundTimer::Reset()
@@ -76,6 +78,20 @@ bool CGEHudRoundTimer::ShouldDraw()
 	{
 		m_flNextAnim = 0;
 		return false;
+	}
+
+	// Protect against timer flashes due to hiding it for more than 5 seconds.  Think is not called in the escape menu for some reason.
+	if (GEMPRules() && gpGlobals->curtime >= m_flNextThink + 3)
+	{
+		float timeleft = 0;
+
+		if (GEMPRules()->IsRoundTimeRunning())
+			timeleft = GEMPRules()->GetRoundTimeRemaining();
+		else if (GEMPRules()->IsMatchTimeRunning())
+			timeleft = GEMPRules()->GetMatchTimeRemaining();
+
+		m_iPrevValue = timeleft;
+		m_flNextThink = gpGlobals->curtime + 0.1f;
 	}
 
 	return CHudElement::ShouldDraw();
@@ -117,6 +133,7 @@ void CGEHudRoundTimer::Think()
 		SetDisplayValue( timeleft );
 
 		// Check if we need to add some special coloring / animations
+
 		if ( timeleft <= 10.0f && m_flNextAnim < gpGlobals->curtime )
 		{
 			// If we only have 10 seconds left start going beserk! (every second)
@@ -129,12 +146,23 @@ void CGEHudRoundTimer::Think()
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("RoundTimeExpiring");
 			m_flNextAnim = gpGlobals->curtime + 5.0f;
 		}
-		else if ( m_flNextAnim == 0 )
+		else if ( timeleft - m_iPrevValue >= 5.0f )
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("RoundTimeIncreased");
+			m_flNextAnim = gpGlobals->curtime + g_pClientMode->GetViewportAnimationController()->GetAnimationSequenceLength("RoundTimeIncreased");
+		}
+		else if ( timeleft - m_iPrevValue <= -5.0f )
+		{
+			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("RoundTimeDecreased");
+			m_flNextAnim = gpGlobals->curtime + g_pClientMode->GetViewportAnimationController()->GetAnimationSequenceLength("RoundTimeDecreased");
+		}
+		else if (m_flNextAnim < gpGlobals->curtime)
 		{	
-			// Reset the color since we have no animation time
+			// Reset the color since our animation is over.
 			ResetColor();
 		}
 
+		m_iPrevValue = timeleft;
 		m_flNextThink = gpGlobals->curtime + 0.1f;
 	}
 

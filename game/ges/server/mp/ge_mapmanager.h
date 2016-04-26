@@ -35,6 +35,9 @@ public:
 	void ParseMapSelectionData(void);
 
 	// Get the current map script file and load all of its data into m_pCurrentSelectionData.
+	void ParseMapData( const char *mapname );
+
+	// Get the current map script file and load all of its data into m_pCurrentSelectionData.
 	void ParseCurrentMapData(void);
 
 	// Prints out the entire map registry to the server console.

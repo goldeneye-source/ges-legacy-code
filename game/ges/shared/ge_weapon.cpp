@@ -841,6 +841,7 @@ bool CGEWeapon::Deploy( void )
 		{
 			SetSkin(ToGEMPPlayer(pOwner)->GetUsedWeaponSkin(GetWeaponID()));
 			ToGEPlayer(pOwner)->DoAnimationEvent(PLAYERANIMEVENT_GES_DRAW);
+			ToGEPlayer(pOwner)->ResetAimMode();
 		}
 
 		return true;

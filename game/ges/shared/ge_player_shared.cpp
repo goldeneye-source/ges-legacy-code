@@ -842,9 +842,9 @@ bool CGEPlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex /*
 		if ( pViewModel )
 			pViewModel->ParticleProp()->StopEmission();
 	#endif
-
-		ResetAimMode();
 	}
+
+	ResetAimMode();
 
 	return res;
 }

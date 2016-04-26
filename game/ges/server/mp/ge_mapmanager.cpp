@@ -152,19 +152,12 @@ void CGEMapManager::ParseMapSelectionData(void)
 	filesystem->FindClose(finder);
 }
 
-void CGEMapManager::ParseCurrentMapData(void)
+void CGEMapManager::ParseMapData(const char *mapname)
 {
-	const char* mapname = gpGlobals->mapname.ToCStr();
-
 	if (!mapname) // We don't have a map yet somehow.
 		return;
 
 	m_pCurrentSelectionData = NULL; // Zero this out so we don't keep the pointer to the old map data.
-	m_pLoadoutBlacklist.PurgeAndDeleteElements(); // Wipe everything else too.
-	m_pMapGamemodes.PurgeAndDeleteElements();
-	m_pMapTeamGamemodes.PurgeAndDeleteElements();
-	m_pMapGamemodeWeights.RemoveAll();
-	m_pMapTeamGamemodeWeights.RemoveAll();
 
 	// We already parsed the selection data so just grab that now.
 	for (int i = 0; i < m_pSelectionData.Count(); i++)
@@ -175,12 +168,8 @@ void CGEMapManager::ParseCurrentMapData(void)
 		}
 	}
 
-	if (!m_pCurrentSelectionData) //Make sure we found it.
-	{
-		Warning("Current map has no script file, attempting to use default!\n");
-		mapname = "default";
+	if (!m_pCurrentSelectionData)
 		m_pCurrentSelectionData = m_pDefaultSelectionData;
-	}
 
 	// Find our map file.
 	char filename[64];
@@ -247,29 +236,77 @@ void CGEMapManager::ParseCurrentMapData(void)
 			{
 				if (data.Count() > 1)
 				{
-					m_pLoadoutBlacklist.AddToTail(data[0]);
-					m_pLoadoutWeightOverrides.AddToTail(atoi(data[1]));
+					int previndex = -1;
+
+					for (int i = 0; i < m_pLoadoutBlacklist.Count(); i++)
+					{
+						if (!Q_strcmp(m_pLoadoutBlacklist[i], data[0]))
+							previndex = i;
+					}
+
+					if (previndex != -1) // If we already have it, just replace the weight.
+					{
+						m_pLoadoutWeightOverrides[previndex] = atoi(data[1]);
+					}
+					else // Otherwise add it to the end.
+					{
+						m_pLoadoutBlacklist.AddToTail(data[0]);
+						m_pLoadoutWeightOverrides.AddToTail(atoi(data[1]));
+					}
 				}
 				else
-					Warning("Weaponset Override specified without weight, ignoring!\n");
+					Warning("Weaponset Override of %s specified without weight, ignoring!\n", data[0]);
 			}
 			else if (Reading == RD_FFAGAMEPLAY)
 			{
-				m_pMapGamemodes.AddToTail(data[0]);
-
 				if (data.Count() > 1)
-					m_pMapGamemodeWeights.AddToTail(atoi(data[1]));
+				{
+					int previndex = -1;
+
+					for (int i = 0; i < m_pMapGamemodes.Count(); i++)
+					{
+						if (!Q_strcmp(m_pMapGamemodes[i], data[0]))
+							previndex = i;
+					}
+
+					if (previndex != -1)
+					{
+						Warning("Matched %s, overwriting weight with %d\n", data[0], atoi(data[1]));
+						m_pMapGamemodeWeights[previndex] = atoi(data[1]);
+					}
+					else
+					{
+						m_pMapGamemodes.AddToTail(data[0]);
+						m_pMapGamemodeWeights.AddToTail(atoi(data[1]));
+					}
+				}
 				else
-					m_pMapGamemodeWeights.AddToTail(500);
+					Warning("Gamemode %s specified without weight, ignoring!\n", data[0]);
 			}
 			else if (Reading == RD_TEAMGAMEPLAY)
 			{
-				m_pMapTeamGamemodes.AddToTail(data[0]);
-
 				if (data.Count() > 1)
-					m_pMapTeamGamemodeWeights.AddToTail(atoi(data[1]));
+				{
+					int previndex = -1;
+
+					for (int i = 0; i < m_pMapTeamGamemodes.Count(); i++)
+					{
+						if (!Q_strcmp(m_pMapTeamGamemodes[i], data[0]))
+							previndex = i;
+					}
+
+					if (previndex != -1)
+					{
+						m_pMapTeamGamemodeWeights[previndex] = atoi(data[1]);
+					}
+					else
+					{
+						m_pMapTeamGamemodes.AddToTail(data[0]);
+						m_pMapTeamGamemodeWeights.AddToTail(atoi(data[1]));
+					}
+				}
 				else
-					m_pMapTeamGamemodeWeights.AddToTail(500);
+					Warning("Team Gamemode %s specified without weight, ignoring!\n", data[0]);
 			}
 		}
 
@@ -283,6 +320,18 @@ void CGEMapManager::ParseCurrentMapData(void)
 	// NOTE: We do not purge the data!
 	ClearStringVector(lines);
 	delete[] contents;
+}
+
+void CGEMapManager::ParseCurrentMapData(void)
+{
+	m_pLoadoutBlacklist.PurgeAndDeleteElements(); // Wipe all the lists so we can get a fresh one.
+	m_pMapGamemodes.PurgeAndDeleteElements();
+	m_pMapTeamGamemodes.PurgeAndDeleteElements();
+	m_pMapGamemodeWeights.RemoveAll();
+	m_pMapTeamGamemodeWeights.RemoveAll();
+
+	ParseMapData("default"); // Parse this first so we can get all the default data, and then overwrite anything redundant with the current map's data.
+	ParseMapData(gpGlobals->mapname.ToCStr());
 }
 
 MapSelectionData* CGEMapManager::GetMapSelectionData(const char *mapname)
@@ -459,19 +508,21 @@ void CGEMapManager::PrintMapDataLists(void)
 	Msg("MaxPlayers: %d\n", m_pCurrentSelectionData->maxplayers);
 	Msg("TeamThresh: %d\n", m_pCurrentSelectionData->teamthreshold);
 
+	Msg("\nLoadout Weight Overrides\n");
+
 	for (int i = 0; i < m_pLoadoutBlacklist.Count(); i++)
 	{
-		Msg("\t%s\n", m_pLoadoutBlacklist[i]);
+		Msg("\t%s\t%d\n", m_pLoadoutBlacklist[i], m_pLoadoutWeightOverrides[i]);
 	}
 
-	Msg("Gamemode Weights\n");
+	Msg("\nGamemode Weights\n");
 
 	for (int i = 0; i < m_pMapGamemodes.Count(); i++)
 	{
 		Msg("\t%s\t%d\n", m_pMapGamemodes[i], m_pMapGamemodeWeights[i]);
 	}
 
-	Msg("Team Gamemode Weights\n");
+	Msg("\nTeam Gamemode Weights\n");
 
 	for (int i = 0; i < m_pMapTeamGamemodes.Count(); i++)
 	{

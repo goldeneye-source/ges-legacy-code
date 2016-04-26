@@ -39,6 +39,16 @@ float pyGetRoundTimeLeft()
 	return GEMPRules()->GetRoundTimeRemaining();
 }
 
+void pySetRoundTimeLeft( int newtime, bool announce )
+{
+	return GEMPRules()->SetRoundTimer(newtime, announce);
+}
+
+void pyAddToRoundTimeLeft( int newtime, bool announce )
+{
+	return GEMPRules()->AddToRoundTimer( newtime, announce );
+}
+
 bool pyIsIntermission()
 {
 	return GEMPRules()->IsIntermission();
@@ -474,6 +484,8 @@ BOOST_PYTHON_MODULE(GEMPGameRules)
 	def("GetMapTimeLeft", pyGetMatchTimeLeft); // DEPRECATED
 	def("GetMatchTimeLeft", pyGetMatchTimeLeft);
 	def("GetRoundTimeLeft", pyGetRoundTimeLeft);
+	def("SetRoundTimeLeft", pySetRoundTimeLeft, ("newtime", arg("announce") = false));
+	def("AddToRoundTimeLeft", pyAddToRoundTimeLeft, ("newtime", arg("announce") = false));
 	def("IsIntermission", pyIsIntermission);
 	def("IsGameOver", pyIsGameOver);
 	def("IsTeamplay", pyIsTeamplay);

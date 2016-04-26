@@ -1336,7 +1336,7 @@ void CGEMPRules::StartRoundTimer( float time_sec /*=-1*/ )
 	m_hRoundTimer->Start( time_sec );
 }
 
-void CGEMPRules::ChangeRoundTimer( float new_time_sec )
+void CGEMPRules::ChangeRoundTimer( float new_time_sec, bool announce )
 {
 	Assert( m_hRoundTimer.Get() != NULL );
 
@@ -1346,27 +1346,93 @@ void CGEMPRules::ChangeRoundTimer( float new_time_sec )
 		// Notify if we extended or shortened the round
 		if ( new_time_sec > 0 )
 		{
-			char szMinSec[8], szDir[16];
-			float min = new_time_sec / 60.0f;
-			int sec = (int)( 60 * (min - (int)min) );
-			Q_snprintf( szMinSec, 8, "%d:%02d", (int)min, sec );
+			if (announce)
+			{
+				char szMinSec[8], szDir[16];
+				float min = new_time_sec / 60.0f;
+				int sec = (int)(60 * (min - (int)min));
+				Q_snprintf(szMinSec, 8, "%d:%02d", (int)min, sec);
 
-			// Tell the everyone that we've extended or shortened the round.
-			if ( new_time_sec > m_hRoundTimer->GetLength() )
-				Q_strncpy( szDir, "#Extended", 16 );
-			else
-				Q_strncpy( szDir, "#Shortened", 16 );
+				// Tell the everyone that we've extended or shortened the round.
+				if (new_time_sec > m_hRoundTimer->GetLength())
+					Q_strncpy(szDir, "#Extended", 16);
+				else
+					Q_strncpy(szDir, "#Shortened", 16);
 
+				UTIL_ClientPrintAll(HUD_PRINTTALK, "#GES_RoundTime_Changed", szDir, szMinSec);
+			}
 			// Set the new time
 			m_hRoundTimer->ChangeLength( new_time_sec );
-
-			UTIL_ClientPrintAll( HUD_PRINTTALK, "#GES_RoundTime_Changed", szDir, szMinSec );
 		}
 		else
 		{
 			// The round timer has been disabled
 			StopRoundTimer();
 		}
+	}
+}
+
+void CGEMPRules::SetRoundTimer(float new_time_sec, bool announce)
+{
+	Assert(m_hRoundTimer.Get() != NULL);
+
+	// Check to make sure we will actually make a change
+	if (new_time_sec != m_hRoundTimer->GetTimeRemaining())
+	{
+		// Notify if we extended or shortened the round
+		if (new_time_sec > 0)
+		{
+			if (announce)
+			{
+				char szMinSec[8], szDir[16];
+				float min = new_time_sec / 60.0f;
+				int sec = (int)(60 * (min - (int)min));
+				Q_snprintf(szMinSec, 8, "%d:%02d", (int)min, sec);
+
+				// Tell the everyone that we've extended or shortened the round.
+				if (new_time_sec > m_hRoundTimer->GetTimeRemaining())
+					Q_strncpy(szDir, "#Extended", 16);
+				else
+					Q_strncpy(szDir, "#Shortened", 16);
+
+				UTIL_ClientPrintAll(HUD_PRINTTALK, "#GES_RoundTime_Changed", szDir, szMinSec);
+			}
+			// Set the new time
+			m_hRoundTimer->SetCurrentLength( new_time_sec );
+		}
+		else
+		{
+			// The round timer has been disabled
+			StopRoundTimer();
+		}
+	}
+}
+
+void CGEMPRules::AddToRoundTimer(float new_time_sec, bool announce)
+{
+	Assert(m_hRoundTimer.Get() != NULL);
+
+	// If we don't have any time on the clock, we don't have any time to add to.
+	if (m_hRoundTimer->IsStarted())
+	{
+		// Notify if we extended or shortened the round
+		if (announce)
+		{
+			char szMinSec[8], szDir[16];
+			float min = abs(new_time_sec) / 60.0f;
+			int sec = (int)abs(60 * (min - (int)min));
+			Q_snprintf(szMinSec, 8, "%d:%02d", (int)min, sec);
+
+			// Tell the everyone that we've extended or shortened the round.
+			if (new_time_sec > 0)
+				Q_strncpy(szDir, "#Extended", 16);
+			else
+				Q_strncpy(szDir, "#Shortened", 16);
+
+			UTIL_ClientPrintAll(HUD_PRINTTALK, "#GES_Roundtime_Added", szDir, szMinSec);
+		}
+		// Set the new time
+		m_hRoundTimer->AddToLength(new_time_sec);
 	}
 }
 

@@ -39,7 +39,7 @@ END_DATADESC();
 
 #define AliveThinkInterval		1.0f
 
-ConVar ge_armorrespawntime("ge_armorrespawntime", "10", FCVAR_REPLICATED | FCVAR_NOTIFY, "Minimum time in seconds before armor respawns.");
+ConVar ge_armorrespawntime("ge_armorrespawntime", "14", FCVAR_REPLICATED | FCVAR_NOTIFY, "Minimum time in seconds before armor respawns.");
 ConVar ge_armorrespawn_pc_scale("ge_armorrespawn_pc_scale", "15.0", FCVAR_REPLICATED, "Multiplier applied to playercount. ge_armorrespawntime * 10 - ge_armorrespawn_pc_scale * (playercount - 1)^ge_armorrespawn_pc_pow is the full equation.");
 ConVar ge_armorrespawn_pc_pow("ge_armorrespawn_pc_pow", "0.5", FCVAR_REPLICATED, "Power applied to playercount. ge_armorrespawntime * 10 - ge_armorrespawn_pc_scale * (playercount - 1)^ge_armorrespawn_pc_pow is the full equation.");
 

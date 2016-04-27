@@ -73,6 +73,12 @@ CHudGameplay::CHudGameplay(const char *pElementName) : BaseClass(NULL, "GEHUDGam
 	m_pGameplayHelp->SetPaintBackgroundEnabled(false);
 	m_pGameplayHelp->SetPaintBorderEnabled(false);
 	m_pGameplayHelp->SetVerticalScrollbar(false);
+
+
+	m_pWeaponHelp = new vgui::GECreditsText(this, "WeaponHelp");
+	m_pWeaponHelp->SetPaintBackgroundEnabled(false);
+	m_pWeaponHelp->SetPaintBorderEnabled(false);
+	m_pWeaponHelp->SetVerticalScrollbar(false);
 }
 
 CHudGameplay::~CHudGameplay()
@@ -219,6 +225,149 @@ void CHudGameplay::ResolveGameplayHelp(void)
 	}
 }
 
+void CHudGameplay::ResolveWeaponHelp(void)
+{
+	CGEPlayer *pGEPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+
+	if (!pGEPlayer)
+		return;
+
+	CGEWeapon *pGEWeapon = ToGEWeapon(pGEPlayer->GetActiveWeapon());
+
+	if (!pGEWeapon)
+		return;
+
+	m_pWeaponHelp->SetText("");
+	m_pWeaponHelp->InsertCenterText(true);
+	m_pWeaponHelp->InsertFontChange(m_hHeaderFont);
+
+	m_pWeaponHelp->InsertString(pGEWeapon->GetPrintName());
+
+	m_pWeaponHelp->InsertCenterText(false);
+	m_pWeaponHelp->InsertFontChange(m_hWeaponFont);
+	m_pWeaponHelp->InsertString("\n\n");
+	
+	// We consider basedamage bodyshot damage usually.
+	// We want everything to be bonuses instead of penalties though, so if bodyshot damage is higher than normal the basedamage will be lower
+	// so we can have a "bodyshot damage bonus" on the weapon
+
+	int basedamage = pGEWeapon->GetWeaponDamage();
+
+	if (pGEWeapon->IsShotgun())
+		basedamage *= 2.5;
+	else if (!pGEWeapon->IsExplosiveWeapon())
+		basedamage *= 0.5;
+
+	float RPS = min(1 / (pGEWeapon->GetClickFireRate() + pGEWeapon->GetFireDelay()), pGEWeapon->GetMaxClip1() == -1 ? 100 : pGEWeapon->GetMaxClip1());
+
+	InsertTokenWithValue("#GE_WH_Damage", basedamage * 0.05);
+	InsertTokenWithValue("#GE_WH_DPHS", min(pGEWeapon->GetDamageCap(), RPS * basedamage * 2) * 0.05);
+
+	if (!pGEWeapon->IsMeleeWeapon())
+		InsertTokenWithValue("#GE_WH_RPS", RPS);
+
+	// Explosive and melee weapons don't have any spread.
+	if (!pGEWeapon->IsMeleeWeapon() && !pGEWeapon->IsExplosiveWeapon())
+	{
+		wchar_t szBuf[128];
+		wchar_t *wszMsg;
+
+		const char *qArray[8] = { "#GE_Q_None", "#GE_Q_VeryLow", "#GE_Q_Low", "#GE_Q_Average", "#GE_Q_High", "#GE_Q_VeryHigh", "#GE_Q_VVHigh", "#GE_Q_VVVHigh" };
+
+		float basespread = min(pGEWeapon->GetGEWpnData().m_vecSpread.x + 1, 7);
+
+		// If we read exactly 1 basespread it means we really had no spread at all.  This gets a special catagory.
+		if (basespread == 1)
+			basespread = 0;
+
+		int spreadpos = round(basespread / sqrt(min(pGEWeapon->GetGEWpnData().m_flGaussFactor*0.3, 1) + 1));
+
+		wszMsg = g_pVGuiLocalize->Find("#GE_WH_MinSpread");
+		g_pVGuiLocalize->ConstructString(szBuf, sizeof(szBuf), wszMsg, 1, g_pVGuiLocalize->Find(qArray[spreadpos]));
+		m_pWeaponHelp->InsertString(szBuf);
+		m_pWeaponHelp->InsertString("\n");
+
+		float maxspread = min(pGEWeapon->GetGEWpnData().m_vecMaxSpread.x + 1, 7);
+
+		// If we read exactly 1 maxspread it means we really had no spread at all.  This gets a special catagory.
+		if (maxspread == 1)
+			maxspread = 0;
+
+		spreadpos = round(maxspread / sqrt(min(pGEWeapon->GetGEWpnData().m_flGaussFactor*0.3, 1) + 1));
+
+		wszMsg = g_pVGuiLocalize->Find("#GE_WH_MaxSpread");
+		g_pVGuiLocalize->ConstructString(szBuf, sizeof(szBuf), wszMsg, 1, g_pVGuiLocalize->Find(qArray[spreadpos]));
+		m_pWeaponHelp->InsertString(szBuf);
+		m_pWeaponHelp->InsertString("\n");
+	}
+
+	// Special attributes
+
+	if (pGEWeapon->GetMaxPenetrationDepth() > 0)
+	{
+		InsertTokenWithValue("#GE_Att_Penetrate", floor(pGEWeapon->GetMaxPenetrationDepth()), false);
+	}
+
+	if (pGEWeapon->GetGEWpnData().m_flAimBonus > 0)
+	{
+		m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find("#GE_Att_AimBoost"));
+		m_pWeaponHelp->InsertString("\n");
+	}
+
+	if (pGEWeapon->IsSilenced())
+	{
+		m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find("#GE_Att_Tracers"));
+		m_pWeaponHelp->InsertString("\n");
+		m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find("#GE_Att_Silenced"));
+		m_pWeaponHelp->InsertString("\n");
+	}
+
+	// These next two modifiers are kind of dinky since they don't actually calculate anything, but they keep things simple.
+
+	if (pGEWeapon->GetHitBoxDataModifierHead() > 1.0)
+	{
+		m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find("#GE_Att_BHeadshot100"));
+		m_pWeaponHelp->InsertString("\n");
+	}
+
+	if (pGEWeapon->GetHitBoxDataModifierChest() > 0.5)
+	{
+		if (pGEWeapon->GetHitBoxDataModifierChest() < 0.75)
+			m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find("#GE_Att_BBodyshot25"));
+		else if (pGEWeapon->GetHitBoxDataModifierChest() > 0.75)
+			m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find("#GE_Att_BBodyshot75"));
+		else
+			m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find("#GE_Att_BBodyshot50"));
+
+		m_pWeaponHelp->InsertString("\n");
+	}
+
+	if (Q_strcmp(pGEWeapon->GetSpecAttString(), ""))
+		m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find(pGEWeapon->GetSpecAttString()));
+}
+
+
+inline void CHudGameplay::InsertTokenWithValue(const char* token, float value, bool precise)
+{
+	static char strBuffer[128];
+	static wchar_t szBuf[128];
+	static wchar_t szValBuf[128];
+	static wchar_t *wszMsg;
+
+	if (precise)
+		Q_snprintf(strBuffer, sizeof(strBuffer), "%0.1f", value);
+	else
+		Q_snprintf(strBuffer, sizeof(strBuffer), "%0.0f", value);
+
+	g_pVGuiLocalize->ConvertANSIToUnicode(strBuffer, szValBuf, sizeof(szValBuf));
+
+	wszMsg = g_pVGuiLocalize->Find(token);
+	g_pVGuiLocalize->ConstructString(szBuf, sizeof(szBuf), wszMsg, 1, szValBuf);
+	m_pWeaponHelp->InsertString(szBuf);
+	m_pWeaponHelp->InsertString("\n");
+}
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Resizes the label
 //-----------------------------------------------------------------------------
@@ -242,11 +391,20 @@ void CHudGameplay::PerformLayout()
 	m_pGameplayHelp->SetPos(m_iTextX, m_iTextY);
 	m_pGameplayHelp->SetSize(wide - m_iTextX - m_iTabWidth, tall - m_iTextY);
 
+	m_pWeaponHelp->SetVisible(false);
+	m_pWeaponHelp->SetPos(m_iTextX, m_iTextY);
+	m_pWeaponHelp->SetSize(wide - m_iTextX - m_iTabWidth, tall - m_iTextY);
+
 	switch (m_iCurrState)
 	{
 	case GAMEPLAY_HELP:
 		// Set the gameplay help visible
 		m_pGameplayHelp->SetVisible(true);
+		break;
+
+	case GAMEPLAY_WEAPONSTATS:
+		ResolveWeaponHelp();
+		m_pWeaponHelp->SetVisible(true);
 		break;
 
 	case GAMEPLAY_WEAPONSET:

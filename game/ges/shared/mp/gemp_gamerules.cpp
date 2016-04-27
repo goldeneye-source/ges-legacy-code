@@ -1408,6 +1408,14 @@ void CGEMPRules::SetRoundTimer(float new_time_sec, bool announce)
 	}
 }
 
+CON_COMMAND(ge_setcurrentroundtime, "Sets the amount of seconds left in the round.  Does not affect subsequent rounds.")
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+		return;
+
+	GEMPRules()->SetRoundTimer(atoi(args[1]));
+}
+
 void CGEMPRules::AddToRoundTimer(float new_time_sec, bool announce)
 {
 	Assert(m_hRoundTimer.Get() != NULL);
@@ -1434,6 +1442,14 @@ void CGEMPRules::AddToRoundTimer(float new_time_sec, bool announce)
 		// Set the new time
 		m_hRoundTimer->AddToLength(new_time_sec);
 	}
+}
+
+CON_COMMAND(ge_addtoroundtime, "Add the given number of seconds to the current roundtime.  Does not affect subsequent rounds.")
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+		return;
+
+	GEMPRules()->AddToRoundTimer(atoi(args[1]));
 }
 
 void CGEMPRules::SetRoundTimerPaused( bool state )

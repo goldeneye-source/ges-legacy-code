@@ -135,8 +135,8 @@ void CWeaponSlappers::AddViewKick( void )
 
 	QAngle punchAng;
 
-	punchAng.x = random->RandomFloat( 1.0f, 2.0f );
-	punchAng.y = random->RandomFloat( -2.0f, -1.0f );
+	punchAng.x = random->RandomFloat(-0.75f, 0.75f);
+	punchAng.y = random->RandomFloat(0.5f, 1.00f);
 	punchAng.z = 0.0f;
 	
 	pPlayer->ViewPunch( punchAng ); 

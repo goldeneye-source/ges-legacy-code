@@ -194,6 +194,24 @@ void CGEWeaponPistol::AddViewKick( void )
 	viewPunch.y = SharedRandomFloat( "gepistolpay", GetGEWpnData().Kick.y_min, GetGEWpnData().Kick.y_max );
 	viewPunch.z = 0.0f;
 
+
+	if (viewPunch.x == 0.0f && viewPunch.y == 0.0f)
+		return;
+
+	CGEPlayer *pGEOwner = ToGEPlayer(GetOwner());
+
+	if (pGEOwner)
+	{
+		if (pGEOwner->IsInAimMode())
+		{
+			viewPunch.x *= 0.25;
+			viewPunch.y *= 0.25;
+		}
+
+		viewPunch.x *= GetAccPenalty() * 3 / GetAccShots() + 1;
+		viewPunch.y *= GetAccPenalty() * 3 / GetAccShots() + 1;
+	}
+
 	//Add it to the view punch
 	pPlayer->ViewPunch( viewPunch );
 }

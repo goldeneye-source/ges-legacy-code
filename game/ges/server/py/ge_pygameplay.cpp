@@ -324,7 +324,6 @@ public:
 
 	virtual int GetHelpString()
 	{
-		DevMsg("Gameplay index is %i \n", m_ScenarioHelp.GetDescriptionIndex());
 		return m_ScenarioHelp.GetDescriptionIndex();
 	}
 

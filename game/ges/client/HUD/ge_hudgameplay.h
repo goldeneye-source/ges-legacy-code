@@ -36,6 +36,8 @@ public:
 
 	virtual void PerformLayout();
 	virtual bool RequestInfo(KeyValues *outputData);
+	virtual void ResolveWeaponHelp();
+	inline void InsertTokenWithValue(const char* token, float value, bool precise = true);
 
 	virtual bool IsRaised(void) { return m_flHeightPercent >= 0.95f; };
 
@@ -92,6 +94,9 @@ private:
 
 	// Gameplay Help Panel
 	vgui::GECreditsText	*m_pGameplayHelp;
+
+	// Weapon Help Panel
+	vgui::GECreditsText	*m_pWeaponHelp;
 
 	// Configurable Parameters
 	CPanelAnimationVarAliasType(int, m_iTabWidth, "tab_width", "16", "proportional_int");

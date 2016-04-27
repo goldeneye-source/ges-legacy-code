@@ -201,18 +201,6 @@ void CGEGameTimer::AddToLength(float length_seconds)
 	if (!IsEnabled())
 		return;
 
-	// Stop the timer if we change to no length
-	if (m_flLength + length_seconds <= 0) {
-		Stop();
-		return;
-	}
-
-	// Simply start the timer if not running already
-	if (!IsStarted()) {
-		Start(length_seconds);
-		return;
-	}
-
 	// If paused, resume the time to capture our real end time
 	bool was_paused = IsPaused();
 	if (was_paused)

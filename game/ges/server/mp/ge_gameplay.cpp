@@ -395,6 +395,10 @@ void CGEBaseGameplayManager::InitScenario()
 	FOR_EACH_MPPLAYER( pPlayer )		
 		GetScenario()->ClientConnect( pPlayer );
 	END_OF_PLAYER_LOOP()
+
+	// Now let anyone who is interested know we are finished initilazing.  
+	// Added to fix the help bug and avoid making any more by switching the order of things, but should be useful in its own right.
+	GP_EVENT(SCENARIO_POST_INIT);
 }
 
 void CGEBaseGameplayManager::ShutdownScenario()

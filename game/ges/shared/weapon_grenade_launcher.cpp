@@ -167,6 +167,10 @@ CGEWeaponGrenadeLauncher::CGEWeaponGrenadeLauncher( void )
 	// NPC Ranging
 	m_fMinRange1 = 250;
 	m_fMaxRange1 = 3000;
+	m_iShellOffset = 0;
+	m_iShellVisAmount = GetDefaultClip1();
+	m_iDesiredShellVisAmount = m_iShellVisAmount;
+	m_iDesiredShellOffset = 0;
 
 	m_iShellBodyGroup[0] = { -1 };
 	m_bPushShells = false;
@@ -191,8 +195,12 @@ bool CGEWeaponGrenadeLauncher::Deploy( void )
 		m_iShellBodyGroup[4] = GetBodygroupFromName("shell5");
 		m_iShellBodyGroup[5] = GetBodygroupFromName("shell6");
 
+		// Flush the bodygroups.  Prevents some weird bodygroup prediction error on the first firing cycle.
+		m_iShellVisAmount = 6;
+		m_iShellOffset = 0;
+		AssignShellVis();
 
-		// Also calculate shell visibility on the very first draw because we haven't reloaded yet and need to know how many to have in the chambers.
+		// Then calculate shell visibility for real because it's the very first draw and we haven't reloaded yet so we need to know how many to have in the chambers.
 		CalculateShellVis(false);
 	}
 

@@ -95,7 +95,7 @@ public:
 	} Kick;
 
 	char m_szAnimExtension[16];		// string used to generate player animations with this weapon
-
+	char m_szSpecialAttributes[32];		// string used to store special attributes for the help
 };
 
 

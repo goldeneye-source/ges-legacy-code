@@ -99,6 +99,7 @@ private:
 // in the CGEGameplayEventListener constructor
 enum GPEvent {
 	SCENARIO_INIT,
+	SCENARIO_POST_INIT,
 	MATCH_START,
 	ROUND_START,
 	ROUND_END,

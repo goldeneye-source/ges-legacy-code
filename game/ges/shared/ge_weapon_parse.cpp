@@ -58,7 +58,7 @@ void CGEWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 	KeyValues *pKickData = pKeyValuesData->FindKey( "Kickback" );
 	if( pKickData )
 	{
-/*		Kick.x_min = pKickData->GetFloat( "x_min", 0.0f );
+		Kick.x_min = pKickData->GetFloat( "x_min", 0.0f );
 		Kick.x_max = pKickData->GetFloat( "x_max", 0.0f );
 
 		Kick.y_min = pKickData->GetFloat( "y_min", 0.0f );
@@ -66,8 +66,6 @@ void CGEWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 
 		Kick.z_min = pKickData->GetFloat( "z_min", 0.0f );
 		Kick.z_max = pKickData->GetFloat( "z_max", 0.0f );
-*/
-		Kick.NotSet();
 	} else //The key might not exist, we don't want ghost values.
 		Kick.NotSet();
 
@@ -116,4 +114,7 @@ void CGEWeaponInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 
 	const char *pAnimEx = pKeyValuesData->GetString( "PlayerAnimationExtension", "mp5" );
 	Q_strncpy( m_szAnimExtension, pAnimEx, sizeof( m_szAnimExtension ) );
+
+	const char *pSpecAtt = pKeyValuesData->GetString("SpecialAttributesHelp", "");
+	Q_strncpy(m_szSpecialAttributes, pSpecAtt, sizeof(m_szSpecialAttributes));
 }

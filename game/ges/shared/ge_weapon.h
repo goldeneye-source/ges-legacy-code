@@ -99,6 +99,7 @@ public:
 	virtual int				GetGaussFactor( void );
 	virtual float			GetFireDelay( void );
 	virtual int				GetTracerFreq( void ) { return GetGEWpnData().m_iTracerFreq; };
+	virtual const char*		GetSpecAttString(void) { return GetGEWpnData().m_szSpecialAttributes; };
 
 	virtual int		GetDamageCap(void) { return GetGEWpnData().m_iDamageCap; };
 

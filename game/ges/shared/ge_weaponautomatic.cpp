@@ -136,7 +136,7 @@ void CGEWeaponAutomatic::DoMachineGunKick( CBasePlayer *pPlayer, float dampEasy,
 	float kickPerc = duration / slideLimitTime;
 
 	// do this to get a hard discontinuity, clear out anything under 10 degrees punch
-	pPlayer->ViewPunchReset( 10 );
+	// pPlayer->ViewPunchReset( 10 );
 
 	//Apply this to the view angles as well
 	vecScratch.x = -( KICK_MIN_X + ( maxVerticleKickAngle * kickPerc ) );
@@ -159,8 +159,7 @@ void CGEWeaponAutomatic::DoMachineGunKick( CBasePlayer *pPlayer, float dampEasy,
 	UTIL_ClipPunchAngleOffset( vecScratch, pPlayer->m_Local.m_vecPunchAngle, QAngle( 24.0f, 3.0f, 1.0f ) );
 
 	//Add it to the view punch
-	// NOTE: 0.5 is just tuned to match the old effect before the punch became simulated
-	pPlayer->ViewPunch( vecScratch * 0.5 );
+	pPlayer->ViewPunch( vecScratch );
 }
 
 bool CGEWeaponAutomatic::Deploy( void )
@@ -241,7 +240,7 @@ bool CGEWeaponAutomatic::Reload( void )
 //-----------------------------------------------------------------------------
 void CGEWeaponAutomatic::AddViewKick( void )
 {
-	/*
+	
 	//Get the view kick
 	CBasePlayer *pPlayer = ToBasePlayer( GetOwner() );
 
@@ -254,7 +253,25 @@ void CGEWeaponAutomatic::AddViewKick( void )
 	viewPunch.y = SharedRandomFloat( "geautopay", GetGEWpnData().Kick.y_min, GetGEWpnData().Kick.y_max );
 	viewPunch.z = 0.0f;
 
-	DoMachineGunKick( pPlayer, 0.5f, viewPunch.y, m_fFireDuration, viewPunch.x );
-	*/
+	if (viewPunch.x == 0.0f && viewPunch.y == 0.0f)
+		return;
+
+	CGEPlayer *pGEOwner = ToGEPlayer(GetOwner());
+
+	if (pGEOwner)
+	{
+		if (pGEOwner->IsInAimMode())
+		{
+			viewPunch.x *= 0.25;
+			viewPunch.y *= 0.25;
+		}
+
+		viewPunch.x *= GetAccPenalty() * 4 / GetAccShots() + 1;
+		viewPunch.y *= GetAccPenalty() * 4 / GetAccShots() + 1;
+	}
+
+	if (abs(viewPunch.x) >= 0.01 || abs(viewPunch.y) >= 0.01)
+		DoMachineGunKick( pPlayer, 0.5f, viewPunch.y, m_fFireDuration, viewPunch.x );
+	
 	BaseClass::AddViewKick();
 }

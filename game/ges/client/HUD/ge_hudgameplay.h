@@ -38,6 +38,7 @@ public:
 	virtual bool RequestInfo(KeyValues *outputData);
 	virtual void ResolveWeaponHelp();
 	inline void InsertTokenWithValue(const char* token, float value, bool precise = true);
+	inline void InsertTokenWithBar(const char* token, int length);
 
 	virtual bool IsRaised(void) { return m_flHeightPercent >= 0.95f; };
 
@@ -68,6 +69,7 @@ private:
 	int m_iCurrMovement;
 	int m_iOrigX;
 	int m_iOrigY;
+	int m_iCurrWepID;
 
 	vgui::AnimationController *m_pHudAnims;
 
@@ -104,6 +106,7 @@ private:
 	CPanelAnimationVarAliasType(int, m_iTextY, "text_ypad", "8", "proportional_int");
 
 	CPanelAnimationVar(vgui::HFont, m_hWeaponFont, "weapon_font", "Default");
+	CPanelAnimationVar(vgui::HFont, m_hWeaponSymbolFont, "weapon_symbol_font", "Default");
 	CPanelAnimationVar(vgui::HFont, m_hHelpFont, "help_font", "Default");
 	CPanelAnimationVar(vgui::HFont, m_hHeaderFont, "header_font", "Default");
 	CPanelAnimationVar(Color, m_TextColor, "fgcolor", "0 0 0 255");

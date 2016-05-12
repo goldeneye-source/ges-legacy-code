@@ -99,6 +99,7 @@ acttable_t CGenericToken::m_acttable[] =
 	{ ACT_GES_DRAW,						ACT_GES_GESTURE_DRAW_KNIFE,				false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_KNIFE,						false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_KNIFE,					false },
 };
 IMPLEMENT_ACTTABLE( CGenericToken );
 

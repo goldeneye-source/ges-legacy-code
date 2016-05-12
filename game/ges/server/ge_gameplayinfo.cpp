@@ -23,6 +23,7 @@ public:
 
 	virtual void OnGameplayEvent( GPEvent event );
 
+	void InputGetConnectionCount(inputdata_t &inputdata);
 	void InputGetPlayerCount( inputdata_t &inputdata );
 	void InputGetRoundCount( inputdata_t &inputdata );
 
@@ -33,6 +34,7 @@ public:
 	// Gamemode that is checked for on scenario change, firing an output on match/no match.
 	string_t m_sGamemode;
 
+	COutputInt m_outConnectionCount;
 	COutputInt m_outPlayerCount;
 	COutputInt m_outRoundCount;
 	COutputEvent m_outTeamplayOn;
@@ -57,10 +59,12 @@ BEGIN_DATADESC( CGEGameplayInfo )
 	DEFINE_KEYFIELD( m_sGamemode, FIELD_STRING, "SpecGamemode" ),
 
 	// Inputs
+	DEFINE_INPUTFUNC(FIELD_VOID, "GetConnectionCount", InputGetConnectionCount),
 	DEFINE_INPUTFUNC( FIELD_VOID, "GetPlayerCount", InputGetPlayerCount ),
 	DEFINE_INPUTFUNC( FIELD_VOID, "GetRoundCount", InputGetRoundCount ),
-
+	
 	// Outputs
+	DEFINE_OUTPUT( m_outConnectionCount, "ConnectionCount"),
 	DEFINE_OUTPUT( m_outPlayerCount, "PlayerCount"),
 	DEFINE_OUTPUT( m_outRoundCount,  "RoundCount" ),
 	DEFINE_OUTPUT( m_outTeamplayOn,	 "TeamplayOn" ),
@@ -146,6 +150,25 @@ void CGEGameplayInfo::OnGameplayEvent( GPEvent event )
 	{
 		m_outRoundEnd.FireOutput( this, this );
 	}
+}
+
+extern ConVar ge_bot_threshold;
+
+void CGEGameplayInfo::InputGetConnectionCount(inputdata_t &inputdata)
+{
+	int iNumConnections = 0;
+
+	// Find out how many people are actually connected to the server.
+	for (int i = 0; i < gpGlobals->maxClients; i++)
+	{
+		if (engine->GetPlayerNetInfo(i))
+			iNumConnections++;
+	}
+
+	// Bots don't have connections but we should still consider them.
+	iNumConnections = max(max(iNumConnections, ge_bot_threshold.GetInt()), GEMPRules()->GetNumAlivePlayers());
+
+	m_outConnectionCount.Set(iNumConnections, inputdata.pActivator, this);
 }
 
 void CGEGameplayInfo::InputGetPlayerCount( inputdata_t &inputdata )

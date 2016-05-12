@@ -267,6 +267,16 @@ void pyResetAllTeamsScores()
 	GEMPRules()->ResetTeamScores();
 }
 
+void pyEnableStandardScoring()
+{
+	GEMPRules()->SetScoreboardMode(0);
+}
+
+void pyEnableTimeBasedScoring()
+{
+	GEMPRules()->SetScoreboardMode(1);
+}
+
 void pySetPlayerWinner(CGEMPPlayer *player)
 {
 	if (!player)
@@ -480,6 +490,9 @@ BOOST_PYTHON_MODULE(GEMPGameRules)
 
 	def("SetPlayerWinner", pySetPlayerWinner);
 	def("SetTeamWinner", pySetTeamWinner);
+
+	def("EnableTimeBasedScoring", pyEnableTimeBasedScoring);
+	def("EnableStandardScoring", pyEnableStandardScoring);
 
 	def("GetMapTimeLeft", pyGetMatchTimeLeft); // DEPRECATED
 	def("GetMatchTimeLeft", pyGetMatchTimeLeft);

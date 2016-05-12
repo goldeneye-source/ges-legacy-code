@@ -314,6 +314,8 @@ BEGIN_NETWORK_TABLE_NOBASE( CGEMPRules, DT_GEMPRules )
 	RecvPropBool( RECVINFO( m_bGlobalInfAmmo )),
 	RecvPropBool( RECVINFO( m_bGamemodeInfAmmo )),
 	RecvPropInt( RECVINFO( m_iTeamplayMode ) ),
+	RecvPropInt( RECVINFO( m_iScoreboardMode )),
+	RecvPropInt( RECVINFO( m_iAwardEventCode )),
 	RecvPropFloat(RECVINFO( m_flMapFloorHeight )),
 	RecvPropEHandle( RECVINFO( m_hMatchTimer ) ),
 	RecvPropEHandle( RECVINFO( m_hRoundTimer ) ),
@@ -323,6 +325,8 @@ BEGIN_NETWORK_TABLE_NOBASE( CGEMPRules, DT_GEMPRules )
 	SendPropBool( SENDINFO( m_bGlobalInfAmmo ) ),
 	SendPropBool( SENDINFO( m_bGamemodeInfAmmo ) ),
 	SendPropInt( SENDINFO( m_iTeamplayMode ) ),
+	SendPropInt( SENDINFO( m_iScoreboardMode ) ),
+	SendPropInt( SENDINFO( m_iAwardEventCode )),
 	SendPropFloat( SENDINFO( m_flMapFloorHeight )),
 	SendPropEHandle( SENDINFO( m_hMatchTimer ) ),
 	SendPropEHandle( SENDINFO( m_hRoundTimer ) ),
@@ -415,6 +419,10 @@ CGEMPRules::CGEMPRules()
 	m_bEnableAmmoSpawns	 = true;
 	m_bEnableArmorSpawns = true;
 	m_bEnableWeaponSpawns= true;
+
+	m_iScoreboardMode = 0;
+
+	m_iAwardEventCode = 0;
 
 	m_iPlayerWinner = m_iTeamWinner = 0;
 
@@ -542,6 +550,10 @@ void CGEMPRules::OnScenarioInit()
 	SetWeaponSpawnState( true );
 	SetArmorSpawnState( true );
 	SetTeamSpawn( true );
+
+	SetGlobalInfAmmoState( ge_infiniteammo.GetBool() );
+	SetGamemodeInfAmmoState( false );
+	SetScoreboardMode( 0 ); //Default points.
 
 	SetSpawnInvulnInterval(GES_DEFAULT_SPAWNINVULN);
 	SetSpawnInvulnCanBreak(GES_DEFAULT_SPAWNBREAK);

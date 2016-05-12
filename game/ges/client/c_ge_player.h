@@ -111,6 +111,8 @@ private:
 	int m_ArmorValue;
 	int m_iMaxArmor;
 	int m_iMaxHealth;
+
+	bool m_bSentUnlockCode;
 };
 
 C_GEPlayer *ToGEPlayer( CBaseEntity *pEntity );

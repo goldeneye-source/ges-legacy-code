@@ -98,8 +98,9 @@ public:
 	virtual void UpdateCampingTime();
 	virtual int  GetCampingPercent();
 
-	virtual unsigned int GetSteamHash()			{ return m_iSteamIDHash; }
+	virtual int			 GetSteamHash()			{ return m_iSteamIDHash; }
 	virtual int			 GetDevStatus()			{ return m_iDevStatus; }
+	virtual int			 GetSkinsCode()			{ return m_iSkinsCode; }
 
 	virtual void		 SetPlayerName( const char *name );
 	virtual const char  *GetCleanPlayerName()	{ return m_szCleanName; }
@@ -184,16 +185,18 @@ protected:
 
 	CNetworkVar( float, m_flRunTime );
 	CNetworkVar( int, m_flRunCode );
-	CNetworkArray( int, m_iWeaponSkinInUse, WEAPON_MAX );
+	CNetworkArray( int, m_iWeaponSkinInUse, WEAPON_RANDOM_MAX ); //Random max marks the last of the actual weapons.
 
+	CNetworkVar(int, m_iSteamIDHash);
 
 	char m_szCleanName[32];
 
 	int m_iMatchScore;
 	int m_iMatchDeaths;
 
-	int m_iSteamIDHash;
 	int m_iDevStatus;
+	uint64 m_iSkinsCode;
+	uint64 m_iClientSkinsCode;
 
 	// This vector keeps track of all the objects thrown by the player
 	// so they don't overpopulate the world

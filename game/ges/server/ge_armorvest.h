@@ -36,6 +36,8 @@ public:
 	void ClearSpawnProgressMod(CBasePlayer *pPlayer);
 	void ClearAllSpawnProgress();
 
+	void DEBUG_ShowProgress(float duration, int progress);
+
 	void SetEnabled( bool state );
 	bool IsEnabled() { return m_bEnabled; }
 
@@ -44,11 +46,12 @@ public:
 	void InputDisable( inputdata_t &inputdata );
 	void InputToggle( inputdata_t &inputdata );	
 
-	int	m_flSpawnCheckRadius;
-	int m_flSpawnCheckRadiusSqr;
-	int m_flSpawnCheckHalfRadiusSqr;
+	int	m_iSpawnCheckRadius;
+	int m_iSpawnCheckRadiusSqr;
+	int m_iSpawnCheckHalfRadiusSqr;
 
 	int m_iPlayerPointContribution[MAX_PLAYERS];
+	bool m_bEnabled;
 
 protected:
 	void OnEnabled();
@@ -58,7 +61,6 @@ private:
 	int		m_iAmount;
 	int		m_iSpawnpoints;
 	int		m_iSpawnpointsgoal;
-	bool	m_bEnabled;
 };
 
 #endif

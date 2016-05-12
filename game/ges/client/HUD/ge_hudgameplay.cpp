@@ -1,4 +1,4 @@
-///////////// Copyright � 2009, Goldeneye: Source. All rights reserved. /////////////
+﻿///////////// Copyright © 2009, Goldeneye: Source. All rights reserved. /////////////
 // 
 // File: ge_hudgameplay.cpp
 // Description:
@@ -30,6 +30,9 @@
 DECLARE_HUDELEMENT_DEPTH(CHudGameplay, 100);
 
 #define HUDGP_SETICONDIR "hud/weaponseticons/"
+#define HUDWP_BARLENGTH 96
+
+ConVar cl_ge_hud_advancedweaponstats("cl_ge_hud_advancedweaponstats", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Show more detailed weapon stats in the popout panel.");
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -44,6 +47,7 @@ CHudGameplay::CHudGameplay(const char *pElementName) : BaseClass(NULL, "GEHUDGam
 	m_iCurrState = GAMEPLAY_HIDDEN;
 	m_iCurrMovement = MOVEMENT_NONE;
 	m_flHeightPercent = 0;
+	m_iCurrWepID = -1;
 
 	m_pBackground = new vgui::ImagePanel(this, "Background");
 	m_pBackground->SetImage("hud/GameplayHUDBg");
@@ -188,7 +192,7 @@ void CHudGameplay::OnGameplayDataUpdate(void)
 		Q_StrRight(szClassName, strlen(szClassName) - 7, szClassName, 32);
 		Q_snprintf(szTexture, 256, "%s%s", HUDGP_SETICONDIR, szClassName);
 		m_vWeaponLabels[i]->pImage->SetImage(szTexture);
-		m_vWeaponLabels[i]->pImage->SetSize(XRES(64), YRES(16));
+		m_vWeaponLabels[i]->pImage->SetSize(YRES(64), YRES(16)); // Use YRES for both so that the image doesn't stretch on widescreen resolutions.
 	}
 
 	ResolveGameplayHelp();
@@ -237,6 +241,8 @@ void CHudGameplay::ResolveWeaponHelp(void)
 	if (!pGEWeapon)
 		return;
 
+	m_iCurrWepID = pGEWeapon->GetWeaponID();
+
 	m_pWeaponHelp->SetText("");
 	m_pWeaponHelp->InsertCenterText(true);
 	m_pWeaponHelp->InsertFontChange(m_hHeaderFont);
@@ -254,16 +260,49 @@ void CHudGameplay::ResolveWeaponHelp(void)
 	int basedamage = pGEWeapon->GetWeaponDamage();
 
 	if (pGEWeapon->IsShotgun())
-		basedamage *= 2.5;
-	else if (!pGEWeapon->IsExplosiveWeapon())
-		basedamage *= 0.5;
+		basedamage *= 5;
+
+	int headshotdamage = basedamage * pGEWeapon->GetHitBoxDataModifierHead();
+	int bodyshotdamage = basedamage * pGEWeapon->GetHitBoxDataModifierChest();
+	int limbshotdamage = basedamage * (pGEWeapon->GetHitBoxDataModifierRightLeg() + pGEWeapon->GetHitBoxDataModifierRightArm()) * 0.5;
 
 	float RPS = min(1 / (pGEWeapon->GetClickFireRate() + pGEWeapon->GetFireDelay()), pGEWeapon->GetMaxClip1() == -1 ? 100 : pGEWeapon->GetMaxClip1());
 
-	InsertTokenWithValue("#GE_WH_Damage", basedamage * 0.05);
-	InsertTokenWithValue("#GE_WH_DPHS", min(pGEWeapon->GetDamageCap(), RPS * basedamage * 2) * 0.05);
+	if (cl_ge_hud_advancedweaponstats.GetBool())
+	{
+		if (!pGEWeapon->IsExplosiveWeapon())
+		{
+			InsertTokenWithValue("#GE_WH_DPHS", pGEWeapon->GetDamageCap() * 0.05);
+			InsertTokenWithValue("#GE_WH_HeadDamage", headshotdamage * 0.05);
+			InsertTokenWithValue("#GE_WH_ChestDamage", bodyshotdamage * 0.05);
+			InsertTokenWithValue("#GE_WH_LimbDamage", limbshotdamage * 0.05);
+		}
+		else
+		{
+			InsertTokenWithValue("#GE_WH_Damage", basedamage * 0.05);
+			InsertTokenWithValue("#GE_WH_Radius", pGEWeapon->GetGEWpnData().m_flDamageRadius / 12);
+		}
+	}
+	else
+	{
+		float units = (MAX_HEALTH * 2) / HUDWP_BARLENGTH;
 
-	if (!pGEWeapon->IsMeleeWeapon())
+		if (!pGEWeapon->IsExplosiveWeapon())
+		{
+			InsertTokenWithBar("#GE_WH_DPHSGraph", round(min(pGEWeapon->GetDamageCap(), RPS * headshotdamage) / units));
+			InsertTokenWithBar("#GE_WH_HeadDamageGraph", round(headshotdamage / units));
+			InsertTokenWithBar("#GE_WH_ChestDamageGraph", round(bodyshotdamage / units));
+			InsertTokenWithBar("#GE_WH_LimbDamageGraph", round(limbshotdamage / units));
+		}
+		else
+		{
+			InsertTokenWithBar("#GE_WH_DamageGraph", round(basedamage * HUDWP_BARLENGTH / 528));
+			InsertTokenWithBar("#GE_WH_RadiusGraph", round(pGEWeapon->GetGEWpnData().m_flDamageRadius * HUDWP_BARLENGTH/140));
+		}
+	}
+
+
+	if (!pGEWeapon->IsMeleeWeapon() && pGEWeapon->GetWeaponID() != WEAPON_GRENADE) // Grenades have the special throwing behavior which mucks up this calculation.
 		InsertTokenWithValue("#GE_WH_RPS", RPS);
 
 	// Explosive and melee weapons don't have any spread.
@@ -301,6 +340,8 @@ void CHudGameplay::ResolveWeaponHelp(void)
 		m_pWeaponHelp->InsertString("\n");
 	}
 
+	m_pWeaponHelp->InsertString("\n");
+
 	// Special attributes
 
 	if (pGEWeapon->GetMaxPenetrationDepth() > 0)
@@ -319,26 +360,6 @@ void CHudGameplay::ResolveWeaponHelp(void)
 		m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find("#GE_Att_Tracers"));
 		m_pWeaponHelp->InsertString("\n");
 		m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find("#GE_Att_Silenced"));
-		m_pWeaponHelp->InsertString("\n");
-	}
-
-	// These next two modifiers are kind of dinky since they don't actually calculate anything, but they keep things simple.
-
-	if (pGEWeapon->GetHitBoxDataModifierHead() > 1.0)
-	{
-		m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find("#GE_Att_BHeadshot100"));
-		m_pWeaponHelp->InsertString("\n");
-	}
-
-	if (pGEWeapon->GetHitBoxDataModifierChest() > 0.5)
-	{
-		if (pGEWeapon->GetHitBoxDataModifierChest() < 0.75)
-			m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find("#GE_Att_BBodyshot25"));
-		else if (pGEWeapon->GetHitBoxDataModifierChest() > 0.75)
-			m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find("#GE_Att_BBodyshot75"));
-		else
-			m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find("#GE_Att_BBodyshot50"));
-
 		m_pWeaponHelp->InsertString("\n");
 	}
 
@@ -365,6 +386,39 @@ inline void CHudGameplay::InsertTokenWithValue(const char* token, float value, b
 	g_pVGuiLocalize->ConstructString(szBuf, sizeof(szBuf), wszMsg, 1, szValBuf);
 	m_pWeaponHelp->InsertString(szBuf);
 	m_pWeaponHelp->InsertString("\n");
+}
+
+inline void CHudGameplay::InsertTokenWithBar(const char* token, int length)
+{
+	if (length > HUDWP_BARLENGTH)
+		length = HUDWP_BARLENGTH;
+
+	float width = ScreenWidth();
+	float flARatio = width / ScreenHeight();
+
+	float scalevalue = min(sqrt(width / 1680), 1.0);
+	
+	if (ScreenHeight() % 768 == 0 || ScreenHeight() == 720) // Some dinky font glitch makes this neccecery.
+		scalevalue *= 0.5;
+
+	int iBarlength = round(HUDWP_BARLENGTH * scalevalue);
+	length = round(length * scalevalue);
+
+	m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find(token));
+	m_pWeaponHelp->InsertString("\t");
+	m_pWeaponHelp->InsertFontChange(m_hWeaponSymbolFont);
+	
+	for (int i = 0; i < length; i++)
+		m_pWeaponHelp->InsertChar('A');
+
+	for (int i = 0; i < iBarlength - length - 1; i++)
+		m_pWeaponHelp->InsertChar('B');
+
+	if (iBarlength != length)
+		m_pWeaponHelp->InsertChar('C');
+
+	m_pWeaponHelp->InsertString("\n");
+	m_pWeaponHelp->InsertFontChange(m_hWeaponFont);
 }
 
 
@@ -455,11 +509,21 @@ void CHudGameplay::KeyboardInput(int action)
 {
 	if (m_iCurrState == action)
 	{
-		// Hitting the same key again will hide the panel
-		m_pHudAnims->StartAnimationSequence("GameplayHudHide");
-		m_iCurrState = GAMEPLAY_HIDDEN;
-		m_iCurrMovement = MOVEMENT_HIDING;
-		return;
+		CGEWeapon *pGEWeapon = NULL;
+		CGEPlayer *pGEPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+		if (pGEPlayer)
+			pGEWeapon = ToGEWeapon(pGEPlayer->GetActiveWeapon());
+
+		if (m_iCurrState != GAMEPLAY_WEAPONSTATS || !pGEWeapon || pGEWeapon->GetWeaponID() == m_iCurrWepID)
+		{
+			// Hitting the same key again will hide the panel
+			m_pHudAnims->StartAnimationSequence("GameplayHudHide");
+			m_iCurrState = GAMEPLAY_HIDDEN;
+			m_iCurrMovement = MOVEMENT_HIDING;
+			return;
+		}
+		else
+			InvalidateLayout(); // Reload the layout
 	}
 	else if (m_iCurrState == GAMEPLAY_HIDDEN)
 	{

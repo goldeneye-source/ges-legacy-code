@@ -26,7 +26,8 @@ PRECACHE_REGISTER( item_armorvest_half );
 
 BEGIN_DATADESC( CGEArmorVest )
 	// Parameters
-	DEFINE_KEYFIELD( m_flSpawnCheckRadius, FIELD_FLOAT, "CheckRadius"),
+	DEFINE_KEYFIELD( m_iSpawnCheckRadius, FIELD_INTEGER, "CheckRadius"),
+	DEFINE_KEYFIELD( m_bEnabled, FIELD_BOOLEAN, "StartDisabled"),
 	// Function Pointers
 	DEFINE_ENTITYFUNC( ItemTouch ),
 	DEFINE_THINKFUNC( AliveThink ),
@@ -43,16 +44,19 @@ ConVar ge_armorrespawntime("ge_armorrespawntime", "14", FCVAR_REPLICATED | FCVAR
 ConVar ge_armorrespawn_pc_scale("ge_armorrespawn_pc_scale", "15.0", FCVAR_REPLICATED, "Multiplier applied to playercount. ge_armorrespawntime * 10 - ge_armorrespawn_pc_scale * (playercount - 1)^ge_armorrespawn_pc_pow is the full equation.");
 ConVar ge_armorrespawn_pc_pow("ge_armorrespawn_pc_pow", "0.5", FCVAR_REPLICATED, "Power applied to playercount. ge_armorrespawntime * 10 - ge_armorrespawn_pc_scale * (playercount - 1)^ge_armorrespawn_pc_pow is the full equation.");
 
+ConVar ge_debug_armorspawns("ge_debug_armorspawns", "0", FCVAR_CHEAT | FCVAR_GAMEDLL, "Debug armor respawn progress.");
+
 
 CGEArmorVest::CGEArmorVest( void )
 {
-	m_bEnabled = true;
+	m_bEnabled = false;
 	m_iAmount = MAX_ARMOR;
-	m_flSpawnCheckRadius = 512;
+	m_iSpawnCheckRadius = 512;
 }
 
 void CGEArmorVest::Spawn( void )
 {
+	m_bEnabled = !m_bEnabled; // Flip this due to our shoddy "StartDisabled" hammer fix.
 	Precache();
 
 	if ( !Q_strcmp(GetClassname(), "item_armorvest_half") )
@@ -73,8 +77,8 @@ void CGEArmorVest::Spawn( void )
 	// So NPC's can "see" us
 	AddFlag( FL_OBJECT );
 
-	m_flSpawnCheckRadiusSqr = m_flSpawnCheckRadius * m_flSpawnCheckRadius;
-	m_flSpawnCheckHalfRadiusSqr = m_flSpawnCheckRadiusSqr * 0.25;
+	m_iSpawnCheckRadiusSqr = m_iSpawnCheckRadius * m_iSpawnCheckRadius;
+	m_iSpawnCheckHalfRadiusSqr = m_iSpawnCheckRadiusSqr * 0.25;
 
 	for (int i = 0; i < MAX_PLAYERS; i++)
 	{
@@ -87,6 +91,10 @@ void CGEArmorVest::Spawn( void )
 	// Start thinking like a healthy, alive armorvest.
 	SetThink(&CGEArmorVest::AliveThink);
 	SetNextThink(gpGlobals->curtime + AliveThinkInterval);
+
+	// Except we might be delusional and really a DEAD, UNHEALTHY ARMORVEST.
+	if (!m_bEnabled)
+		OnDisabled();
 }
 
 void CGEArmorVest::Precache( void )
@@ -110,6 +118,7 @@ CBaseEntity *CGEArmorVest::Respawn(void)
 	DevMsg("Spawnpoints goal for armor at location %f, %f, %f set to %d\n", curPos.x, curPos.y, curPos.z, m_iSpawnpointsgoal);
 
 	ClearAllSpawnProgress();
+
 	SetThink(&CGEArmorVest::RespawnThink);
 	SetNextThink(gpGlobals->curtime + 1);
 	return this;
@@ -117,9 +126,15 @@ CBaseEntity *CGEArmorVest::Respawn(void)
 
 void CGEArmorVest::RespawnThink(void)
 {
-	m_iSpawnpoints += CalcSpawnProgress();
+	int newpoints;
+	
+	newpoints = CalcSpawnProgress();
+	m_iSpawnpoints += newpoints;
 
-	if (m_iSpawnpointsgoal < m_iSpawnpoints)
+	if (ge_debug_armorspawns.GetBool())
+		DEBUG_ShowProgress(1, newpoints);
+
+	if (m_iSpawnpointsgoal <= m_iSpawnpoints)
 		Materialize();
 	else
 		SetNextThink(gpGlobals->curtime + 1);
@@ -140,6 +155,9 @@ void CGEArmorVest::AliveThink(void)
 
 		CreateItemVPhysicsObject();
 	}
+
+	if (ge_debug_armorspawns.GetBool())
+		DEBUG_ShowProgress(1, 10);
 
 	SetNextThink(gpGlobals->curtime + AliveThinkInterval);
 }
@@ -210,8 +228,12 @@ bool CGEArmorVest::MyTouch( CBasePlayer *pPlayer )
 
 int CGEArmorVest::CalcSpawnProgress()
 {
-	float length1 = m_flSpawnCheckRadiusSqr; //Shortest length
-	float length2 = m_flSpawnCheckRadiusSqr; //Second shortest length
+	// On teamplay just ignore this fancy stuff, people clump together much more and it's not really as big of a deal.
+	if ( GEMPRules()->IsTeamplay() )
+		return 10;
+
+	float length1 = m_iSpawnCheckRadiusSqr + 1; //Shortest length
+	float length2 = m_iSpawnCheckRadiusSqr + 1; //Second shortest length
 	float currentlength = 0;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
@@ -219,7 +241,7 @@ int CGEArmorVest::CalcSpawnProgress()
 		CGEMPPlayer *pPlayer = ToGEMPPlayer(UTIL_PlayerByIndex(i));
 		if (pPlayer && pPlayer->IsConnected() && !pPlayer->IsObserver())
 		{
-			if (!pPlayer->CheckInPVS(this)) // We don't care about players who can't see us.
+			if (!pPlayer->IsAlive() || !pPlayer->CheckInPVS(this)) // We don't care about players who can't see us.
 				continue;
 
 			currentlength = (pPlayer->GetAbsOrigin() - GetAbsOrigin()).LengthSqr();
@@ -234,20 +256,20 @@ int CGEArmorVest::CalcSpawnProgress()
 	}
 
 	// If the distances aren't low enough then we just tick down at max speed without calculating anything.
-	if (length1 > m_flSpawnCheckHalfRadiusSqr || length2 > m_flSpawnCheckRadiusSqr)
+	if (length1 > m_iSpawnCheckHalfRadiusSqr || length2 > m_iSpawnCheckRadiusSqr)
 		return 10;
 
 	// Basically, 2 people being within the check distance of the armor with one of them within a quarter of it is the only way to get it to tick down at less than max rate.
 	// Discourages standing on top of the armor spawn in the middle of a fight because "oh man i need 3 gauges of health"
 
-	// It will never spawn if one of the players is standing right on top of it.
-	if (length1 < 48)
+	// It will never spawn if one of the players is standing right on top of it and the other player is within half the radius.
+	if (length1 < 64 && length2 < m_iSpawnCheckHalfRadiusSqr)
 		return 0;
 
-	// Otherwise we only care about length 2.  Linear falloff, the further they are the faster it respawns.
-	float metric = 1 - sqrt(length2) / m_flSpawnCheckRadius;
+	// Otherwise we only care about length 2.  Linear falloff, tick up faster the further away player2 is.
+	float metric = 1 - sqrt(length2) / m_iSpawnCheckRadius;
 
-	// If both players are within 17% of the radius the armor does not tick down at all.
+	// If player2 is within 17% of the radius, the armor does not tick down at all.
 	return (int)clamp(10 - 12 * metric, 0, 10);
 }
 
@@ -327,3 +349,51 @@ void CGEArmorVest::InputToggle( inputdata_t &inputdata )
 	m_bEnabled ? OnEnabled() : OnDisabled();
 }
 
+// Just going to recycle the one from the playerspawns because it is so good.
+void CGEArmorVest::DEBUG_ShowProgress(float duration, int progress)
+{
+	// Only show this on local host servers
+	if (engine->IsDedicatedServer())
+		return;
+
+	int line = 0;
+	char tempstr[64];
+
+	int r = (int)RemapValClamped(progress, 0, 10.0f, 255.0f, 0);
+	int g = (int)RemapValClamped(progress, 0, 10.0f, 0, 255.0f);
+
+	Color c(r, g, 0, 200);
+	Vector mins = {-12, -12, 0};
+	Vector maxes = {12, 12, 4};
+	debugoverlay->AddBoxOverlay2(GetAbsOrigin(), mins, maxes, GetAbsAngles(), c, c, duration);
+
+	Q_snprintf(tempstr, 64, "%s", GetClassname());
+	EntityText(++line, tempstr, duration);
+
+	if (!IsEnabled())
+	{
+		// We are disabled
+		Q_snprintf(tempstr, 64, "DISABLED", progress);
+		EntityText(++line, tempstr, duration);
+	}
+	else if (!IsEffectActive(EF_NODRAW))
+	{
+		// We've spawned
+		Q_snprintf(tempstr, 64, "SPAWNED", progress);
+		EntityText(++line, tempstr, duration);
+	}
+	else
+	{
+		// We are enabled, show our desirability and stats
+		Q_snprintf(tempstr, 64, "Progress: %i/%i", m_iSpawnpoints, m_iSpawnpointsgoal);
+		EntityText(++line, tempstr, duration);
+
+		Q_snprintf(tempstr, 64, "Rate: %i", progress);
+		EntityText(++line, tempstr, duration);
+
+		Q_snprintf(tempstr, 64, "Radius: %i", m_iSpawnCheckRadius);
+		EntityText(++line, tempstr, duration);
+	}
+
+	
+}

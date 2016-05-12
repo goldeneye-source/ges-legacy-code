@@ -50,6 +50,9 @@ public:
 	void InputDisable( inputdata_t &inputdata );
 	void InputToggle( inputdata_t &inputdata );
 
+	void InputEnableResetting(inputdata_t &inputdata);
+	void InputDisableResetting(inputdata_t &inputdata);
+
 protected:
 	// Should we respawn now?
 	virtual bool  ShouldRespawn();
@@ -75,6 +78,8 @@ private:
 	// Slot determines which weapon/ammo we will spawn (default:-1)
 	int  m_iSlot;
 	bool m_bDisabled;
+	bool m_bOrigDisableState;
+	bool m_bResetOnNewRound;
 
 	char m_szBaseEntity[MAX_ENTITY_NAME];
 	char m_szOverrideEntity[MAX_ENTITY_NAME];

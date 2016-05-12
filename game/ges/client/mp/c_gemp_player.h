@@ -55,6 +55,8 @@ public:
 	virtual int   GetRunCode()					{ return m_flRunCode; }
 	virtual void  SetRunCode(float code)		{ m_flRunCode = code; }
 
+	virtual int  GetSteamHash()					{ return m_iSteamIDHash; }
+
 	virtual int	  GetUsedWeaponSkin(int weapid)	{ return m_iWeaponSkinInUse[weapid]; }
 	virtual void  SetUsedWeaponSkin(int weapid, int value)	{ m_iWeaponSkinInUse[weapid] = value; }
 
@@ -69,8 +71,9 @@ private:
 	float m_flLastLandVelocity;
 	float m_flRunTime;
 	int m_flRunCode;
+	int m_iSteamIDHash; // We need this to decode our save files.
 
-	int m_iWeaponSkinInUse[WEAPON_MAX];
+	int m_iWeaponSkinInUse[WEAPON_RANDOM_MAX];
 };
 
 C_GEMPPlayer *ToGEMPPlayer( CBaseEntity *pEntity );

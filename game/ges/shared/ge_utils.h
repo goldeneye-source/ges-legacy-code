@@ -56,6 +56,11 @@ void GEUTIL_GetTextSize( const char *text, vgui::HFont font, int &wide, int &tal
 // Get the current gameplay name, appends "(MOD)" when appropriate
 wchar_t *GEUTIL_GetGameplayName( wchar_t *out, int byte_size );
 
+// Encrypt/Decrypt using some dinky method I threw together because I actually don't do any encryption stuff.
+uint64 GEUTIL_GetUniqueSkinData( int steamhash );
+void GEUTIL_WriteUniqueSkinData( uint64 value, int steamhash );
+
+uint64 GEUTIL_EventCodeToSkin( int code );
 #else
 
 #include "ge_player.h"

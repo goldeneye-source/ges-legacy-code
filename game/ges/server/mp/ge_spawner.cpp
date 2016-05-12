@@ -20,13 +20,17 @@
 
 BEGIN_DATADESC( CGESpawner )
 	DEFINE_KEYFIELD( m_iSlot, FIELD_INTEGER, "slot" ),
-	DEFINE_KEYFIELD( m_bDisabled, FIELD_BOOLEAN, "StartDisabled" ),
+	DEFINE_KEYFIELD( m_bOrigDisableState, FIELD_BOOLEAN, "StartDisabled"),
+	DEFINE_KEYFIELD( m_bResetOnNewRound, FIELD_BOOLEAN, "ResetOnNewRound"),
 	// Think
 	DEFINE_THINKFUNC( Think ),
 	// Inputs
 	DEFINE_INPUTFUNC(FIELD_VOID, "Enable", InputEnable),
 	DEFINE_INPUTFUNC(FIELD_VOID, "Disable", InputDisable),
 	DEFINE_INPUTFUNC(FIELD_VOID, "Toggle", InputToggle),
+
+	DEFINE_INPUTFUNC(FIELD_VOID, "EnableResetting", InputEnableResetting),
+	DEFINE_INPUTFUNC(FIELD_VOID, "DisableResetting", InputDisableResetting),
 	// Outputs
 	DEFINE_OUTPUT( m_OnPickedUp, "OnPickedUp" ),
 	DEFINE_OUTPUT( m_OnRespawn, "OnRespawn" ),
@@ -36,15 +40,18 @@ END_DATADESC();
 LINK_ENTITY_TO_CLASS( ge_tokenspawner, CGESpawner );
 LINK_ENTITY_TO_CLASS( ge_tokenspawner_mi6, CGESpawner );
 LINK_ENTITY_TO_CLASS( ge_tokenspawner_janus, CGESpawner );
-LINK_ENTITY_TO_CLASS( ge_capturearea_spawn, CPointEntity );
-LINK_ENTITY_TO_CLASS( ge_capturearea_spawn_mi6, CPointEntity );
-LINK_ENTITY_TO_CLASS( ge_capturearea_spawn_janus, CPointEntity );
+LINK_ENTITY_TO_CLASS( ge_capturearea_spawn, CGESpawner );
+LINK_ENTITY_TO_CLASS( ge_capturearea_spawn_mi6, CGESpawner );
+LINK_ENTITY_TO_CLASS( ge_capturearea_spawn_janus, CGESpawner );
 
 ConVar ge_debug_itemspawns( "ge_debug_itemspawns", "0", FCVAR_CHEAT | FCVAR_GAMEDLL, "Visualize spawners and show their slot information" );
 
 CGESpawner::CGESpawner( void )
 {
 	m_iSlot = -1;
+	m_bOrigDisableState = false;
+	m_bDisabled = false;
+	m_bResetOnNewRound = true;
 	m_szBaseEntity[0] = m_szOverrideEntity[0] = '\0';
 }
 
@@ -55,6 +62,8 @@ void CGESpawner::Spawn( void )
 	// Move us up 10 units to curtail things getting stuck
 	SetAbsOrigin( GetAbsOrigin() + Vector(0,0,10) );
 
+	m_bDisabled = m_bOrigDisableState;
+
 	SetThink( &CGESpawner::Think );
 	SetNextThink( gpGlobals->curtime );
 }
@@ -63,6 +72,9 @@ void CGESpawner::Init( void )
 {
 	OnInit();
 	m_fNextSpawnTime = gpGlobals->curtime;
+
+	if (m_bResetOnNewRound)
+		m_bDisabled = m_bOrigDisableState;
 }
 
 void CGESpawner::Think( void )
@@ -300,6 +312,16 @@ void CGESpawner::InputDisable( inputdata_t &inputdata )
 {
 	m_bDisabled = true;
 	OnDisabled();
+}
+
+void CGESpawner::InputEnableResetting(inputdata_t &inputdata)
+{
+	m_bResetOnNewRound = true;
+}
+
+void CGESpawner::InputDisableResetting(inputdata_t &inputdata)
+{
+	m_bResetOnNewRound = false;
 }
 
 void CGESpawner::InputToggle( inputdata_t &inputdata )

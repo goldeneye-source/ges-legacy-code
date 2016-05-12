@@ -27,6 +27,7 @@
 	#include "utlbuffer.h"
 	#include "filesystem.h"
 
+	#include "gemp_gamerules.h"
 	#include "ge_player.h"
 	#include "ge_playerspawn.h"
 	#include "ge_weapon.h"
@@ -279,6 +280,7 @@ void CGERules::Think()
 		else
 		{
 			UpdateStatusLists( g_pStatusListWebRequest->GetResult() );
+			GEMPRules()->SetSpecialEventCode( iAwardEventCode );
 		}
 
 		m_bStatusListsUpdated = true;

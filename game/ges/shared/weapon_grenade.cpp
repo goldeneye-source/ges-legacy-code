@@ -387,6 +387,9 @@ void CGEWeaponGrenade::ThrowGrenade( float throwforce )
 		pGrenade->SetDamageRadius( GetGEWpnData().m_flDamageRadius );
 		pGrenade->SetSourceWeapon(this);
 		
+		if (throwforce == GE_GRENADE_THROW_FORCE / 5) // For acheivement tracking.
+			pGrenade->m_bDroppedOnDeath = true;
+
 		// The timer is whatever is left over from the primed time + our fuse minus our 
 		// current time to give us an absolute time in seconds
 		pGrenade->SetTimer( (m_flPrimedTime + GE_GRENADE_FUSE_TIME) - gpGlobals->curtime );
@@ -424,6 +427,7 @@ void CGEWeaponGrenade::ExplodeInHand( void )
 		pGrenade->SetOwnerEntity( GetOwner() );
 		pGrenade->SetSourceWeapon(this);
 		pGrenade->SetVelocity( 0, NULL );
+		pGrenade->m_bHitSomething = true; //I'm not gonna just give it to you!
 
 		pGrenade->SetDamage( GetGEWpnData().m_iDamage );
 		pGrenade->SetDamageRadius( GetGEWpnData().m_flDamageRadius );

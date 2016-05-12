@@ -81,6 +81,9 @@ CGEPlayer::CGEPlayer()
 	m_iFavoriteWeapon = WEAPON_NONE;
 	m_iScoreBoardColor = 0;
 
+	m_bKilledOtherThisFrame = false;
+	m_iFrameDamageOutput = 0;
+
 	memset(m_iPVS, 0, sizeof(m_iPVS));
 }
 
@@ -97,6 +100,7 @@ void CGEPlayer::Precache( void )
 	PrecacheScriptSound( "GEPlayer.HitOtherHead" );
 	PrecacheScriptSound( "GEPlayer.HitOtherLimb" );
 	PrecacheScriptSound( "GEPlayer.HitOtherInvuln" );
+	PrecacheScriptSound( "GEPlayer.KillOther" );
 #if 0
 	PrecacheScriptSound( "GEPlayer.HitPainMale" );
 	PrecacheScriptSound( "GEPlayer.HitPainFemale" );
@@ -265,9 +269,6 @@ void CGEPlayer::PreThink( void )
 		CheckObserverSettings();	// do this each frame
 	}
 
-	// Reset per-frame variables
-	m_bSentHitSoundThisFrame = false;
-
 	BaseClass::PreThink();
 }
 
@@ -314,11 +315,15 @@ void CGEPlayer::PostThink( void )
 		PlayHitsound(0, DMG_BULLET);
 	}
 
+	if (m_bKilledOtherThisFrame)
+		PlayKillsound();
+
 	// Reset our damage statistics
 	m_iViewPunchScale = 0;
 	m_iFrameDamageOutput = 0;
 	m_iFrameDamageOutputType = 0;
 	m_iDmgTakenThisFrame = 0;
+	m_bKilledOtherThisFrame = false;
 	m_vDmgForceThisFrame = vec3_origin;
 
 	m_vExpDmgForceThisFrame = vec3_origin;
@@ -395,6 +400,9 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 		SetLastHitGroup(HITGROUP_GENERIC); // Set this here to avoid world kills counting as headshots.
 		return BaseClass::OnTakeDamage(inputinfo);
 	}
+
+	if (!g_pGameRules->FPlayerCanTakeDamage(this, info.GetAttacker()))
+		return 0;
 
 	// Make sure that our attacker has us loaded and we have our attacker loaded.
 	if (inputinfo.GetDamageType() & DMG_BULLET && !CheckInPVS(pGEAttacker) && !pGEAttacker->CheckInPVS(this))
@@ -748,6 +756,11 @@ void CGEPlayer::Event_DamagedOther( CGEPlayer *pOther, int dmgTaken, const CTake
 	}
 
 	m_iFrameDamageOutputType = inputInfo.GetDamageType();
+
+
+	if ( pOther->GetHealth() <= 0 )
+		m_bKilledOtherThisFrame = true;
+
 	// TraceBleed occurs in TraceAttack and is defined in baseentity_shared.cpp
 	// SpawnBlood occurs in TraceAttack and is defined as UTIL_BloodDrips in util_shared.cpp
 	// GE:S spawns blood on the client, the server blood is for all other players
@@ -1164,8 +1177,20 @@ void CGEPlayer::PlayHitsound(int dmgTaken, int dmgtype)
 		EmitSound(filter, entindex(), "GEPlayer.HitOther", 0, playAt);
 	else
 		EmitSound(filter, entindex(), "GEPlayer.HitOtherHead", 0, playAt);
+}
 
-	m_bSentHitSoundThisFrame = true;
+void CGEPlayer::PlayKillsound()
+{
+	// All the reasons we might not want to play killsounds
+	int noSound = atoi(engine->GetClientConVarValue(entindex(), "cl_ge_nokillsound"));
+	if (noSound != 0 || IsBotPlayer())
+		return;
+
+
+	float playAt = gpGlobals->curtime - (g_pPlayerResource->GetPing(entindex()) / 1000) + GE_HITOTHER_DELAY;
+	CSingleUserRecipientFilter filter(this);
+	filter.MakeReliable();
+	EmitSound(filter, entindex(), "GEPlayer.KillOther", 0, playAt);
 }
 
 // Event notifier for plugins to tell when a player picks up stuff

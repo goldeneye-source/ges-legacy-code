@@ -37,6 +37,8 @@ void CGEGrenade::Spawn( void )
 
 	m_takedamage	= DAMAGE_YES;
 	m_iHealth		= 1;
+	m_bHitSomething = false;
+	m_bDroppedOnDeath = false;
 
 	// Default Damages they should be modified by the thrower
 	SetDamage( 320 );
@@ -113,6 +115,8 @@ void CGEGrenade::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 
 	if ( pOther->IsWorld() )
 	{
+		m_bHitSomething = true;
+
 		surfacedata_t *phit = physprops->GetSurfaceData( pEvent->surfaceProps[!index] );
 		if ( phit->game.material == 'X' )
 		{

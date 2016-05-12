@@ -108,7 +108,7 @@ void CGEHudRoundTimer::Think()
 	// Figure out if we should use the round time or the map time.
 	if (GEMPRules()->IsRoundTimeRunning())
 		timeleft = GEMPRules()->GetRoundTimeRemaining(); //Rounds always finish even when match time runs out.
-	else if (GEMPRules()->IsMatchTimeRunning())
+	else if (GEMPRules()->IsMatchTimeRunning() && GEMPRules()->IsRoundTimeEnabled()) // If round time isn't enabled then we're controling rounds some other way.
 		timeleft = GEMPRules()->GetMatchTimeRemaining();
 
 	// Check if we have time to display

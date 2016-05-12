@@ -12,6 +12,8 @@
 #include "vcollide_parse.h"
 #include "c_ge_player.h"
 #include "c_gemp_player.h"
+#include "ge_utils.h"
+#include "gemp_gamerules.h"
 #include "view.h"
 #include "takedamageinfo.h"
 #include "ge_gamerules.h"
@@ -57,6 +59,8 @@ extern ConVar v_viewmodel_fov;
 static ConVar ge_fp_ragdoll ( "ge_fp_ragdoll", "1", FCVAR_ARCHIVE, "Allow first person ragdolls" );
 static ConVar ge_fp_ragdoll_auto ( "ge_fp_ragdoll_auto", "1", FCVAR_ARCHIVE, "Autoswitch to ragdoll thirdperson-view when necessary" );
 ConVar cl_ge_nohitothersound( "cl_ge_nohitsound", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Disable the sound that plays when you damage another player" );
+ConVar cl_ge_nokillothersound( "cl_ge_nokillsound", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Disable the sound that plays when you kill another player" );
+
 
 C_GEPlayer::C_GEPlayer()
 {
@@ -69,6 +73,7 @@ C_GEPlayer::C_GEPlayer()
 	m_iMaxHealth = MAX_HEALTH;
 
 	m_iNewZoomOffset = 0;
+	m_bSentUnlockCode = false;
 
 	// Load our voice overhead icons if not done yet
 	if ( m_pDM_VoiceHeadMaterial == NULL )
@@ -381,6 +386,19 @@ void C_GEPlayer::PostDataUpdate( DataUpdateType_t updateType )
 			return;
 
 		pAchievementMgr->SendAchievementProgress();
+	}
+
+	// This occurs after the baseclass cause we have to setup the local player first and also make sure we have their steam hash.
+	if ( !m_bSentUnlockCode && IsLocalPlayer() && ToGEMPPlayer(this)->GetSteamHash())
+	{
+		if ( GEMPRules()->GetSpecialEventCode() )
+			GEUTIL_WriteUniqueSkinData(GEUTIL_EventCodeToSkin(GEMPRules()->GetSpecialEventCode()), ToGEMPPlayer(this)->GetSteamHash());
+
+		char cmd[128];
+		Q_snprintf(cmd, sizeof(cmd), "skin_unlock_code %llu", GEUTIL_GetUniqueSkinData(ToGEMPPlayer(this)->GetSteamHash()));
+		engine->ClientCmd_Unrestricted(cmd);
+		DevMsg("Sent skin unlock code of %s", cmd);
+		m_bSentUnlockCode = true;
 	}
 
 	// Check if we changed weapons to reset zoom

@@ -1788,6 +1788,12 @@
     <ClCompile Include="ges\server\ge_door_interp.cpp">
       <Filter>GES\Entities</Filter>
     </ClCompile>
+    <ClCompile Include="ges\server\mp\ge_mapmanager.cpp">
+      <Filter>GES\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="ge_logic_bitflag.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sdk\server\plasma.h">
@@ -3532,6 +3538,9 @@
     </ClInclude>
     <ClInclude Include="ges\server\ge_door_interp.h">
       <Filter>GES\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\server\mp\ge_mapmanager.h">
+      <Filter>GES\Gameplay</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

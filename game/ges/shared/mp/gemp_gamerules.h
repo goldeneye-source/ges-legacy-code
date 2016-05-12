@@ -167,6 +167,9 @@ public:
 	void  SetGamemodeInfAmmoState( bool newstate )  { m_bGamemodeInfAmmo = newstate; };
 	bool  InfAmmoEnabled()  { return m_bGlobalInfAmmo || m_bGamemodeInfAmmo; };
 
+	int  GetScoreboardMode()  { return m_iScoreboardMode; };
+	void  SetScoreboardMode( int newmode )  { m_iScoreboardMode = newmode; };
+
 	bool IsMultiplayer() { return true; }
 	bool IsTeamplay();
 	bool IsIntermission();
@@ -175,6 +178,9 @@ public:
 	float GetMapFloorHeight();
 
 	int   GetRandomSeedOffset() { return m_iRandomSeedOffset; }
+
+	int	  GetSpecialEventCode() { return m_iAwardEventCode; };
+	void  SetSpecialEventCode(int newcode)  { m_iAwardEventCode = newcode; };
 
 	// ------------------------------
 	// Server Only -- Inherited Functions
@@ -267,6 +273,8 @@ private:
 	CNetworkVar( bool,  m_bGlobalInfAmmo );
 	CNetworkVar( bool,  m_bGamemodeInfAmmo );
 	CNetworkVar( int,	m_iTeamplayMode );
+	CNetworkVar( int, m_iScoreboardMode );
+	CNetworkVar( int, m_iAwardEventCode );
 
 	CNetworkHandle( CGEGameTimer, m_hMatchTimer );
 	CNetworkHandle( CGEGameTimer, m_hRoundTimer );

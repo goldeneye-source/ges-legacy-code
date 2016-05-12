@@ -450,17 +450,27 @@ extern bool GetAwardSort( int id );
 
 #define GE_DEVELOPER 1
 #define GE_BETATESTER 2
-#define GE_SILVERACH 3
-#define GE_GOLDACH 4
+#define GE_CONTRIBUTOR 3
+#define GE_SILVERACH 4
+#define GE_GOLDACH 5
 
 #ifdef GAME_DLL
 extern CUtlVector<unsigned int> vDevsHash;
 extern CUtlVector<unsigned int> vTestersHash;
+extern CUtlVector<unsigned int> vContributorsHash;
 extern CUtlVector<unsigned int> vBannedHash;
+
+extern CUtlVector<unsigned int> vSkinsHash;
+extern CUtlVector<uint64> vSkinsValues;
+
+extern int iAwardEventCode; // Code for giving special event rewards.
+extern uint64 iAllowedClientSkins;
 
 static const int LIST_DEVELOPERS = 1;
 static const int LIST_TESTERS = 2;
-static const int LIST_BANNED = 3;
+static const int LIST_CONTRIBUTORS = 3;
+static const int LIST_SKINS = 4;
+static const int LIST_BANNED = 5;
 
 #define HASHLIST_END 4294967295u  // 2^32-1
 

@@ -92,6 +92,7 @@ public:
 	// Custom damage tracking function
 	virtual void Event_DamagedOther( CGEPlayer *pOther, int dmgTaken, const CTakeDamageInfo &inputInfo );
 	virtual void PlayHitsound(int dmgTaken, int dmgtype);
+	virtual void PlayKillsound();
 
 	// -------------------------------------------------
 
@@ -185,7 +186,7 @@ protected:
 
 	int m_iFrameDamageOutput;
 	int m_iFrameDamageOutputType;
-	bool m_bSentHitSoundThisFrame;
+	bool m_bKilledOtherThisFrame;
 
 	// Invulnerability variables
 	float		m_flEndInvulTime;

@@ -1,6 +1,6 @@
 ///////////// Copyright © 2008, Goldeneye: Source. All rights reserved. /////////////
 // 
-// File: ge_point_follower.h
+// File: ge_logic_gate.h
 // Description:
 //      Logic entity that will function as a specified logic gate.
 //		
@@ -24,9 +24,9 @@ public:
 	// Check the inputs against the current logic gate type and return the output that gate would have given.
 	virtual bool CheckGateLogic();
 	// Fire the approperate entity outputs for the given state.
-	virtual void ReportGateLogic(bool state);
+	virtual void ReportGateLogic(bool state, CBaseEntity *pActivator = NULL);
 	// Change one of the inputs and handle the approperate logic.  First input is false for x, true for y.
-	virtual void ChangeInput(bool changeY, bool state);
+	virtual void ChangeInput(bool changeY, bool state, CBaseEntity *pActivator = NULL);
 
 	// Set the type of gate
 	void InputSetGateType(inputdata_t &inputdata);

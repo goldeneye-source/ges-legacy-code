@@ -191,12 +191,11 @@ void CGEWeapon::Equip( CBaseCombatCharacter *pOwner )
 	// Fill this bad boy up with ammo if we have any for it to use!
 	FinishReload();
 
-	CGEMPPlayer *pGEPlayer = ToGEMPPlayer(pOwner);
-
 	if ( GEMPRules()->InfAmmoEnabled() )
 	{
 		m_iClip1 = GetMaxClip1();
 #ifdef GAME_DLL
+		CGEMPPlayer *pGEPlayer = ToGEMPPlayer(pOwner);
 		pGEPlayer->GiveAmmo(800, GetPrimaryAmmoType(), true);
 #endif
 	}
@@ -267,7 +266,7 @@ void CGEWeapon::PrimaryAttack(void)
 //	CGEPlayer *pGEPlayer = ToGEPlayer(pPlayer);
 	
 	// MUST call sound before removing a round from the clip of a CMachineGun
-	WeaponSound(SINGLE);
+	WeaponSound( SINGLE );
 
 	pPlayer->DoMuzzleFlash();
 
@@ -325,7 +324,7 @@ void CGEWeapon::OnReloadOffscreen(void)
 
 bool CGEWeapon::Reload( void )
 {
-	if ( m_flNextPrimaryAttack > gpGlobals->curtime || m_flNextSecondaryAttack > gpGlobals->curtime )
+	if ( m_flNextPrimaryAttack > gpGlobals->curtime )
 		return false;
 
 	bool bRet = false;

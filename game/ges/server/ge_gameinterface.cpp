@@ -132,6 +132,7 @@ static const char *s_PreserveEnts[] =
 	"info_player_spectator",
 	"info_player_mi6",
 	"info_player_janus",
+	"ge_logic_bitflag",
 	"ge_game_timer",
 	"func_smokevolume",
 	"func_precipitation",

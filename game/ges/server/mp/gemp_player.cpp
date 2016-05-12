@@ -49,6 +49,7 @@ IMPLEMENT_SERVERCLASS_ST(CGEMPPlayer, DT_GEMP_Player)
 	SendPropFloat( SENDINFO( m_flLastLandVelocity )),
 	SendPropFloat( SENDINFO( m_flRunTime )),
 	SendPropInt( SENDINFO( m_flRunCode )),
+	SendPropInt( SENDINFO( m_iSteamIDHash )),
 	SendPropArray3( SENDINFO_ARRAY3(m_iWeaponSkinInUse), SendPropInt(SENDINFO_ARRAY(m_iWeaponSkinInUse))),
 END_SEND_TABLE()
 
@@ -85,6 +86,8 @@ CGEMPPlayer::CGEMPPlayer()
 
 	m_iSteamIDHash = 0;
 	m_iDevStatus = 0;
+	m_iSkinsCode = 0;
+	m_iClientSkinsCode = 0;
 	m_iCampingState = 0;
 
 	m_szCleanName[0] = '\0';
@@ -103,7 +106,7 @@ CGEMPPlayer::CGEMPPlayer()
 	m_vLastDeath = Vector(-1, -1, -1);
 	m_vLastSpawn = Vector(-1, -1, -1);
 
-	for (int i = 0; i < WEAPON_MAX; i++)
+	for (int i = 0; i < WEAPON_RANDOM_MAX; i++)
 	{
 		m_iWeaponSkinInUse.Set(i, 0);
 	}
@@ -378,18 +381,44 @@ void CGEMPPlayer::Spawn()
 		}
 
 		// Create a dummy skin list, fill it out, and then transmit anything that changed.
-		int iDummySkinList[WEAPON_MAX] = {0};
-		
+		int iDummySkinList[WEAPON_RANDOM_MAX] = { 0 };
+
+		// First decypher their skins code, if they have one.
+		if (m_iClientSkinsCode)
+		{
+			DevMsg("Parsing client skin code of %d\n", m_iClientSkinsCode);
+
+			for (int i = 0; i < WEAPON_RANDOM_MAX; i++)
+			{
+				iDummySkinList[i] = (m_iClientSkinsCode >> (i * 2)) & (3);
+				DevMsg("Skin for weapon %d set to %d\n", i, iDummySkinList[i]);
+			}
+		}
+
+		// Then look at the server authenticated skin code, this overwrites the client skins.
+		if (m_iSkinsCode)
+		{
+			DevMsg("Parsing skin code of %d\n", m_iSkinsCode);
+
+			for ( int i = 0; i < WEAPON_RANDOM_MAX; i++ )
+			{
+				iDummySkinList[i] = (m_iSkinsCode >> (i * 2)) & (3);
+				DevMsg("Skin for weapon %d set to %d\n", i, iDummySkinList[i]);
+			}
+		}
+
 		if (GetDevStatus() == GE_DEVELOPER)
-			iDummySkinList[WEAPON_KLOBB] = 2;
+			iDummySkinList[WEAPON_KLOBB] = 3;
 		else if (GetDevStatus() == GE_BETATESTER)
+			iDummySkinList[WEAPON_KLOBB] = 2;
+		else if (GetDevStatus() == GE_CONTRIBUTOR)
 			iDummySkinList[WEAPON_KLOBB] = 1;
 
 		// If it's luchador, give him the watermelon KF7.  Love u 4evr luch.
 		if ( m_iSteamIDHash == 3135237817u )
 			iDummySkinList[WEAPON_KF7] = 1;
 
-		for (int i = 0; i < WEAPON_MAX; i++)
+		for (int i = 0; i < WEAPON_RANDOM_MAX; i++)
 		{
 			if (iDummySkinList[i] != m_iWeaponSkinInUse.Get(i))
 				m_iWeaponSkinInUse.Set(i, iDummySkinList[i]);
@@ -817,7 +846,16 @@ CBaseEntity* CGEMPPlayer::EntSelectSpawnPoint()
 	if (iSpawnerType == SPAWN_PLAYER_SPECTATOR || IsObserver())
 	{
 		if (GEMPRules()->GetSpawnersOfType(SPAWN_PLAYER_SPECTATOR)->Count()) // Find us the next spectator spawn, skip the theatrics below
-			pSpot = (CGEPlayerSpawn*)EntFindSpawnPoint(m_iLastSpecSpawn, iSpawnerType, m_iLastSpecSpawn);
+		{
+			// Find one that isn't disabled, unless all of them are in which case use the first.
+			for (int i = 0; i <= GEMPRules()->GetSpawnersOfType(SPAWN_PLAYER_SPECTATOR)->Count(); i++)
+			{
+				pSpot = (CGEPlayerSpawn*)EntFindSpawnPoint(m_iLastSpecSpawn, iSpawnerType, m_iLastSpecSpawn);
+
+				if (pSpot && pSpot->IsEnabled())
+					break;
+			}
+		}
 		else  // Didn't find one but we don't want to see the inside of dr.dean's head anymore so let's just grab the first deathmatch one.
 		{
 			DevMsg("Looking for DM Spawn!\n");
@@ -1003,17 +1041,13 @@ void CGEMPPlayer::GiveDefaultItems()
 			int aID = GetAmmoDef()->Index( GetAmmoForWeapon(wID) );
 
 			// Give the player a slice of ammo for the lowest ranked weapon in the set
-			CBasePlayer::GiveAmmo( GetAmmoDef()->CrateAmount(aID), aID );
-			pGivenWeapon = GiveNamedItem( WeaponIDToAlias(wID) );
+			if (wID)
+			{
+				CBasePlayer::GiveAmmo(GetAmmoDef()->CrateAmount(aID), aID);
+				pGivenWeapon = GiveNamedItem(WeaponIDToAlias(wID));
+			}
 		}
-		//if (ge_startarmed.GetInt() >= 2)
-		//	pGivenWeapon = GiveNamedItem("weapon_knife");
 	} 
-	else
-	{
-		// No loadout? Give them a knife so they can still have fun
-		pGivenWeapon = GiveNamedItem( "weapon_knife" );
-	}
 
 	// Switch to the best given weapon
 	if (pGivenWeapon)
@@ -1117,6 +1151,30 @@ bool CGEMPPlayer::ClientCommand( const CCommand &args )
 					m_iDevStatus = GE_SILVERACH;
 			}
 		}
+
+		return true;
+	}
+	else if (Q_stricmp(cmd, "skin_unlock_code") == 0)
+	{
+		if (args.ArgC() < 1)
+			Warning("Player sent bad unlock code!\n");
+
+		DevMsg("Got skin unlock code of %s\n", args[1]);
+
+		uint64 unlockcode = atoll( args[1] );
+		uint64 sendbits = 0;
+
+		// We now want to check with the server and make sure that the client is allowed to confirm these skins.  Let's face it any encryption method we use is going to get broken.
+		// If someone wants to put in the effort I have no objection to them giving themselves the promotional skins, but we have to protect the rare ones so they're actually worth something.
+		// Not a perfect filter, but should suit our purposes since if a client authed skin is level 3 there are probably level 1 and 2 skins as well.
+		sendbits = unlockcode & iAllowedClientSkins;
+
+		DevMsg("Filtered it to be %llu\n", sendbits);
+
+		if (sendbits != unlockcode)
+			Warning("%s requested skins they aren't allowed to have using code %llu!", GetPlayerName(), unlockcode);
+
+		m_iClientSkinsCode = sendbits;
 
 		return true;
 	}
@@ -1247,6 +1305,11 @@ void CGEMPPlayer::PreThink()
 					DevMsg( "BT STATUS: %s (%s)\n", GetPlayerName(), steamID );
 					m_iDevStatus = GE_BETATESTER;
 				}
+				else if (IsOnList(LIST_CONTRIBUTORS, m_iSteamIDHash))
+				{
+					DevMsg("CC STATUS: %s (%s)\n", GetPlayerName(), steamID);
+					m_iDevStatus = GE_CONTRIBUTOR;
+				}
 				else if ( IsOnList( LIST_BANNED, m_iSteamIDHash) )
 				{
 					char command[255];
@@ -1254,6 +1317,14 @@ void CGEMPPlayer::PreThink()
 					Msg("Hardcode Banned %s [%s]\n", steamID, command);
 					engine->ServerCommand(command);
 					engine->ServerCommand("writeid\n");
+				}
+
+				if (IsOnList(LIST_SKINS, m_iSteamIDHash))
+				{
+					DevMsg("OWNS AUTHED SKIN: %s (%s)\n", GetPlayerName(), steamID);
+
+					int skinIndex = vSkinsHash.Find(m_iSteamIDHash);
+					m_iSkinsCode = vSkinsValues[skinIndex];
 				}
 			}
 		}
@@ -1386,9 +1457,9 @@ void CGEMPPlayer::ObserverTransistion()
 	{
 		Q_snprintf(specmode, 16, "spec_mode %i", OBS_MODE_FIXED);
 		engine->ClientCommand(edict(), specmode);
+		SetObserverTarget(NULL);
 		SetObserverMode(OBS_MODE_FIXED);
 		GERules()->GetSpectatorSpawnSpot(this);
-		SetObserverTarget(NULL);
 		SetViewOffset(0);
 		ClearFlags();
 	}

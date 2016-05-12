@@ -494,7 +494,7 @@ void CGERadar::WorldToRadar( CGERadarContact *contact )
 
 	// If we're in first person spectate mode we should use the rotation of whoever we're spectating.
 	if (pLocalPlayer->IsObserver() && pLocalPlayer->GetObserverTarget() && pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
-		flPlayerY = (pLocalPlayer->GetObserverTarget()->EyeAngles().y * M_PI) * 0.0055555f;
+		flPlayerY = (pLocalPlayer->GetLocalAngles().y * M_PI) * 0.0055555f;
 	else
 		flPlayerY = (pLocalPlayer->LocalEyeAngles().y * M_PI) * 0.0055555f;
 

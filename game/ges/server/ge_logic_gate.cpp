@@ -81,12 +81,15 @@ bool CGELogicGate::CheckGateLogic(void)
 	}
 }
 
-void CGELogicGate::ReportGateLogic(bool state)
+void CGELogicGate::ReportGateLogic(bool state, CBaseEntity *pActivator)
 {
+	if (!pActivator)
+		pActivator = this;
+
 	if (state)
-		m_FireTrue.FireOutput(this, this);
+		m_FireTrue.FireOutput(pActivator, this);
 	else
-		m_FireFalse.FireOutput(this, this);
+		m_FireFalse.FireOutput(pActivator, this);
 }
 
 void CGELogicGate::InputSetGateType(inputdata_t &inputdata)
@@ -95,16 +98,19 @@ void CGELogicGate::InputSetGateType(inputdata_t &inputdata)
 
 	// If the type of gate changes the output may have changed.
 	if (m_bAutoFire)
-		ReportGateLogic(CheckGateLogic());
+		ReportGateLogic(CheckGateLogic(), inputdata.pActivator);
 }
 
 void CGELogicGate::InputCheckGateOutput(inputdata_t &inputdata)
 {
-	ReportGateLogic(CheckGateLogic());
+	ReportGateLogic(CheckGateLogic(), inputdata.pActivator);
 }
 
-void CGELogicGate::ChangeInput(bool changeY, bool state)
+void CGELogicGate::ChangeInput(bool changeY, bool state, CBaseEntity *pActivator)
 {
+	if (!pActivator)
+		pActivator = this;
+
 	if (changeY)
 		m_bYValue = state;
 	else
@@ -112,37 +118,37 @@ void CGELogicGate::ChangeInput(bool changeY, bool state)
 
 	// Changing an input could have changed the output.
 	if (m_bAutoFire)
-		ReportGateLogic(CheckGateLogic());
+		ReportGateLogic(CheckGateLogic(), pActivator);
 }
 
 void CGELogicGate::InputXTrue(inputdata_t &inputdata)
 {
-	ChangeInput(false, true);
+	ChangeInput(false, true, inputdata.pActivator);
 }
 
 void CGELogicGate::InputXFalse(inputdata_t &inputdata)
 {
-	ChangeInput(false, false);
+	ChangeInput(false, false, inputdata.pActivator);
 }
 
 void CGELogicGate::InputYTrue(inputdata_t &inputdata)
 {
-	ChangeInput(true, true);
+	ChangeInput(true, true, inputdata.pActivator);
 }
 
 void CGELogicGate::InputYFalse(inputdata_t &inputdata)
 {
-	ChangeInput(true, false);
+	ChangeInput(true, false, inputdata.pActivator);
 }
 
 void CGELogicGate::InputXToggle(inputdata_t &inputdata)
 {
-	ChangeInput(false, !m_bXValue);
+	ChangeInput(false, !m_bXValue, inputdata.pActivator);
 }
 
 void CGELogicGate::InputYToggle(inputdata_t &inputdata)
 {
-	ChangeInput(true, !m_bYValue);
+	ChangeInput(true, !m_bYValue, inputdata.pActivator);
 }
 
 void CGELogicGate::InputEnableAutofire(inputdata_t &inputdata)

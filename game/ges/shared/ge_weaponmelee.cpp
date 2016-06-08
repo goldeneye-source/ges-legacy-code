@@ -364,6 +364,7 @@ void CGEWeaponMelee::Swing( int bIsSecondary )
 
 	Vector swingEnd = swingStart + forward * GetRange();
 	UTIL_TraceLine( swingStart, swingEnd, MASK_SHOT | CONTENTS_GRATE, pOwner, COLLISION_GROUP_NONE, &traceHit );
+
 	Activity nHitActivity = ACT_VM_HITCENTER;
 
 #ifndef CLIENT_DLL

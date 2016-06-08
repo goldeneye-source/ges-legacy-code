@@ -58,7 +58,7 @@ protected:
 			if (gpGlobals->curtime <= m_flLastKillTime + 0.2f)
 			{
 				// If it's not LTK just give it to them instantly.
-				if (!IsScenario("ltk"))
+				if (!IsScenario("ltk", false))
 				{
 					SetCount(GetGoal() - 1);
 					IncrementCount();
@@ -74,7 +74,7 @@ protected:
 private:
 	float m_flLastKillTime;
 };
-DECLARE_GE_ACHIEVEMENT(CAchDoubleDown, ACHIEVEMENT_GES_DOUBLE_DOWN, "GES_DOUBLE_DOWN", 100, GE_ACH_HIDDEN);
+DECLARE_GE_ACHIEVEMENT(CAchDoubleDown, ACHIEVEMENT_GES_DOUBLE_DOWN, "GES_DOUBLE_DOWN", 100, GE_ACH_UNLOCKED);
 
 // There's The Armor:  Take 8 gauges of damage in a single life
 class CAchTheresTheArmor : public CGEAchievement
@@ -130,7 +130,7 @@ protected:
 private:
 	int m_iDmgTaken;
 };
-DECLARE_GE_ACHIEVEMENT(CAchTheresTheArmor, ACHIEVEMENT_GES_THERES_THE_ARMOR, "GES_THERES_THE_ARMOR", 100, GE_ACH_HIDDEN);
+DECLARE_GE_ACHIEVEMENT(CAchTheresTheArmor, ACHIEVEMENT_GES_THERES_THE_ARMOR, "GES_THERES_THE_ARMOR", 100, GE_ACH_UNLOCKED);
 
 // Remote Delivery:  Kill a player that you can't see with remote mines
 class CAchRemoteDelivery : public CGEAchievement
@@ -799,8 +799,6 @@ protected:
 		{
 			if (!Q_stricmp(event->GetString("name"), "yolt_lastmanstanding"))
 			{
-				Warning("Noticed Victory, value 1 is %s, value 2 is %s, killcount is at %d, and playerID is %d\n", event->GetString("value1"), event->GetString("value2"), m_iKillCount, pPlayer->GetUserID());
-
 				// If we were the last man standing, we had less than 2 kills, and there were more than 3 players in the round, we did it!
 				if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && m_iKillCount < 2 && Q_atoi(event->GetString("value2")) > 3)
 					IncrementCount();
@@ -814,3 +812,928 @@ private:
 	int m_iKillCount;
 };
 DECLARE_GE_ACHIEVEMENT(CAchLastManHiding, ACHIEVEMENT_GES_LASTMANHIDING, "GES_LASTMANHIDING", 100, GE_ACH_UNLOCKED);
+
+
+// Frags to Riches: Trade the grenade for the golden gun in Investment Losses
+class CAchFragsToRiches : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("gameplay_event");
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		if (!Q_stricmp(event->GetString("name"), "gt_weaponswap"))
+		{
+			CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+			if (!pPlayer)
+				return;
+
+			// If we're the one that triggered the event, and the grenade was traded for the golden gun, we did it!
+			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && !Q_stricmp(event->GetString("value3"), "weapon_grenade") && (!Q_strnicmp(event->GetString("value4"), "weapon_gold", 11)))
+				IncrementCount();
+		}
+	}
+};
+DECLARE_GE_ACHIEVEMENT(CAchFragsToRiches, ACHIEVEMENT_GES_FRAGSTORICHES, "GES_FRAGSTORICHES", 100, GE_ACH_UNLOCKED);
+
+
+// Upgrade Path: Trade the pp7 or its silenced variant for the silver PP7, and then trade that for the gold PP7 without making any trades in between.
+class CAchUpgradePath : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		VarInit();
+	}
+
+	virtual void VarInit()
+	{
+		m_bState = 0;
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("gameplay_event");
+		VarInit();
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		if (!Q_stricmp(event->GetString("name"), "gt_weaponswap"))
+		{
+			CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+			if (!pPlayer)
+				return;
+
+			// If it's not us we don't care
+			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID())
+			{
+				if (!m_bState) // We're on PP7
+				{
+					if (!Q_strnicmp(event->GetString("value3"), "weapon_pp7", 10) && (!Q_stricmp(event->GetString("value4"), "weapon_silver_pp7")))
+						m_bState = true;
+
+				}
+				else if (m_bState) // We're on Silver PP7
+				{
+					if (!Q_stricmp(event->GetString("value3"), "weapon_silver_pp7") && (!Q_stricmp(event->GetString("value4"), "weapon_golden_pp7")))
+						IncrementCount(); // We got to gold PP7!
+					else
+						m_bState = false; // Killed with wrong weapon or started with wrong weapon somehow.
+				}
+			}
+			// But we're also allowed to trade by dying
+			else if (Q_atoi(event->GetString("value2")) == pPlayer->GetUserID())
+			{
+				if (!m_bState) // We're on PP7
+				{
+					if (!Q_strnicmp(event->GetString("value4"), "weapon_pp7", 10) && (!Q_stricmp(event->GetString("value3"), "weapon_silver_pp7")))
+						m_bState = true;
+				}
+				else if (m_bState) // We're on Silver PP7
+				{
+					if (!Q_stricmp(event->GetString("value4"), "weapon_silver_pp7") && (!Q_stricmp(event->GetString("value3"), "weapon_golden_pp7")))
+						IncrementCount(); // We got to gold PP7!
+					else
+						m_bState = false; // Killed with wrong weapon or started with wrong weapon somehow.
+				}
+			}
+		}
+	}
+
+private:
+	bool m_bState;
+};
+DECLARE_GE_ACHIEVEMENT(CAchUpgradePath, ACHIEVEMENT_GES_UPGRADEPATH, "GES_UPGRADEPATH", 100, GE_ACH_UNLOCKED);
+
+
+// Return on Investment: Return to a player the weapon they just killed you with
+class CAchReturnOnInvestment : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		VarInit();
+	}
+
+	virtual void VarInit()
+	{
+		m_iKillerID = -1;
+		Q_strncpy(m_sWeapon, "weapon_none", 32);
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("gameplay_event");
+		VarInit();
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		if (!Q_stricmp(event->GetString("name"), "gt_weaponswap"))
+		{
+			CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+			if (!pPlayer)
+				return;
+
+			// Can't get it if we're dead to prevent double kills from counting.
+			if (!pPlayer->IsAlive())
+				return;
+
+			if (Q_atoi(event->GetString("value2")) == pPlayer->GetUserID())
+			{
+				m_iKillerID = atoi(event->GetString("value1"));
+				Q_strncpy(m_sWeapon, event->GetString("value3"), 32);
+			}
+			else if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID())
+			{
+				// If our weapon was the weapon we were killed with, and the victim was our previous killer, we did it!
+				if ( m_iKillerID == atoi(event->GetString("value2")) && !Q_stricmp(event->GetString("value3"), m_sWeapon) )
+					IncrementCount();
+			}
+		}
+	}
+
+private:
+	int m_iKillerID;
+	char m_sWeapon[32];
+};
+DECLARE_GE_ACHIEVEMENT(CAchReturnOnInvestment, ACHIEVEMENT_GES_RETURNONINVESTMENT, "GES_RETURNONINVESTMENT", 100, GE_ACH_UNLOCKED);
+
+
+// Fort Knox: Pick up the golden gun and get 10 kills without using it.
+class CAchFortKnox : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		VarInit();
+	}
+
+	virtual void VarInit()
+	{
+		m_bHasGG = false;
+		m_iKillCount = 0;
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("player_death");
+		ListenForGameEvent("gameplay_event");
+		ListenForGameEvent("round_start");
+		VarInit();
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+		if (!pPlayer)
+			return;
+
+		if (!Q_stricmp(event->GetName(), "gameplay_event"))
+		{
+			if (!Q_stricmp(event->GetString("name"), "mwgg_ggpickup") && Q_atoi(event->GetString("value1")) == pPlayer->GetUserID())
+				m_bHasGG = true;
+		}
+		else if (!Q_stricmp(event->GetName(), "player_death"))
+		{
+			// If we died we need to reset our golden gun status and kill count.
+			if (event->GetInt("userid") == pPlayer->GetUserID())
+			{
+				m_iKillCount = 0;
+				m_bHasGG = false;
+			}
+			else if ( m_bHasGG && event->GetInt("attacker") == pPlayer->GetUserID() )
+			{
+				if (event->GetInt("weaponid") != WEAPON_GOLDENGUN)
+				{
+					m_iKillCount++;
+
+					// If we managed to get 10 kills without using the golden gun, we did it!
+					if ( m_iKillCount >= 10 )
+						IncrementCount();
+				}
+				else
+				{
+					m_iKillCount = 0;
+					m_bHasGG = false; // We still have the golden gun but we'll pretend we don't to make this life invalid, as we can't "pick it up" again without dying.
+				}
+			}
+		}
+		else if (!Q_stricmp(event->GetName(), "round_start"))
+		{
+			m_iKillCount = 0; //Reset our killcount.
+			m_bHasGG = false;
+		}
+	}
+
+private:
+	bool m_bHasGG;
+	int m_iKillCount;
+};
+DECLARE_GE_ACHIEVEMENT(CAchFortKnox, ACHIEVEMENT_GES_FORTKNOX, "GES_FORTKNOX", 100, GE_ACH_UNLOCKED);
+
+
+// Gold Standard: In MWGG win the round without using any weapon other than the golden gun.
+class CAchGoldStandard : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		VarInit();
+	}
+
+	virtual void VarInit()
+	{
+		m_bOnlyUsedGG = true;
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("player_death");
+		ListenForGameEvent("round_start");
+		ListenForGameEvent("round_end");
+		VarInit();
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+		if (!pPlayer)
+			return;
+
+		if ( !Q_stricmp(event->GetName(), "round_start") )
+			m_bOnlyUsedGG = true;
+		else if (!m_bOnlyUsedGG)
+			return;
+		else if (!IsScenario("mwgg", false))
+			m_bOnlyUsedGG = false;
+		else if (!Q_stricmp(event->GetName(), "player_death"))
+		{
+			if (event->GetInt("attacker") == pPlayer->GetUserID())
+			{
+				if (event->GetInt("weaponid") != WEAPON_GOLDENGUN)
+					m_bOnlyUsedGG = false;
+			}
+		}
+		else if (!Q_stricmp(event->GetName(), "round_end"))
+		{
+			if (pPlayer->entindex() == event->GetInt("winnerid"))
+				IncrementCount();
+		}
+	}
+
+private:
+	bool m_bOnlyUsedGG;
+};
+DECLARE_GE_ACHIEVEMENT(CAchGoldStandard, ACHIEVEMENT_GES_GOLDSTANDARD, "GES_GOLDSTANDARD", 100, GE_ACH_UNLOCKED);
+
+
+// Going for the Gold: Pick up the golden gun 100 times
+class CAchGoingForTheGold : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(100);
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("gameplay_event");
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		if (!Q_stricmp(event->GetString("name"), "mwgg_ggpickup"))
+		{
+			CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+			if (!pPlayer)
+				return;
+
+			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID())
+				IncrementCount();
+		}
+	}
+};
+DECLARE_GE_ACHIEVEMENT(CAchGoingForTheGold, ACHIEVEMENT_GES_GOINGFORTHEGOLD, "GES_GOINGFORTHEGOLD", 100, GE_ACH_UNLOCKED);
+
+
+// Crouching Tiger: Kill 7 players without moving or dying in LTK.
+class CAchCrouchingTiger : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		VarInit();
+	}
+
+	virtual void VarInit()
+	{
+		m_vecLastKillPos = ( 0, 0, 0 );
+		m_iKillCount = 0;
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("player_death");
+		ListenForGameEvent("round_start");
+		VarInit();
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+		if (!pPlayer)
+			return;
+
+		if ( !Q_stricmp(event->GetName(), "round_start") )
+		{
+			m_vecLastKillPos = (0, 0, 0);
+			m_iKillCount = 0;
+		}
+		else if (!Q_stricmp(event->GetName(), "player_death"))
+		{
+			if (event->GetInt("attacker") == pPlayer->GetUserID())
+			{
+				if ( !IsScenario("ltk", false) )
+					return;
+
+				if (pPlayer->GetAbsOrigin() == m_vecLastKillPos)
+				{
+					m_iKillCount++;
+
+					if (m_iKillCount >= 7)
+						IncrementCount();
+				}
+				else
+				{
+					m_vecLastKillPos = pPlayer->GetAbsOrigin();
+					m_iKillCount = 1;
+				}
+			}
+		}
+	}
+
+private:
+	Vector m_vecLastKillPos;
+	int m_iKillCount;
+};
+DECLARE_GE_ACHIEVEMENT( CAchCrouchingTiger, ACHIEVEMENT_GES_CROUCHINGTIGER, "GES_CROUCHINGTIGER", 100, GE_ACH_UNLOCKED );
+
+
+// Licence To Spree Kill: Kill 4 enemies within 2 seconds in LTK
+class CAchLicenceToSpreeKill : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		VarInit();
+	}
+
+	virtual void VarInit()
+	{
+		m_flKillTime = 0;
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("player_death");
+		ListenForGameEvent("round_start");
+		VarInit();
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+		if (!pPlayer)
+			return;
+
+		if (!Q_stricmp(event->GetName(), "round_start"))
+		{
+			m_flKillTime = 0;
+			m_iKillCount = 0;
+		}
+		else if (!Q_stricmp(event->GetName(), "player_death"))
+		{
+			if (event->GetInt("attacker") == pPlayer->GetUserID())
+			{
+				if (!IsScenario("ltk", false))
+					return;
+
+				if (m_flKillTime >= gpGlobals->curtime - 2)
+				{
+					m_iKillCount++;
+
+					if (m_iKillCount >= 4)
+						IncrementCount();
+				}
+				else
+				{
+					m_flKillTime = gpGlobals->curtime;
+					m_iKillCount = 1;
+				}
+			}
+		}
+	}
+
+private:
+	float m_flKillTime;
+	int m_iKillCount;
+};
+DECLARE_GE_ACHIEVEMENT(CAchLicenceToSpreeKill, ACHIEVEMENT_GES_LICENCETOSPREEKILL, "GES_LICENCETOSPREEKILL", 100, GE_ACH_UNLOCKED);
+
+
+// View to no kills: Win VTAK without killing anyone
+class CAchViewToNoKills : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		VarInit();
+	}
+
+	virtual void VarInit()
+	{
+		m_bKilledSomeone = false;
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("player_death");
+		ListenForGameEvent("round_end");
+		ListenForGameEvent("round_start");
+		VarInit();
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+		if (!pPlayer)
+			return;
+
+		if (!Q_stricmp(event->GetName(), "player_death"))
+		{
+			// If this isn't us doing the killing we don't care
+			if (event->GetInt("attacker") != pPlayer->GetUserID())
+				return;
+
+			// But if it is...
+			m_bKilledSomeone = true;
+		}
+		else if (!Q_stricmp(event->GetName(), "round_start"))
+			m_bKilledSomeone = false; //Reset our kill flag.
+		else if (!Q_stricmp(event->GetName(), "round_end"))
+		{
+			if (!m_bKilledSomeone && pPlayer->entindex() == event->GetInt("winnerid") && IsScenario("viewtoakill", false))
+				IncrementCount();
+		}
+	}
+private:
+	bool m_bKilledSomeone;
+};
+DECLARE_GE_ACHIEVEMENT(CAchViewToNoKills, ACHIEVEMENT_GES_VIEWTONOKILLS, "GES_VIEWTONOKILLS", 100, GE_ACH_UNLOCKED);
+
+
+// We've got all the time in the world: Achieve certain victory in VTAK
+class CAchAllTheTime : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("gameplay_event");
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		if (!Q_stricmp(event->GetString("name"), "vtak_certainvictory"))
+		{
+			CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+			if (!pPlayer)
+				return;
+
+			if ( Q_atoi(event->GetString("value1") ) == pPlayer->GetUserID())
+				IncrementCount();
+		}
+	}
+};
+DECLARE_GE_ACHIEVEMENT(CAchAllTheTime, ACHIEVEMENT_GES_ALLTHETIME, "GES_ALLTHETIME", 100, GE_ACH_UNLOCKED);
+
+
+// His Finest Hour: Steal a total of 60 minutes of time in VTAK
+class CAchFinestHour : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(60);
+		VarInit();
+	}
+
+	virtual void VarInit()
+	{
+		m_iStolenSeconds = 0;
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("gameplay_event");
+		VarInit();
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		if (!Q_stricmp(event->GetString("name"), "vtak_stealtime"))
+		{
+			CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+			if (!pPlayer)
+				return;
+
+			if ( Q_atoi(event->GetString("value1")) != pPlayer->GetUserID() )
+				return;
+
+			m_iStolenSeconds += max( Q_atoi(event->GetString("value3")), 0 );
+
+			while ( m_iStolenSeconds >= 60 )
+			{
+				m_iStolenSeconds -= 60;
+				IncrementCount();
+			}
+		}
+	}
+private:
+	int m_iStolenSeconds;
+};
+DECLARE_GE_ACHIEVEMENT(CAchFinestHour, ACHIEVEMENT_GES_FINESTHOUR, "GES_FINESTHOUR", 100, GE_ACH_UNLOCKED);
+
+
+
+// Flag Tag: Steal 100 points in Living Daylights with the flag
+class CAchFlagTag : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(100);
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("gameplay_event");
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		if (!Q_stricmp(event->GetString("name"), "ld_flagpoint"))
+		{
+			CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+			if (!pPlayer)
+				return;
+
+			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && !Q_stricmp(event->GetString("value3"), "flaghit"))
+				IncrementCount();
+		}
+	}
+};
+DECLARE_GE_ACHIEVEMENT(CAchFlagTag, ACHIEVEMENT_GES_FLAGTAG, "GES_FLAGTAG", 100, GE_ACH_UNLOCKED);
+
+// King of the Flag: Win living daylights with less than 10 points.
+class CAchKingOfTheFlag : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("round_end");
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+		if (!pPlayer)
+			return;
+
+		if ( !Q_stricmp(event->GetName(), "round_end") )
+		{
+			if (pPlayer->entindex() == event->GetInt("winnerid") && event->GetInt("winnerscore") <= 10 && IsScenario("livingdaylights", false))
+				IncrementCount();
+		}
+	}
+};
+DECLARE_GE_ACHIEVEMENT( CAchKingOfTheFlag, ACHIEVEMENT_GES_KINGOFTHEFLAG, "GES_KINGOFTHEFLAG", 100, GE_ACH_UNLOCKED );
+
+
+// Flag Saver: Capture the enemy flag 10 times in Capture the Flag
+class CAchFlagSaver : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(10);
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("gameplay_event");
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		if ( !Q_stricmp(event->GetString("name"), "ctf_tokencapture") )
+		{
+			CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+			if (!pPlayer)
+				return;
+
+			if ( Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() )
+				IncrementCount();
+		}
+	}
+};
+DECLARE_GE_ACHIEVEMENT(CAchFlagSaver, ACHIEVEMENT_GES_FLAGSAVER, "GES_FLAGSAVER", 100, GE_ACH_UNLOCKED);
+
+// Flagged Down: Kill an enemy who has your flag with their flag in Capture the Flag
+class CAchFlaggedDown : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("gameplay_event");
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		if (!Q_stricmp(event->GetString("name"), "ctf_tokendefended"))
+		{
+			CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+			if (!pPlayer)
+				return;
+
+			// If we defended our flag using a flag, we killed their token holder while we were a token holder!
+			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && !Q_strnicmp(event->GetString("value4"), "token_", 6))
+				IncrementCount();
+		}
+	}
+};
+DECLARE_GE_ACHIEVEMENT(CAchFlaggedDown, ACHIEVEMENT_GES_FLAGGEDDOWN, "GES_FLAGGEDDOWN", 100, GE_ACH_UNLOCKED);
+
+
+// Cycle of Death: Land 2 CMAG headshots on the same target within 1 second.
+class CAchCycleOfDeath : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		VarInit();
+	}
+
+	virtual void VarInit()
+	{
+		m_iVictimID = 0;
+		m_flLastHitTime = 0;
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("player_hurt");
+		VarInit();
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+		if (!pPlayer)
+			return;
+
+		// Not us, don't care
+		if (event->GetInt("attacker") != pPlayer->GetUserID())
+			return;
+
+		if ( event->GetInt("weaponid") == WEAPON_COUGAR_MAGNUM && event->GetInt("hitgroup") == HITGROUP_HEAD )
+		{
+			if (event->GetInt("userid") == m_iVictimID && gpGlobals->curtime <= m_flLastHitTime + 1.0f)
+				IncrementCount();
+			else
+			{
+				m_flLastHitTime = gpGlobals->curtime;
+				m_iVictimID = event->GetInt("userid");
+			}
+		}
+	}
+private:
+	int m_iVictimID;
+	float m_flLastHitTime;
+};
+DECLARE_GE_ACHIEVEMENT(CAchCycleOfDeath, ACHIEVEMENT_GES_CYCLEOFDEATH, "GES_CYCLEOFDEATH", 100, GE_ACH_UNLOCKED);
+
+
+// Highly Trained Operative: Get a kill with 9 different weapons in one life.
+class CAchHighlyTrained : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		VarInit();
+	}
+
+	virtual void VarInit()
+	{
+		m_iWeaponFlags = 0;
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("player_death");
+		VarInit();
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+		if (!pPlayer)
+			return;
+
+		// We died, reset our progress
+		if (event->GetInt("userid") == pPlayer->GetUserID())
+		{
+			m_iWeaponFlags = 0;
+			return;
+		}
+
+		// Not us doing the killing, don't care
+		if (event->GetInt("attacker") != pPlayer->GetUserID())
+			return;
+
+		int weapid = event->GetInt("weaponid");
+
+		if (weapid == WEAPON_TOKEN)
+			weapid = WEAPON_SPAWNMAX; // Assign tokens to an unused bit.
+		else if (weapid > WEAPON_RANDOM)
+			weapid = WEAPON_RANDOM_MAX; // Assign explosions and traps to an unused bit.
+
+		m_iWeaponFlags |= 1 << weapid;
+
+		int uniquecount = 0;
+
+		for ( int i = 0; i < WEAPON_RANDOM; i++ )
+		{
+			if ( 1 << i & m_iWeaponFlags )
+				uniquecount++;
+		}
+
+		if ( uniquecount > 8)
+			IncrementCount();
+	}
+private:
+	int m_iWeaponFlags;
+};
+DECLARE_GE_ACHIEVEMENT(CAchHighlyTrained, ACHIEVEMENT_GES_HIGHLYTRAINED, "GES_HIGHLYTRAINED", 100, GE_ACH_UNLOCKED);
+
+
+// Silent Opposition: kill 5 people with the silenced pp7 without being damaged in deathmatch.
+class CAchSilentOpp : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal(1);
+		VarInit();
+	}
+
+	virtual void VarInit()
+	{
+		m_iKillcount = 0;
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("player_death");
+		ListenForGameEvent("player_hurt");
+		VarInit();
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+		if (!pPlayer)
+			return;
+
+		// We got hurt or died, reset the count.
+		if ( event->GetInt("userid") == pPlayer->GetUserID() )
+		{
+			m_iKillcount = 0;
+			return;
+		}
+
+		// Not us attacking
+		if ( event->GetInt("attacker") != pPlayer->GetUserID() )
+			return;
+
+		if (!Q_stricmp(event->GetName(), "player_death"))
+		{
+			if ( event->GetInt("weaponid") == WEAPON_PP7_SILENCED )
+			{
+				m_iKillcount++;
+
+				if (m_iKillcount > 4 && IsScenario( "deathmatch", false ))
+					IncrementCount();
+			}
+		}
+	}
+private:
+	int m_iKillcount;
+};
+DECLARE_GE_ACHIEVEMENT(CAchSilentOpp, ACHIEVEMENT_GES_SILENTOPP, "GES_SILENTOPP", 100, GE_ACH_UNLOCKED);
+
+
+//The Perfect Agent : Get 8128 kills over your GoldenEye career.
+class CAchPerfectAgent : public CGEAchievement
+{
+protected:
+	virtual void Init()
+	{
+		SetFlags(ACH_SAVE_GLOBAL);
+		SetGoal( 8128 );
+		VarInit();
+	}
+
+	virtual void VarInit()
+	{
+		m_iKillInterp = 0;
+	}
+
+	virtual void ListenForEvents()
+	{
+		ListenForGameEvent("player_death");
+		VarInit();
+	}
+
+	virtual void FireGameEvent_Internal(IGameEvent *event)
+	{
+		CGEPlayer *pPlayer = ToGEPlayer(CBasePlayer::GetLocalPlayer());
+		if (!pPlayer)
+			return;
+
+		// Not us attacking
+		if ( event->GetInt("attacker") != pPlayer->GetUserID() )
+			return;
+
+		m_iKillInterp++;
+		if ( IsScenario( "ltk", false ) && m_iKillInterp % 3 )
+			return;
+
+		IncrementCount();
+	}
+private:
+	int m_iKillInterp;
+};
+DECLARE_GE_DEPENDENT_ACHIEVEMENT(CAchPerfectAgent, ACHIEVEMENT_GES_PERFECTAGENT, "GES_PERFECTAGENT", 28, ACHIEVEMENT_GES_GOLDENEYE_MASTER);

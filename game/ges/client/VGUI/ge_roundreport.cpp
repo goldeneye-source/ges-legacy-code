@@ -110,6 +110,10 @@ void CGERoundReport::FireGameEvent( IGameEvent *event )
 		if ( !event->GetBool( "showreport" ) )
 			return;
 
+		// We may not have gotten a round start event since we always join after the first round started, and could have joined in the middle of this round.
+		// So make sure our teamplay state is correct.
+		m_RoundData.is_teamplay = GEMPRules()->IsTeamplay();
+
 		// Always play our music if we are scoring
 		PlayWinLoseMusic();
 
@@ -157,6 +161,7 @@ void CGERoundReport::FireGameEvent( IGameEvent *event )
 	{
 		// Store what our teamplay state is for use on end round
 		m_RoundData.is_teamplay = event->GetBool( "teamplay" );
+
 		// Store the gameplay name for the report
 		GEUTIL_GetGameplayName( m_RoundData.scenario_name, sizeof(m_RoundData.scenario_name) );
 

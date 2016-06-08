@@ -39,6 +39,7 @@ public:
 	// Functions to add ammo count dependant shells
 	virtual void OnReloadOffscreen(void);
 	virtual bool Deploy(void);
+	virtual void Precache(void);
 
 	virtual void CalculateShellVis(bool fillclip);
 

@@ -73,6 +73,23 @@ CWeaponShotgun::CWeaponShotgun( void )
 	m_iShellBodyGroup[0] = {-1};
 }
 
+void CWeaponShotgun::Precache(void)
+{
+	PrecacheModel("models/Weapons/shotgun/v_shotgun.mdl");
+	PrecacheModel("models/weapons/shotgun/w_shotgun.mdl");
+
+	PrecacheMaterial("sprites/hud/weaponicons/shotgun");
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_buckshot");
+
+	PrecacheScriptSound("Weapon.Shotgun_Reload");
+	PrecacheScriptSound("Weapon_pshotgun.Single");
+	PrecacheScriptSound("Weapon_pshotgun.NPC_Single");
+	PrecacheScriptSound("Weapon.Special1");
+	PrecacheScriptSound("Weapon.Special2");
+
+	BaseClass::Precache();
+}
+
 void CWeaponShotgun::PrimaryAttack( void )
 {
 	// Only the player fires this way so we can cast

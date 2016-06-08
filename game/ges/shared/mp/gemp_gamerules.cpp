@@ -1208,7 +1208,7 @@ void CGEMPRules::SetupChangeLevel( const char *next_level /*= NULL*/ )
 	if ( nextMapData && curMapData && nextMapData->resintensity + curMapData->resintensity >= 10 )
 	{
 		ge_nextnextmap.SetValue(m_szNextLevel);
-		Q_strncpy(m_szNextLevel, "es_devland", sizeof(m_szNextLevel));
+		Q_strncpy(m_szNextLevel, "ge_transition", sizeof(m_szNextLevel));
 	}
 	
 	// Notify everyone
@@ -1787,7 +1787,8 @@ void CGEMPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info 
 			CGEWeapon *pGEWeapon = ToGEWeapon( (CBaseCombatWeapon*)pWeapon );
 			killer_weapon_name = pGEWeapon->GetPrintName();
 			weaponid = pGEWeapon->GetWeaponID();
-			wepSkin = pGEWeapon->GetSkin();
+			if (weaponid < WEAPON_RANDOM)
+				wepSkin = pGEWeapon->GetSkin();
 		}
 		else
 		{

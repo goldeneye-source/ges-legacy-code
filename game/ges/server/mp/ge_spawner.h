@@ -26,7 +26,7 @@ public:
 	void Init();
 	void Think();
 
-	void SpawnEnt();
+	void SpawnEnt(int spawnstate);
 	void RemoveEnt();
 	
 	// Handle overrides to the base entity
@@ -55,7 +55,7 @@ public:
 
 protected:
 	// Should we respawn now?
-	virtual bool  ShouldRespawn();
+	virtual int ShouldRespawn();
 	virtual float GetRespawnInterval();
 
 	// Overridable "callbacks"

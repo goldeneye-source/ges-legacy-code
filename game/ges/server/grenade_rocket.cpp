@@ -41,6 +41,7 @@ void CGERocket::Spawn( void )
 
 	m_takedamage	= DAMAGE_YES;
 	m_iHealth		= 1;
+	m_bHitPlayer	= false;
 
 	// Default Damages they should be modified by the thrower
 	SetDamage( 320 );
@@ -232,7 +233,7 @@ void CGERocket::ExplodeTouch( CBaseEntity *pOther )
 	if (pOther != GetThrower())
 	{
 		// Check if they're a player, if they are deal out instant death.
-		if (pOther->IsPlayer() || pOther->IsNPC())
+		if (!m_bHitPlayer && (pOther->IsPlayer() || pOther->IsNPC()))
 		{
 			Vector playercenter = pOther->GetAbsOrigin() + Vector(0, 0, 38);
 			Vector impactforce = playercenter - GetAbsOrigin();
@@ -242,6 +243,8 @@ void CGERocket::ExplodeTouch( CBaseEntity *pOther )
 
 			CTakeDamageInfo rocketinfo(this, GetThrower(), impactforce, GetAbsOrigin(), 398.0f, DMG_BLAST);
 			pOther->TakeDamage(rocketinfo);
+
+			m_bHitPlayer = true; // Only deal one direct hit per projectile.
 		}
 		Explode();
 	}

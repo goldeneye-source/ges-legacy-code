@@ -38,6 +38,7 @@ public:
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 
+	virtual void Precache( void );
 	virtual GEWeaponID GetWeaponID( void ) const { return WEAPON_DD44; }
 
 	DECLARE_ACTTABLE();
@@ -88,4 +89,20 @@ IMPLEMENT_ACTTABLE( CWeaponDD44 );
 //-----------------------------------------------------------------------------
 CWeaponDD44::CWeaponDD44( void )
 {
+}
+
+void CWeaponDD44::Precache(void)
+{
+	PrecacheModel("models/weapons/dd44/v_dd44.mdl");
+	PrecacheModel("models/weapons/dd44/w_dd44.mdl");
+
+	PrecacheMaterial("sprites/hud/weaponicons/dd44");
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_9mm");
+
+	PrecacheScriptSound("Weapon_dd44.Single");
+	PrecacheScriptSound("Weapon_dd44.NPC_Single");
+	PrecacheScriptSound("Weapon.Special1");
+	PrecacheScriptSound("Weapon.Special2");
+
+	BaseClass::Precache();
 }

@@ -27,6 +27,8 @@
 #include "tier0/memdbgon.h"
 
 ConVar ge_mapchooser_avoidteamplay("ge_mapchooser_avoidteamplay", "0", FCVAR_GAMEDLL, "If set to 1, server will avoid choosing maps where the current playercount is above the team threshold.");
+ConVar ge_mapchooser_avoidtransistions("ge_mapchooser_avoidtransistions", "0", FCVAR_GAMEDLL, "If set to 1, server will avoid choosing maps where a transition through ge_transition is neccecery.");
+
 
 CGEMapManager::CGEMapManager(void)
 {
@@ -400,21 +402,14 @@ void CGEMapManager::GetSetBlacklist(CUtlVector<char*> &sets, CUtlVector<int> &we
 	}
 }
 
-const char* CGEMapManager::SelectNewMap( void )
+void CGEMapManager::GetViableMapList(int iNumPlayers, CUtlVector<char*> &mapnames, CUtlVector<int> &mapweights)
 {
 	if (!m_pSelectionData.Count()) // We don't actually have any maps to choose from.
-		return NULL;
-
-	int iNumPlayers = 0; // Get all the players currently in the game, spectators might decide they want to play the next map so we should count them too.
-
-	FOR_EACH_MPPLAYER(pPlayer)
-		if (pPlayer->IsConnected())
-			iNumPlayers++;
-	END_OF_PLAYER_LOOP()
+		return;
 
 	int currentResIntensity = 3;
-	CUtlVector<char*> mapnames;
-	CUtlVector<int> mapweights;
+	mapnames.RemoveAll();
+	mapweights.RemoveAll();
 	CUtlVector<int> mapintensities;
 	bool lookforcheap = false;
 	int	currentmapindex = -1;
@@ -465,9 +460,9 @@ const char* CGEMapManager::SelectNewMap( void )
 	}
 
 	// Strip out maps that risk a game crash if we can do that.
-	if (lookforcheap)
+	if (lookforcheap && ge_mapchooser_avoidtransistions.GetBool())
 	{
-		for (int i = 0; i < mapnames.Count(); )
+		for (int i = 0; i < mapnames.Count();)
 		{
 			if (mapintensities[i] + currentResIntensity >= 10)
 			{
@@ -482,6 +477,25 @@ const char* CGEMapManager::SelectNewMap( void )
 	}
 
 	Msg("---Map list finished with %d maps total---\n", mapnames.Count());
+
+	return;
+}
+
+const char* CGEMapManager::SelectNewMap( void )
+{
+	if (!m_pSelectionData.Count()) // We don't actually have any maps to choose from.
+		return NULL;
+
+	CUtlVector<char*> mapnames;
+	CUtlVector<int> mapweights;
+	int iNumPlayers = 0; // Get all the players currently in the game, spectators might decide they want to play the next map so we should count them too.
+
+	FOR_EACH_MPPLAYER(pPlayer)
+		if (pPlayer->IsConnected())
+			iNumPlayers++;
+	END_OF_PLAYER_LOOP()
+
+	GetViableMapList( iNumPlayers, mapnames, mapweights );
 
 	return GERandomWeighted<char*>(mapnames.Base(), mapweights.Base(), mapnames.Count());
 }
@@ -530,6 +544,20 @@ void CGEMapManager::PrintMapDataLists(void)
 	}
 }
 
+void CGEMapManager::PrintMapSelectionWeights(int pcount)
+{
+	CUtlVector<char*> mapnames;
+	CUtlVector<int> mapweights;
+
+	GetViableMapList( pcount, mapnames, mapweights );
+
+	Msg("Map : Weight\n");
+	for (int i = 0; i < mapnames.Count(); i++)
+	{
+		Msg("%s : %d\n", mapnames[i], mapweights[i]);
+	}
+}
+
 CON_COMMAND(ge_print_map_selection_data, "Prints the server's map selection data ")
 {
 	if (!UTIL_IsCommandIssuedByServerAdmin())
@@ -552,4 +580,27 @@ CON_COMMAND(ge_print_current_map_data, "Prints the current map's data ")
 
 	if (GEMPRules())
 		GEMPRules()->GetMapManager()->PrintMapDataLists();
+}
+
+CON_COMMAND(ge_print_map_selection_weights, "Prints the map selection chance for given playercount")
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+	{
+		Msg("You must be a server admin to use this command\n");
+		return;
+	}
+
+	if ( GEMPRules() && args.ArgC() > 1 )
+		GEMPRules()->GetMapManager()->PrintMapSelectionWeights(atoi(args[1]));
+	else
+	{
+		int iNumPlayers = 0;
+
+		FOR_EACH_MPPLAYER(pPlayer)
+			if (pPlayer->IsConnected())
+				iNumPlayers++;
+		END_OF_PLAYER_LOOP()
+
+		GEMPRules()->GetMapManager()->PrintMapSelectionWeights(iNumPlayers);
+	}
 }

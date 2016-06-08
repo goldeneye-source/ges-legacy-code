@@ -38,6 +38,10 @@
 #include "rumble_shared.h"
 #include "saverestoretypes.h"
 
+#ifdef GE_DLL
+#include "ge_player.h"
+#endif
+
 #ifdef HL2_DLL
 #include "weapon_physcannon.h"
 #include "hl2_gamerules.h"
@@ -1539,6 +1543,13 @@ void CBaseCombatCharacter::Event_Killed( const CTakeDamageInfo &info )
 	{
 		forceVector += pMagnet->GetForceVector( this );
 	}
+
+#ifdef GE_DLL
+	CGEPlayer *pGEPlayer = ToGEPlayer(this);
+
+	if (pGEPlayer) // We have to do this here for ideal weapon drop behavior (like allowing gamemodes to prevent it)
+		pGEPlayer->DropTopWeapons();
+#endif
 
 	CBaseCombatWeapon *pDroppedWeapon = m_hActiveWeapon.Get();
 

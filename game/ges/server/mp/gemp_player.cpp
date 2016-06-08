@@ -106,7 +106,7 @@ CGEMPPlayer::CGEMPPlayer()
 	m_vLastDeath = Vector(-1, -1, -1);
 	m_vLastSpawn = Vector(-1, -1, -1);
 
-	for (int i = 0; i < WEAPON_RANDOM_MAX; i++)
+	for (int i = 0; i < WEAPON_RANDOM; i++)
 	{
 		m_iWeaponSkinInUse.Set(i, 0);
 	}
@@ -380,45 +380,55 @@ void CGEMPPlayer::Spawn()
 			return;
 		}
 
+		int noSkins = atoi(engine->GetClientConVarValue(entindex(), "cl_ge_nowepskins"));
+
 		// Create a dummy skin list, fill it out, and then transmit anything that changed.
-		int iDummySkinList[WEAPON_RANDOM_MAX] = { 0 };
+		int iDummySkinList[WEAPON_RANDOM] = { 0 };
 
 		// First decypher their skins code, if they have one.
-		if (m_iClientSkinsCode)
+		if (m_iClientSkinsCode && !noSkins)
 		{
 			DevMsg("Parsing client skin code of %d\n", m_iClientSkinsCode);
 
-			for (int i = 0; i < WEAPON_RANDOM_MAX; i++)
+			for (int i = 0; i < WEAPON_RANDOM; i++)
 			{
-				iDummySkinList[i] = (m_iClientSkinsCode >> (i * 2)) & (3);
+				iDummySkinList[i] = (m_iClientSkinsCode >> (i * 2)) & 3;
 				DevMsg("Skin for weapon %d set to %d\n", i, iDummySkinList[i]);
 			}
 		}
 
 		// Then look at the server authenticated skin code, this overwrites the client skins.
-		if (m_iSkinsCode)
+		if (m_iSkinsCode && noSkins <= 1)
 		{
 			DevMsg("Parsing skin code of %d\n", m_iSkinsCode);
+			uint64 shiftvalue = 0;
 
-			for ( int i = 0; i < WEAPON_RANDOM_MAX; i++ )
+			for ( int i = 0; i < WEAPON_RANDOM; i++ )
 			{
-				iDummySkinList[i] = (m_iSkinsCode >> (i * 2)) & (3);
-				DevMsg("Skin for weapon %d set to %d\n", i, iDummySkinList[i]);
+				shiftvalue = (m_iSkinsCode >> (i * 2)) & 3;
+				if (shiftvalue != 0)
+				{
+					iDummySkinList[i] = shiftvalue;
+					DevMsg("Skin for weapon %d set to %d\n", i, iDummySkinList[i]);
+				}
 			}
 		}
 
-		if (GetDevStatus() == GE_DEVELOPER)
-			iDummySkinList[WEAPON_KLOBB] = 3;
-		else if (GetDevStatus() == GE_BETATESTER)
-			iDummySkinList[WEAPON_KLOBB] = 2;
-		else if (GetDevStatus() == GE_CONTRIBUTOR)
-			iDummySkinList[WEAPON_KLOBB] = 1;
+		if (noSkins <= 2)
+		{
+			if (GetDevStatus() == GE_DEVELOPER)
+				iDummySkinList[WEAPON_KLOBB] = 3;
+			else if (GetDevStatus() == GE_BETATESTER)
+				iDummySkinList[WEAPON_KLOBB] = 2;
+			else if (GetDevStatus() == GE_CONTRIBUTOR)
+				iDummySkinList[WEAPON_KLOBB] = 1;
 
-		// If it's luchador, give him the watermelon KF7.  Love u 4evr luch.
-		if ( m_iSteamIDHash == 3135237817u )
-			iDummySkinList[WEAPON_KF7] = 1;
+			// If it's luchador, give him the watermelon KF7.  Love u 4evr luch.
+			if (m_iSteamIDHash == 3135237817u)
+				iDummySkinList[WEAPON_KF7] = 1;
+		}
 
-		for (int i = 0; i < WEAPON_RANDOM_MAX; i++)
+		for (int i = 0; i < WEAPON_RANDOM; i++)
 		{
 			if (iDummySkinList[i] != m_iWeaponSkinInUse.Get(i))
 				m_iWeaponSkinInUse.Set(i, iDummySkinList[i]);
@@ -466,7 +476,7 @@ void CGEMPPlayer::Spawn()
 		else
 			StopInvul();
 
-		SetMaxSpeed(GE_NORM_SPEED);
+		SetMaxSpeed( GE_NORM_SPEED * GEMPRules()->GetSpeedMultiplier(this) );
 		m_Local.m_bDucked = false;
 		SetPlayerUnderwater(false);
 		m_flStartJumpZ = 0.0f;
@@ -1172,7 +1182,7 @@ bool CGEMPPlayer::ClientCommand( const CCommand &args )
 		DevMsg("Filtered it to be %llu\n", sendbits);
 
 		if (sendbits != unlockcode)
-			Warning("%s requested skins they aren't allowed to have using code %llu!", GetPlayerName(), unlockcode);
+			Warning("%s requested skins they aren't allowed to have using code %llu!\n", GetPlayerName(), unlockcode);
 
 		m_iClientSkinsCode = sendbits;
 
@@ -1342,6 +1352,9 @@ void CGEMPPlayer::PreThink()
 			event->SetString( "achieved", m_szAchList );
 			gameeventmanager->FireEvent( event, true );
 		}
+
+		if (atoi(engine->GetClientConVarValue(entindex(), "cl_ge_hidetags")))
+			m_iDevStatus = 0; // Maybe we don't want anyone to know we have all the acheivements.
 	}
 
 	// If we are waiting to spawn and have passed our wait time, try again!
@@ -1389,7 +1402,7 @@ void CGEMPPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if ( killedByTrigger )
 	{
 		pWeapon = GetActiveWeapon();
-		if ( GEMPRules()->GetTokenManager()->IsValidToken( pWeapon->GetClassname() ) )
+		if ( pWeapon && GEMPRules()->GetTokenManager()->IsValidToken(pWeapon->GetClassname()) )
 		{
 			Weapon_Detach( pWeapon );
 			UTIL_Remove( pWeapon );
@@ -1631,7 +1644,7 @@ bool CGEMPPlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
 	bool forcepickup = GERules()->ShouldForcePickup(this, pWeapon);
 
 	// We have to do this before we actually fire the weapon pickup code so the skin data is overwritten before it starts getting read.
-	if (GetUsedWeaponSkin(pGEWeapon->GetWeaponID()) < pWeapon->m_nSkin)
+	if (GetUsedWeaponSkin(pGEWeapon->GetWeaponID()) < pWeapon->m_nSkin && pGEWeapon->GetWeaponID() < WEAPON_RANDOM)
 	{
 		SetUsedWeaponSkin(pGEWeapon->GetWeaponID(), pWeapon->m_nSkin);
 		forcepickup = true;  //If we got a new skin, pick up the weapon no matter what.

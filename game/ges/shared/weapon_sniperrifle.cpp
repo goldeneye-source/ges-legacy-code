@@ -40,6 +40,7 @@ public:
 	CWeaponSniper(void)
 	{
 		SetAlwaysSilenced(true);
+		ToggleSilencer(false);
 		// NPC Ranging
 		m_fMinRange1 = 100;
 		m_fMaxRange1 = 8000;
@@ -49,7 +50,9 @@ public:
 #endif
 	}
 
+	virtual void	Precache(void);
 	virtual GEWeaponID GetWeaponID(void) const { return WEAPON_SNIPER_RIFLE; }
+	virtual bool CanBeSilenced(void) { return true; }
 
 #ifdef CLIENT_DLL
 	virtual int KeyInput(int down, ButtonCode_t keynum, const char *pszCurrentBinding)
@@ -136,3 +139,20 @@ acttable_t CWeaponSniper::m_acttable[] =
 	{ ACT_GES_CJUMP, ACT_GES_CJUMP_SNIPERRIFLE, false },
 };
 IMPLEMENT_ACTTABLE(CWeaponSniper);
+
+void CWeaponSniper::Precache(void)
+{
+	PrecacheModel("models/weapons/sniperrifle/v_sniperrifle.mdl");
+	PrecacheModel("models/weapons/sniperrifle/w_sniperrifle.mdl");
+
+	PrecacheMaterial("sprites/hud/weaponicons/sniper_rifle");
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_rifle");
+
+	PrecacheScriptSound("Weapon.Rifle_Reload");
+	PrecacheScriptSound("Weapon_sniper.Single");
+	PrecacheScriptSound("Weapon_sniper.NPC_Single");
+	PrecacheScriptSound("Weapon.Special1");
+	PrecacheScriptSound("Weapon.Special2");
+
+	BaseClass::Precache();
+}

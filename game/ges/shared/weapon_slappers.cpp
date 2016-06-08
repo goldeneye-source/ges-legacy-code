@@ -55,6 +55,7 @@ public:
 	float		GetRange( void )		{	return	SLAPPER_RANGE;	}
 	bool		DamageWorld()			{	return	false;			}
 
+	virtual void	Precache(void);
 	void		AddViewKick( void );
 	void		SecondaryAttack( void )	{	return;	}
 
@@ -115,6 +116,17 @@ IMPLEMENT_ACTTABLE(CWeaponSlappers);
 CWeaponSlappers::CWeaponSlappers( void )
 {
 
+}
+
+void CWeaponSlappers::Precache(void)
+{
+	PrecacheModel("models/weapons/slappers/v_slappers.mdl");
+	PrecacheModel("models/weapons/slappers/w_slappers.mdl");
+
+	PrecacheScriptSound("Weapon_slappers.Swing");
+	PrecacheScriptSound("Weapon_slappers.Smack");
+
+	BaseClass::Precache();
 }
 
 void CWeaponSlappers::Spawn( void )

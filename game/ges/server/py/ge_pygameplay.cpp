@@ -484,6 +484,10 @@ public:
 		TRYFUNC( this->get_override("OnTokenAttack")(bp::ptr(pToken), bp::ptr(pPlayer), position, forward) );
 	}
 
+	virtual void OnEnemyTokenTouched(CGEWeapon *pToken, CGEPlayer *pPlayer)
+	{
+		TRYFUNC( this->get_override("OnEnemyTokenTouched")(bp::ptr(pToken), bp::ptr(pPlayer)) );
+	}
 
 	virtual bool CanRoundEnd()
 	{

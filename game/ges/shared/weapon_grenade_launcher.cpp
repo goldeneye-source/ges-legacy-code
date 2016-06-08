@@ -75,6 +75,7 @@ public:
 	virtual void Precache( void );
 	virtual void FinishReload(void);
 	virtual void WeaponIdle(void);
+	virtual void HandleFireOnEmpty(void);
 
 	CNetworkVar(int, m_iDesiredShellOffset);
 	CNetworkVar(int, m_iDesiredShellVisAmount);
@@ -85,6 +86,7 @@ private:
 	// check a throw from vecSrc.  If not valid, move the position back along the line to vecEye
 	void	CheckLaunchPosition( const Vector &vecEye, Vector &vecSrc );
 	void	LaunchGrenade( void );
+	void	PushShells( void );
 	int		m_iShellBodyGroup[6];
 
 	CNetworkVar( bool, m_bPushShells );
@@ -220,8 +222,17 @@ void CGEWeaponGrenadeLauncher::Equip(CBaseCombatCharacter *pOwner)
 bool CGEWeaponGrenadeLauncher::Holster(CBaseCombatWeapon *pSwitchingTo)
 {
 	// Prevent a shell push if we abort firing.
-	m_iDesiredShellOffset = m_iShellOffset;
-	m_iDesiredShellVisAmount = m_iShellVisAmount;
+	if (m_bPreLaunch)
+	{
+		m_iDesiredShellOffset = m_iShellOffset;
+		m_iDesiredShellVisAmount = m_iShellVisAmount;
+	}
+	else
+	{
+		m_iShellOffset = m_iDesiredShellOffset;
+		m_iShellVisAmount = m_iDesiredShellVisAmount;
+	}
+	
 
 	return BaseClass::Holster(pSwitchingTo);
 }
@@ -269,8 +280,17 @@ void CGEWeaponGrenadeLauncher::WeaponIdle(void)
 
 void CGEWeaponGrenadeLauncher::Precache( void )
 {
+	PrecacheModel("models/weapons/gl/v_gl.mdl");
+	PrecacheModel("models/weapons/gl/w_gl.mdl");
+
+	PrecacheMaterial("sprites/hud/weaponicons/ar33");
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_rifle");
+
+	PrecacheScriptSound("Weapon_glauncher.Single");
+	PrecacheScriptSound("Weapon_glauncher.NPC_Single");
+	PrecacheScriptSound("Weapon.GrenadeLauncher_Reload");
+
 	PrecacheModel("models/weapons/gl/grenadeprojectile.mdl");
-	PrecacheMaterial("models/weapons/w_models/w_gl/grenadeprojectile");
 
 	BaseClass::Precache();
 }
@@ -294,6 +314,15 @@ void CGEWeaponGrenadeLauncher::PrimaryAttack( void )
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 	ToGEPlayer(pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 
+	WeaponSound( SPECIAL1 );
+	PushShells();
+
+	m_flGrenadeSpawnTime = gpGlobals->curtime + GetFireDelay();
+	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
+}
+
+void CGEWeaponGrenadeLauncher::PushShells(void)
+{
 	// For ejecting the shell on fire if we decide to go that route for a special weapon skin or something.
 	bool fireshell = false;
 
@@ -308,9 +337,6 @@ void CGEWeaponGrenadeLauncher::PrimaryAttack( void )
 	// Can't use %6 since it's not modulo but division remainder and can give negative results.
 	if (m_iDesiredShellOffset < 0)
 		m_iDesiredShellOffset = m_iShellOffset + 5;
-
-	m_flGrenadeSpawnTime = gpGlobals->curtime + GetFireDelay();
-	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
 }
 
 void CGEWeaponGrenadeLauncher::ItemPostFrame( void )
@@ -331,6 +357,25 @@ void CGEWeaponGrenadeLauncher::ItemPostFrame( void )
 	}
 
 	BaseClass::ItemPostFrame();
+}
+
+void CGEWeaponGrenadeLauncher::HandleFireOnEmpty()
+{
+	m_bFireOnEmpty = true;
+
+	if (m_flNextEmptySoundTime <= gpGlobals->curtime)
+	{
+		SendWeaponAnim( ACT_VM_DRYFIRE );
+		WeaponSound( SPECIAL1 );
+		PushShells();
+
+		m_bPreLaunch = true;
+		m_flGrenadeSpawnTime = gpGlobals->curtime + GetFireDelay();
+		m_flNextEmptySoundTime = gpGlobals->curtime + GetFireRate();
+		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
+	}
+	else
+		WeaponIdle(); // Make sure the animation resets at the correct time.
 }
 
 #ifdef GAME_DLL
@@ -363,12 +408,14 @@ void CGEWeaponGrenadeLauncher::LaunchGrenade( void )
 	if ( !pOwner )
 		return;
 
-	// If my clip is empty (and I use clips) dry fire instead.
-	if (UsesClipsForAmmo1() && !m_iClip1)
+	// If my clip is empty dry fire instead.
+	if (!m_iClip1)
 	{
-		DryFire();
+		WeaponSound( EMPTY );
 		return;
 	}
+
+	WeaponSound( SINGLE );
 
 #ifndef CLIENT_DLL
 	Vector	vForward, vRight, vUp;
@@ -421,7 +468,6 @@ void CGEWeaponGrenadeLauncher::LaunchGrenade( void )
 
 	// Remove the grenade from our ammo pool
 	m_iClip1 -= 1;
-	WeaponSound( SINGLE );
 
 	//Add our view kick in
 	AddViewKick();

@@ -32,7 +32,7 @@ public:
 protected:
 	virtual void OnInit( void );
 
-	virtual bool  ShouldRespawn( void );
+	virtual int  ShouldRespawn( void );
 	virtual float GetRespawnInterval( void );
 
 private:
@@ -70,19 +70,21 @@ void CGEWeaponSpawner::OnInit( void )
 		SetBaseEnt( WeaponIDToAlias( weapid ) );
 }
 
-bool CGEWeaponSpawner::ShouldRespawn( void )
+int CGEWeaponSpawner::ShouldRespawn( void )
 {
-	if ( IsOverridden() )
-		return BaseClass::ShouldRespawn();
+	int basestate = BaseClass::ShouldRespawn();
+
+	if ( IsOverridden() && basestate > 1 )
+		return 2;
 
 	// Obey our game rules
-	if ( !GEMPRules()->WeaponShouldRespawn( GetEntClass() ) )
-		return false;
+	if (!GEMPRules()->WeaponShouldRespawn(GetEntClass()))
+		return 0;
 
-	return BaseClass::ShouldRespawn();
+	return basestate;
 }
 
 float CGEWeaponSpawner::GetRespawnInterval( void )
 { 
-	return IsOverridden() ? 0 : GEMPRules()->FlWeaponRespawnTime(NULL);
+	return 10;
 }

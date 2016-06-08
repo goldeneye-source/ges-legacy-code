@@ -359,8 +359,6 @@ void CHudGameplay::ResolveWeaponHelp(void)
 	{
 		m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find("#GE_Att_Tracers"));
 		m_pWeaponHelp->InsertString("\n");
-		m_pWeaponHelp->InsertString(g_pVGuiLocalize->Find("#GE_Att_Silenced"));
-		m_pWeaponHelp->InsertString("\n");
 	}
 
 	if (Q_strcmp(pGEWeapon->GetSpecAttString(), ""))
@@ -394,7 +392,6 @@ inline void CHudGameplay::InsertTokenWithBar(const char* token, int length)
 		length = HUDWP_BARLENGTH;
 
 	float width = ScreenWidth();
-	float flARatio = width / ScreenHeight();
 
 	float scalevalue = min(sqrt(width / 1680), 1.0);
 	

@@ -89,6 +89,7 @@ public:
 	virtual void OnTokenRemoved( CGEWeapon *pToken ) { Msg( "[PYGP] Called OnTokenRemoved()\n" ); }
 	virtual void OnTokenPicked( CGEWeapon *pToken, CGEPlayer *pPlayer ) { Msg( "[PYGP] Called OnTokenPicked()\n" ); }
 	virtual void OnTokenDropped( CGEWeapon *pToken, CGEPlayer *pPlayer ) { Msg( "[PYGP] Called OnTokenDropped()\n" ); }
+	virtual void OnEnemyTokenTouched(CGEWeapon *pToken, CGEPlayer *pPlayer) { Msg("[PYGP] Called OnEnemyTokenTouched()\n"); }
 	virtual void OnTokenAttack( CGEWeapon *pToken, CGEPlayer *pPlayer, Vector position, Vector forward ) { Msg( "[PYGP] Called OnTokenAttack()\n" ); }
 
 	virtual bool CanRoundEnd() { 

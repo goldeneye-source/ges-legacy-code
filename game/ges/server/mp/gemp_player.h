@@ -105,8 +105,8 @@ public:
 	virtual void		 SetPlayerName( const char *name );
 	virtual const char  *GetCleanPlayerName()	{ return m_szCleanName; }
 
-	virtual int		GetUsedWeaponSkin(int weapid)				{ return m_iWeaponSkinInUse.Get(weapid); }
-	virtual void	SetUsedWeaponSkin(int weapid, int value)	{ m_iWeaponSkinInUse.Set(weapid, value); }
+	virtual int		GetUsedWeaponSkin(int weapid)				{ return weapid < WEAPON_RANDOM ? m_iWeaponSkinInUse.Get(weapid) : 0; }
+	virtual void	SetUsedWeaponSkin(int weapid, int value)	{ if (weapid < WEAPON_RANDOM) m_iWeaponSkinInUse.Set(weapid, value); }
 
 	virtual void  ShowScenarioHelp();
 
@@ -185,7 +185,7 @@ protected:
 
 	CNetworkVar( float, m_flRunTime );
 	CNetworkVar( int, m_flRunCode );
-	CNetworkArray( int, m_iWeaponSkinInUse, WEAPON_RANDOM_MAX ); //Random max marks the last of the actual weapons.
+	CNetworkArray( int, m_iWeaponSkinInUse, WEAPON_RANDOM ); //Random marks the last of the actual weapons.
 
 	CNetworkVar(int, m_iSteamIDHash);
 

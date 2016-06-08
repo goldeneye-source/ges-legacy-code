@@ -1084,6 +1084,9 @@ int CBreakableProp::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	}
 
 	float flPropDamage = GetBreakableDamage( info, assert_cast<IBreakableWithPropData*>(this) );
+#ifdef GE_DLL
+	flPropDamage *= 1.5; // Quick fix for super robust props caused by weapon damage adjustments.
+#endif
 	info.SetDamage( flPropDamage );
 
 	// UNDONE: Do this?

@@ -1035,7 +1035,8 @@ void CGETokenManager::ApplyTokenSettings( CGETokenDef *ttype, CGEWeapon *pToken 
 			pGenToken->SetTeamRestriction( ttype->iTeam );
 
 			pGenToken->SetDamageModifier( ttype->flDmgMod );
-			pGenToken->SetSkin( ttype->nSkin );
+			if (ttype->nSkin != -1)
+				pGenToken->SetSkin( ttype->nSkin );
 		}
 	}
 }

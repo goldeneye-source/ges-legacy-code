@@ -83,7 +83,6 @@ public:
 
 	C_BaseEntity *GetHat()		{ return m_hHat.Get(); };
 
-	virtual void		DoMuzzleFlash();
 	virtual void		FireBullets( const FireBulletsInfo_t &info );
 	virtual bool		Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex = GE_RIGHT_HAND );
 

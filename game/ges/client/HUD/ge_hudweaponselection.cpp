@@ -32,6 +32,8 @@
 
 using namespace vgui;
 
+ConVar cl_ge_hud_fastswitchlist("cl_ge_hud_fastswitchlist", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Show all held weapons on fast switch.");
+
 //-----------------------------------------------------------------------------
 // Purpose: Selection of weapons for GE:Source
 //-----------------------------------------------------------------------------
@@ -467,7 +469,7 @@ void CHudWeaponSelection::Paint()
 		return;
 
 	// If we are using fast-switch we only draw our current weapon (exported methodology)
-	if ( hud_fastswitch.GetBool() )
+	if ( hud_fastswitch.GetBool() && !cl_ge_hud_fastswitchlist.GetBool())
 	{
 		PaintFastWeaponSwitch();
 		return;

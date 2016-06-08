@@ -55,6 +55,7 @@ public:
 	virtual void ThrowKnife();
 	virtual void SwitchToKnife();
 
+	virtual void Precache( void );
 	virtual void ItemPreFrame( void );
 	virtual void ItemPostFrame( void );
 
@@ -137,6 +138,19 @@ CWeaponKnifeThrowing::CWeaponKnifeThrowing( void )
 
 	m_fMinRange1 = 24;
 	m_fMaxRange1 = 500;
+}
+
+void CWeaponKnifeThrowing::Precache(void)
+{
+	PrecacheModel("models/weapons/knife/v_tknife.mdl");
+	PrecacheModel("models/weapons/knife/w_tknife.mdl");
+
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_tknife");
+
+	PrecacheScriptSound("weapon_knife_throwing.Single");
+	PrecacheScriptSound("Weapon_Crowbar.Melee_Hit");
+
+	BaseClass::Precache();
 }
 
 //-----------------------------------------------------------------------------

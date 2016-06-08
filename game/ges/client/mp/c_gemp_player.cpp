@@ -60,7 +60,7 @@ C_GEMPPlayer::C_GEMPPlayer()
 	m_flRunTime = 0;
 	m_flRunCode = 0;
 
-	memset(m_iWeaponSkinInUse, 0, WEAPON_RANDOM_MAX);
+	memset(m_iWeaponSkinInUse, 0, WEAPON_RANDOM);
 }
 
 void C_GEMPPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )

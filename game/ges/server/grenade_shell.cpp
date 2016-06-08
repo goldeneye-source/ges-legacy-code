@@ -36,6 +36,7 @@ void CGEShell::Spawn( void )
 	m_takedamage	= DAMAGE_YES;
 	m_iHealth		= 1;
 	m_iBounceCount	= 0;
+	m_bHitPlayer	= 0;
 
 	// Default Damages they should be modified by the thrower
 	SetDamage( 320 );
@@ -147,14 +148,18 @@ void CGEShell::PlayerTouch( CBaseEntity *pOther )
 	{
 		SetNextThink( gpGlobals->curtime );
 
-		Vector playercenter = pOther->GetAbsOrigin() + Vector(0, 0, 38);
-		Vector impactforce = playercenter - GetAbsOrigin();
-		VectorNormalize(impactforce);
+		if (!m_bHitPlayer) // Only do this if we haven't already done it.  We don't want to get 2 directs with one grenade.
+		{
+			Vector playercenter = pOther->GetAbsOrigin() + Vector(0, 0, 38);
+			Vector impactforce = playercenter - GetAbsOrigin();
+			VectorNormalize(impactforce);
 
-		impactforce *= 1000;
+			impactforce *= 1000;
 
-		CTakeDamageInfo shellinfo(this, GetThrower(), impactforce, GetAbsOrigin(), 398.0f, DMG_BLAST);
-		pOther->TakeDamage(shellinfo);
+			m_bHitPlayer = true;
+			CTakeDamageInfo shellinfo(this, GetThrower(), impactforce, GetAbsOrigin(), 398.0f, DMG_BLAST);
+			pOther->TakeDamage(shellinfo);
+		}
 	}
 }
 

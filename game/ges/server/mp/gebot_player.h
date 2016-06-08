@@ -66,7 +66,7 @@ public:
 	virtual void PostThink();
 
 	virtual void GiveHat();
-	virtual void SpawnHat(const char* hatModel, Vector offset = { 0, 0, 0 }, QAngle angOffset = { 0, 0, 0 });
+	virtual void SpawnHat( const char* hatModel );
 	virtual void KnockOffHat( bool bRemove = false, const CTakeDamageInfo *dmg = NULL );
 
 	// Bots don't need help!

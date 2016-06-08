@@ -1056,7 +1056,10 @@ bool CGERules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	{
 		if ( collisionGroup0 == COLLISION_GROUP_PLAYER ||
 			collisionGroup0 == COLLISION_GROUP_NPC ||
-			collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT )
+			collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT ||
+			collisionGroup0 == COLLISION_GROUP_GRENADE || 
+			collisionGroup0 == COLLISION_GROUP_PROJECTILE ||
+			collisionGroup0 == COLLISION_GROUP_MINE )
 			return false;
 	}
 

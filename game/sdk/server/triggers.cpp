@@ -172,6 +172,13 @@ void CBaseTrigger::Spawn()
 		AddSpawnFlags( SF_TRIGGER_ALLOW_CLIENTS );
 	}
 
+#ifdef GE_DLL
+	if (HasSpawnFlags(SF_TRIGGER_ALLOW_CLIENTS))
+	{
+		AddSpawnFlags(SF_TRIGGER_ALLOW_NPCS);
+	}
+#endif
+
 	BaseClass::Spawn();
 }
 

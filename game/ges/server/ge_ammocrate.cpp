@@ -176,14 +176,28 @@ bool CGEAmmoCrate::MyTouch( CBasePlayer *pPlayer )
 		return true;
 	}
 
-	if (ge_partialammopickups.GetBool()) // Subtract the amount that was actually given to the player if we want this behavior
-		m_iAmmoAmount -= pPlayer->GiveAmmo(m_iAmmoAmount, m_iAmmoID);
-	else if (pPlayer->GiveAmmo(m_iAmmoAmount, m_iAmmoID)) // Otherwise take all the ammo if we can take any of it.
-		m_iAmmoAmount = 0;
+	int ammotaken = pPlayer->GiveAmmo(m_iAmmoAmount, m_iAmmoID);
+
+	m_iAmmoAmount -= ammotaken; // Subtract the amount that was actually given to the player from our carried ammo.
 
 	// Tell our token manager to give out any global ammo if we haven't this respawn cycle
 	if (!m_bGaveGlobalAmmo && GEMPRules()->GetTokenManager()->GiveGlobalAmmo(pPlayer))
+	{
+		if (!ammotaken) //This way we get the sound even if we only pick up special ammo.
+			EmitSound("BaseCombatCharacter.AmmoPickup"); // We can't just surpress the sound normally since the surpress sound flag on the giveammo function also tells the game not to give you ammo based weapons.
+
 		m_bGaveGlobalAmmo = true;
+		ammotaken += 1; // Tells us later that we took something
+	}
+
+	if ( ammotaken )
+	{
+		if (!ge_partialammopickups.GetBool()) // If we picked up anything, WE PICKED UP IT ALL!...but only if we want to.
+		{
+			m_iAmmoAmount = 0;
+			m_bGaveGlobalAmmo = true;
+		}
+	}
 
 	if ( !HasAmmo() || GERules()->ShouldForcePickup( pPlayer, this ) )
 		return true;

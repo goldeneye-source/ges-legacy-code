@@ -71,7 +71,7 @@ public:
 	// Main way to assign hats to characters.  Uses model specific hats.
 	virtual void GiveHat( void );
 	// Method of assigning whatever hat you want to a player.
-	virtual void SpawnHat( const char* hatModel, Vector offset = { 0, 0, 0 }, QAngle angOffset = {0, 0, 0} );
+	virtual void SpawnHat( const char* hatModel );
 
 	void HideBloodScreen( void );
 
@@ -125,7 +125,6 @@ public:
 	virtual void  CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles);
 	virtual float GetSequenceGroundSpeed( CStudioHdr *pStudioHdr, int iSequence );
 
-	virtual void	DoMuzzleFlash( void );
 	virtual void	RemoveAmmo(int iCount, int iAmmoIndex);
 	virtual void	FireBullets( const FireBulletsInfo_t &info );
 	virtual Vector	GetAttackSpread( CBaseCombatWeapon *pWeapon, CBaseEntity *pTarget = NULL );

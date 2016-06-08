@@ -60,7 +60,8 @@ static ConVar ge_fp_ragdoll ( "ge_fp_ragdoll", "1", FCVAR_ARCHIVE, "Allow first 
 static ConVar ge_fp_ragdoll_auto ( "ge_fp_ragdoll_auto", "1", FCVAR_ARCHIVE, "Autoswitch to ragdoll thirdperson-view when necessary" );
 ConVar cl_ge_nohitothersound( "cl_ge_nohitsound", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Disable the sound that plays when you damage another player" );
 ConVar cl_ge_nokillothersound( "cl_ge_nokillsound", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Disable the sound that plays when you kill another player" );
-
+ConVar cl_ge_nowepskins("cl_ge_nowepskins", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Disables alternative weapon appearances.");
+ConVar cl_ge_hidetags("cl_ge_hidetags", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Disables BT/Dev/CC tags.");
 
 C_GEPlayer::C_GEPlayer()
 {
@@ -320,8 +321,32 @@ void C_GEPlayer::ClientThink( void )
 		// But we have to check aimmode status in preframe because it needs to be called in the same function as on the server
 		// and the server has no ClientThink.
 
+		if (IsObserver())
+		{
+			C_GEPlayer *pGEObsTarget = ToGEPlayer(GetObserverTarget());
 
-		if (!IsAlive()) //Force reset our zoom if we died right away, otherwise we wrap around to the next frame and can't reset zoom since we're already fully dead.
+			if ( GetObserverMode() == OBS_MODE_IN_EYE && pGEObsTarget )
+			{
+				CGEWeapon *pGEWeapon = ToGEWeapon(pGEObsTarget->GetActiveWeapon());
+
+				if ( pGEWeapon && pGEObsTarget->StartedAimMode() )
+					m_iNewZoomOffset = pGEWeapon->GetZoomOffset();
+				else
+					m_iNewZoomOffset = 0;
+
+				if ( m_iNewZoomOffset != GetZoomEnd() )
+				{
+					SetZoom( m_iNewZoomOffset );
+					Warning("Set zoom to %d!\n", m_iNewZoomOffset);
+				}
+			}
+			else
+			{
+				m_iNewZoomOffset = 0;
+				SetZoom(0, true);
+			}
+		}
+		else if (!IsAlive()) //Force reset our zoom if we died right away, otherwise we wrap around to the next frame and can't reset zoom since we're already fully dead.
 		{
 			m_iNewZoomOffset = 0;
 			SetZoom(0, true);
@@ -349,7 +374,7 @@ void C_GEPlayer::ClientThink( void )
 
 		C_BaseViewModel *vm = GetViewModel();
 
-		if (vm)
+		if ( vm )
 		{
 			if (54.0f + GetZoom() <= 0)
 				v_viewmodel_fov.SetValue(GetZoom() * -1 + 5);

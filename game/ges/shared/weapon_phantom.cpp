@@ -31,6 +31,7 @@ public:
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 
+	virtual void Precache(void);
 	virtual GEWeaponID GetWeaponID( void ) const { return WEAPON_PHANTOM; }
 	
 	DECLARE_ACTTABLE();
@@ -80,4 +81,21 @@ IMPLEMENT_ACTTABLE( CWeaponPhantom );
 CWeaponPhantom::CWeaponPhantom( void )
 {
 
+}
+
+void CWeaponPhantom::Precache(void)
+{
+	PrecacheModel("models/weapons/phantom/v_phantom.mdl");
+	PrecacheModel("models/weapons/phantom/w_phantom.mdl");
+
+	PrecacheMaterial("sprites/hud/weaponicons/phantom");
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_9mm");
+
+	PrecacheScriptSound("Weapon.SMG_Reload");
+	PrecacheScriptSound("Weapon_phantom.Single");
+	PrecacheScriptSound("Weapon_phantom.NPC_Single");
+	PrecacheScriptSound("Weapon.Special1");
+	PrecacheScriptSound("Weapon.Special2");
+
+	BaseClass::Precache();
 }

@@ -44,7 +44,9 @@ public:
 	// This function is purely for the CMag and encorporates primary attack functionality
 	// but does not play the animation again!
 	virtual void FireWeapon( void );
+	virtual void HandleFireOnEmpty(void);
 
+	virtual void Precache( void );
 	virtual bool Deploy( void );
 
 	virtual void ItemPreFrame( void );
@@ -118,6 +120,22 @@ CWeaponCMag::CWeaponCMag( void )
 	m_fMaxRange1 = 3000;
 }
 
+void CWeaponCMag::Precache(void)
+{
+	PrecacheModel("models/weapons/cmag/v_cmag.mdl");
+	PrecacheModel("models/weapons/cmag/w_cmag.mdl");
+
+	PrecacheMaterial("sprites/hud/weaponicons/cmag");
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_magnum");
+
+	PrecacheScriptSound("Weapon_cmag.Single");
+	PrecacheScriptSound("Weapon_cmag.NPC_Single");
+	PrecacheScriptSound("Weapon.Special1");
+	PrecacheScriptSound("Weapon.Special2");
+
+	BaseClass::Precache();
+}
+
 bool CWeaponCMag::Deploy( void )
 {
 	m_bPreShoot = false;
@@ -158,6 +176,13 @@ void CWeaponCMag::FireWeapon( void )
 	if (!pPlayer)
 		return;
 
+	// If my clip is empty dry fire instead.
+	if (!m_iClip1)
+	{
+		WeaponSound( EMPTY );
+		return;
+	}
+
 	pPlayer->DoMuzzleFlash();
 
 	FireBulletsInfo_t info;
@@ -197,6 +222,21 @@ void CWeaponCMag::FireWeapon( void )
 
 	//Add our view kick in
 	AddViewKick();
+}
+
+void CWeaponCMag::HandleFireOnEmpty()
+{
+	m_bFireOnEmpty = true;
+
+	if ( m_flNextEmptySoundTime <= gpGlobals->curtime )
+	{
+		SendWeaponAnim( ACT_VM_DRYFIRE );
+
+		m_bPreShoot = true;
+		m_flShootTime = gpGlobals->curtime + GetFireDelay();
+		m_flNextEmptySoundTime = gpGlobals->curtime + GetFireRate();
+		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
+	}
 }
 
 void CWeaponCMag::ItemPreFrame( void )

@@ -73,7 +73,7 @@ private:
 	int m_flRunCode;
 	int m_iSteamIDHash; // We need this to decode our save files.
 
-	int m_iWeaponSkinInUse[WEAPON_RANDOM_MAX];
+	int m_iWeaponSkinInUse[WEAPON_RANDOM];
 };
 
 C_GEMPPlayer *ToGEMPPlayer( CBaseEntity *pEntity );

@@ -46,6 +46,9 @@ public:
 	// Prints out the gamemode weights and set blacklists to the console.
 	void PrintMapDataLists(void);
 
+	// Prints out the liklyhood of picking a given map at this playercount.
+	void PrintMapSelectionWeights(int pcount);
+
 	// Get selection data for a specific map and write it to mincount and maxcount
 	MapSelectionData* GetMapSelectionData(const char *mapname);
 
@@ -54,6 +57,9 @@ public:
 
 	// Get the gameplay list for the map and write to the given addresses.
 	void GetMapGameplayList( CUtlVector<char*> &gameplays, CUtlVector<int> &weights, bool teamplay = false );
+
+	// Get list of maps suitable for current playercount and conditions.
+	void GetViableMapList( int iNumPlayers, CUtlVector<char*> &mapnames, CUtlVector<int> &mapweights );
 
 	// Pick and return a new map using the current server conditions.
 	const char* SelectNewMap();

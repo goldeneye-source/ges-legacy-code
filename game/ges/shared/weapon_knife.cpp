@@ -54,6 +54,8 @@ public:
 	void		AddViewKick( void );
 	void		SecondaryAttack( void );
 
+	virtual		void Precache(void);
+
 //	void		Drop( const Vector &vecVelocity );
 
 	virtual GEWeaponID GetWeaponID( void ) const { return WEAPON_KNIFE; }
@@ -118,6 +120,21 @@ IMPLEMENT_ACTTABLE(CWeaponKnife);
 CWeaponKnife::CWeaponKnife( void )
 {
 }
+
+
+void CWeaponKnife::Precache(void)
+{
+	PrecacheModel("models/weapons/knife/v_knife.mdl");
+	PrecacheModel("models/weapons/knife/w_knife.mdl");
+
+	PrecacheMaterial("sprites/hud/weaponicons/knife");
+
+	PrecacheScriptSound("Weapon_Knife.Single");
+	PrecacheScriptSound("Weapon_Crowbar.Melee_Hit");
+
+	BaseClass::Precache();
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Add in a view kick for this weapon

@@ -83,6 +83,7 @@ public:
 	virtual void OnTokenRemoved(CGEWeapon *pToken)=0;
 	virtual void OnTokenPicked(CGEWeapon *pToken, CGEPlayer *pPlayer)=0;
 	virtual void OnTokenDropped(CGEWeapon *pToken, CGEPlayer *pPlayer)=0;
+	virtual void OnEnemyTokenTouched(CGEWeapon *pToken, CGEPlayer *pPlayer) = 0;
 	virtual void OnTokenAttack(CGEWeapon *pToken, CGEPlayer *pPlayer, Vector position, Vector forward)=0;
 
 private:

@@ -20,6 +20,7 @@
 #include "ge_spawner.h"
 #include "ge_armorvest.h"
 #include "gemp_gamerules.h"
+#include "ge_mapmanager.h"
 #include "gemp_player.h"
 #include "ge_gameplayresource.h"
 #include "team.h"
@@ -305,6 +306,40 @@ int pyGetNumInRoundPlayers()
 	return GEMPRules()->GetNumInRoundPlayers();
 }
 
+int pyGetMapMaxPlayers()
+{
+	if (!GEMPRules()->GetMapManager())
+	{
+		Warning("Tried to call map manager before it existed!");
+		return -1;
+	}
+
+
+	MapSelectionData *curMapData = GEMPRules()->GetMapManager()->GetCurrentMapSelectionData();
+
+	if (curMapData)
+		return curMapData->maxplayers;
+	else
+		return -1;
+}
+
+int pyGetMapMinPlayers()
+{
+	if (!GEMPRules()->GetMapManager())
+	{
+		Warning("Tried to call map manager before it existed!");
+		return -1;
+	}
+
+
+	MapSelectionData *curMapData = GEMPRules()->GetMapManager()->GetCurrentMapSelectionData();
+
+	if (curMapData)
+		return curMapData->minplayers;
+	else
+		return -1;
+}
+
 int pyGetNumActiveTeamPlayers( bp::object team_obj )
 {
 	bp::extract<CTeam*> to_team( team_obj );
@@ -481,6 +516,9 @@ BOOST_PYTHON_MODULE(GEMPGameRules)
 
 	def("EnableInfiniteAmmo", pyEnableInfiniteAmmo);
 	def("DisableInfiniteAmmo", pyDisableInfiniteAmmo);
+
+	def("GetMapMaxPlayers", pyGetMapMaxPlayers);
+	def("GetMapMinPlayers", pyGetMapMinPlayers);
 
 	def("EnableSuperfluousAreas", pyEnableSuperfluousAreas);
 	def("DisableSuperfluousAreas", pyDisableSuperfluousAreas);

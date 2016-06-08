@@ -212,7 +212,7 @@ void CGEWeapon::Drop( const Vector &vecVelocity )
 
 	CGEMPPlayer *pGEMPPlayer = ToGEMPPlayer(GetOwner());
 
-	if (pGEMPPlayer)
+	if (pGEMPPlayer && GetWeaponID() < WEAPON_RANDOM)
 		m_nSkin = pGEMPPlayer->GetUsedWeaponSkin(GetWeaponID()); // Just in case the player never pulled it out.
 
 	BaseClass::Drop( vecVelocity );
@@ -270,10 +270,7 @@ void CGEWeapon::PrimaryAttack(void)
 
 	pPlayer->DoMuzzleFlash();
 
-	if (IsSilenced())
-		SendWeaponAnim(ACT_VM_PRIMARYATTACK_SILENCED);
-	else
-		SendWeaponAnim(ACT_VM_PRIMARYATTACK);
+	SendWeaponAnim(ACT_VM_PRIMARYATTACK);
 
 	//This stops silent firing...
 	if(pPlayer->m_nButtons & IN_RELOAD)
@@ -316,23 +313,20 @@ void CGEWeapon::OnReloadOffscreen(void)
 	if (!pOwner)
 		return;
 
-	if (pOwner->GetActiveWeapon() == this) // Only switch skins if we still have the weapon equipped!
+	if ( pOwner->GetActiveWeapon() == this && GetWeaponID() < WEAPON_RANDOM ) // Only switch skins if we still have the weapon equipped!
 		SetSkin(ToGEMPPlayer(pOwner)->GetUsedWeaponSkin(GetWeaponID()));
 }
 
 
 
-bool CGEWeapon::Reload( void )
+bool CGEWeapon::Reload(void)
 {
-	if ( m_flNextPrimaryAttack > gpGlobals->curtime )
+	if (m_flNextPrimaryAttack > gpGlobals->curtime)
 		return false;
 
 	bool bRet = false;
 
-	if ( IsSilenced() )
-		bRet = DefaultReload( GetMaxClip1(), GetMaxClip2(), ACT_VM_RELOAD_SILENCED );
-	else
-		bRet = DefaultReload( GetMaxClip1(), GetMaxClip2(), ACT_VM_RELOAD );
+	bRet = DefaultReload(GetMaxClip1(), GetMaxClip2(), ACT_VM_RELOAD);
 
 	if ( bRet && GetOwner() && GetOwner()->IsPlayer() )
 	{
@@ -500,28 +494,19 @@ void CGEWeapon::UpdateVisibility( void )
 
 Activity CGEWeapon::GetPrimaryAttackActivity( void )
 {
-	if ( IsSilenced() )
-		return ACT_VM_PRIMARYATTACK_SILENCED;
-	else 
-		return ACT_VM_PRIMARYATTACK;
+	return ACT_VM_PRIMARYATTACK;
 }
 
 Activity CGEWeapon::GetDrawActivity( void )
 {
-	if ( IsSilenced() )
-		return ACT_VM_DRAW_SILENCED;
-	else
-		return ACT_VM_DRAW;
+	return ACT_VM_DRAW;
 }
 
 void CGEWeapon::WeaponIdle( void )
 {
 	if ( HasWeaponIdleTimeElapsed() )
 	{
-		if ( IsSilenced() )
-			SendWeaponAnim( ACT_VM_IDLE_SILENCED );
-		else
-			SendWeaponAnim( ACT_VM_IDLE );
+		SendWeaponAnim( ACT_VM_IDLE );
 	}
 }
 
@@ -625,7 +610,7 @@ void CGEWeapon::PrepareFireBullets(int number, CBaseCombatCharacter *pOperator, 
 	info.m_iGaussFactor = GetGaussFactor(); //Calculates the gauss factor and adds it to the fire info.
 
 	if (m_flAccuracyPenalty < 1.0 && tracerfreq > 0)
-		tracerfreq = 1; //Always try to draw tracers on the first shot even though this doesn't seem to work
+		tracerfreq = 1; //Always try to draw tracers on the first shot
 	
 	info.m_iTracerFreq = tracerfreq; //Otherwise use the weapon's tracerfreq
 
@@ -730,13 +715,27 @@ int CGEWeapon::GetGaussFactor()
 	return (int)(gaussfactor - ramp * gausspenalty);
 }
 
+#ifdef CLIENT_DLL
+extern ConVar cl_ge_weapon_switchempty;
+#endif
+
 bool CGEWeapon::HasAmmo( void )
 {
 	// Weapons with no ammo types can always be selected
 	if ( m_iPrimaryAmmoType == -1 && m_iSecondaryAmmoType == -1  )
 		return true;
 	if ( GetWeaponFlags() & ITEM_FLAG_SELECTONEMPTY )
-		return true;
+	{
+		int clAutoswitch;
+
+#ifdef GAME_DLL
+		clAutoswitch = atoi( engine->GetClientConVarValue( GetOwner()->entindex(), "cl_ge_weapon_switchempty" ) );
+#else
+		clAutoswitch = cl_ge_weapon_switchempty.GetInt();
+#endif
+		if ( clAutoswitch < 1 || GetWeaponID() == WEAPON_REMOTEMINE) // Remote mines are the only weapon that needs this but it should still be a flag.
+			return true;
+	}
 
 	CBaseCombatCharacter *owner = GetOwner();
 	if ( !owner )
@@ -838,7 +837,8 @@ bool CGEWeapon::Deploy( void )
 #endif
 		if ( pOwner && pOwner->IsPlayer() )
 		{
-			SetSkin(ToGEMPPlayer(pOwner)->GetUsedWeaponSkin(GetWeaponID()));
+			if (GetWeaponID() < WEAPON_RANDOM)
+				SetSkin(ToGEMPPlayer(pOwner)->GetUsedWeaponSkin(GetWeaponID()));
 			ToGEPlayer(pOwner)->DoAnimationEvent(PLAYERANIMEVENT_GES_DRAW);
 			ToGEPlayer(pOwner)->ResetAimMode();
 		}
@@ -1000,6 +1000,7 @@ const CGEWeaponInfo &CGEWeapon::GetGEWpnData() const
 
 	return *pGEInfo;
 }
+
 float CGEWeapon::GetFireRate( void )
 {
 	return GetGEWpnData().m_flRateOfFire;

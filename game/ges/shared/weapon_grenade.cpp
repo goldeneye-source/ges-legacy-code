@@ -183,6 +183,13 @@ CGEWeaponGrenade::CGEWeaponGrenade( void )
 
 void CGEWeaponGrenade::Precache( void )
 {
+	PrecacheModel("models/weapons/grenade/v_grenade.mdl");
+	PrecacheModel("models/weapons/grenade/w_grenade.mdl");
+
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_grenade");
+
+	PrecacheScriptSound("Weapon_mines.Throw");
+
 	BaseClass::Precache();
 	m_iCrateModelIndex = PrecacheModel( BABYCRATE_MODEL );
 	m_iWorldModelIndex = PrecacheModel( BaseClass::GetWorldModel() );

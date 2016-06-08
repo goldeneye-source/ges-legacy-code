@@ -42,6 +42,7 @@ public:
 	// Override pistol behavior of recoil fire animation
 	virtual Activity GetPrimaryAttackActivity( void ) { return ACT_VM_PRIMARYATTACK; };
 
+	virtual void	Precache(void);
 	virtual GEWeaponID GetWeaponID( void ) const { return WEAPON_AUTO_SHOTGUN; }
 	virtual bool IsShotgun() { return true; };
 	
@@ -92,4 +93,21 @@ CWeaponAutoShotgun::CWeaponAutoShotgun( void )
 {
 	// NPC Ranging
 	m_fMaxRange1 = 1024;
+}
+
+void CWeaponAutoShotgun::Precache(void)
+{
+	PrecacheModel("models/Weapons/autosg/v_autosg.mdl");
+	PrecacheModel("models/weapons/autosg/w_autosg.mdl");
+
+	PrecacheMaterial("sprites/hud/weaponicons/auto_shotgun");
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_buckshot");
+
+	PrecacheScriptSound("Weapon.Shotgun_Reload");
+	PrecacheScriptSound("Weapon_autoshotgun.Single");
+	PrecacheScriptSound("Weapon_autoshotgun.NPC_Single");
+	PrecacheScriptSound("Weapon.Special1");
+	PrecacheScriptSound("Weapon.Special2");
+
+	BaseClass::Precache();
 }

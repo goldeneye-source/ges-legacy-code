@@ -526,7 +526,7 @@ void CGEBotPlayer::GiveHat()
 	SpawnHat(hatModel);
 }
 
-void CGEBotPlayer::SpawnHat(const char* hatModel, Vector offset, QAngle angOffset)
+void CGEBotPlayer::SpawnHat(const char* hatModel)
 {
 	if (IsObserver() && !IsAlive()) // Observers can't have any hats.  Need this here so direct hat assignment doesn't make floating hats.
 		return;

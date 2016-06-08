@@ -1705,7 +1705,11 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 	// -----------------------
 	//  No buttons down
 	// -----------------------
+#ifdef GE_DLL
+	if ( !((pOwner->m_nButtons & IN_ATTACK) || (pOwner->m_nButtons & IN_RELOAD)) )
+#else
 	if (!((pOwner->m_nButtons & IN_ATTACK) || (pOwner->m_nButtons & IN_ATTACK2) || (pOwner->m_nButtons & IN_RELOAD)))
+#endif
 	{
 		// no fire buttons down or reloading
 		if ( !ReloadOrSwitchWeapons() && ( m_bInReload == false ) )
@@ -1746,8 +1750,8 @@ void CBaseCombatWeapon::HandleFireOnEmpty()
 
 	if (m_flNextEmptySoundTime <= gpGlobals->curtime)
 	{
-		WeaponSound(EMPTY);
-		m_flNextEmptySoundTime = gpGlobals->curtime + max(GetFireRate(), 0.25);
+		WeaponSound( EMPTY );
+		m_flNextEmptySoundTime = gpGlobals->curtime + max( GetFireRate(), 0.25 );
 	}
 #endif
 
@@ -1947,10 +1951,13 @@ bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActi
 
 	if ( !bReload )
 		return false;
-
+#ifdef GE_DLL
+	WeaponSound(RELOAD);
+#else
 #ifdef CLIENT_DLL
 	// Play reload
-	WeaponSound( RELOAD );
+	WeaponSound(RELOAD);
+#endif
 #endif
 	SendWeaponAnim( iActivity );
 

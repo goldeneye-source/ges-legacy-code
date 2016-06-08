@@ -78,7 +78,7 @@ void CGETKnife::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 	Vector vecAiming = pEvent->preVelocity[index];
 	VectorNormalize( vecAiming );
 
-	if ( pOther->m_takedamage != DAMAGE_NO )
+	if ( pOther->m_takedamage != DAMAGE_NO && (pOther->IsPlayer() || pOther->IsNPC()) )
 	{
 		ClearMultiDamage();
 
@@ -136,6 +136,9 @@ void CGETKnife::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 
 		SetTouch( &CGETKnife::PickupTouch );
 		SetThink( &CGETKnife::RemoveThink );
+
+		g_PostSimulationQueue.QueueCall(this, &CBaseEntity::SetCollisionGroup, COLLISION_GROUP_DROPPEDWEAPON);
+
 		SetNextThink( gpGlobals->curtime + 10.0f );
 	}
 }
@@ -149,6 +152,9 @@ void CGETKnife::DamageTouch( CBaseEntity *pOther )
 		return;
 
 	if ( !g_pGameRules->ShouldCollide( GetCollisionGroup(), pOther->GetCollisionGroup() ) )
+		return;
+
+	if (!pOther->IsPlayer() && !pOther->IsNPC())
 		return;
 
 	Vector vecAiming;

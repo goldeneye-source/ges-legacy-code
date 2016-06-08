@@ -89,9 +89,12 @@ void CGESpawner::Think( void )
 		pCurrEnt = NULL;
 	}
 
+	int spawnstate = ShouldRespawn();
+
 	// This may call into a higher class if it's overridden
-	if ( !pCurrEnt && ShouldRespawn() )
-		SpawnEnt();
+	if ( spawnstate > 1 || (!pCurrEnt && spawnstate) )
+		SpawnEnt( spawnstate );
+
 
 	if ( pCurrEnt && gpGlobals->curtime >= m_fNextMoveCheck )
 	{
@@ -157,26 +160,23 @@ void CGESpawner::Think( void )
 	SetNextThink( gpGlobals->curtime + SPAWNER_THINK_INTERVAL );
 }
 
-bool CGESpawner::ShouldRespawn( void )
+int CGESpawner::ShouldRespawn( void )
 {
 	// Always deny if we are disabled
 	if ( m_bDisabled )
-		return false;
+		return 0;
 
-	if ( IsOverridden() )
-	{
-		// Overrides defer to the token manager
-		if ( GEMPRules()->GetTokenManager()->ShouldSpawnToken( m_szOverrideEntity, this ) )
-			return true;
-	}
+	// Overrides defer to the token manager
+	if ( IsOverridden() && GEMPRules()->GetTokenManager()->ShouldSpawnToken(m_szOverrideEntity, this) )
+		return 2;
 	else if ( IsValid() && !m_hCurrentEntity.Get() && gpGlobals->curtime >= m_fNextSpawnTime )
 	{
 		// If we are not overridden, don't spawn a registered token type
 		if ( !GEMPRules()->GetTokenManager()->IsValidToken( m_szBaseEntity ) )
-			return true;
+			return 1;
 	}
 
-	return false;
+	return 0;
 }
 
 float CGESpawner::GetRespawnInterval( void )
@@ -230,14 +230,17 @@ void CGESpawner::SetBaseEnt( const char *szClassname )
 	}
 }
 
-void CGESpawner::SpawnEnt( void )
+void CGESpawner::SpawnEnt( int spawnstate )
 {
 	// Just in case
 	RemoveEnt();
 	m_OnRespawn.FireOutput(this, this);
 
-	if ( IsOverridden() )
+	if ( spawnstate == 2 )
 	{
+		if (!IsOverridden())
+			return;
+
 		if ( CanCreateEntityClass( m_szOverrideEntity ) )
 		{
 			m_hCurrentEntity = CBaseEntity::Create( m_szOverrideEntity, GetAbsOrigin(), GetAbsAngles(), this );
@@ -247,8 +250,11 @@ void CGESpawner::SpawnEnt( void )
 		// Don't try again even if we fail
 		m_fNextSpawnTime = 0;
 	}
-	else if ( IsValid() )
+	else if ( spawnstate == 1 )
 	{
+		if ( !IsValid() )
+			return;
+
 		if ( CanCreateEntityClass( m_szBaseEntity ) )
 		{
 			m_hCurrentEntity = CBaseEntity::Create( m_szBaseEntity, GetAbsOrigin(), GetAbsAngles(), this );	

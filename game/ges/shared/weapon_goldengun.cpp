@@ -32,6 +32,7 @@ public:
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 
+	virtual void Precache(void);
 	virtual GEWeaponID GetWeaponID( void ) const { return WEAPON_GOLDENGUN; }
 	
 	DECLARE_ACTTABLE();
@@ -80,6 +81,23 @@ IMPLEMENT_ACTTABLE( CWeaponGG );
 CWeaponGG::CWeaponGG()
 {
 	m_fMaxRange1 = 3500;
+}
+
+void CWeaponGG::Precache(void)
+{
+	PrecacheModel("models/weapons/goldengun/v_goldengun.mdl");
+	PrecacheModel("models/weapons/goldengun/w_goldengun.mdl");
+
+	PrecacheMaterial("sprites/hud/weaponicons/gg");
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_goldengun");
+
+	PrecacheScriptSound("Weapon_gg.Reload");
+	PrecacheScriptSound("Weapon_gg.Single");
+	PrecacheScriptSound("Weapon_gg.NPC_Single");
+	PrecacheScriptSound("Weapon.Special1");
+	PrecacheScriptSound("Weapon.Special2");
+
+	BaseClass::Precache();
 }
 
 bool CWeaponGG::Reload( void )

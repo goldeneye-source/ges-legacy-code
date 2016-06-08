@@ -116,15 +116,6 @@ void CGEPlayer::PlayStepSound( Vector &vecOrigin, surfacedata_t *psurface, float
 	CBasePlayer::PlayStepSound( vecOrigin, psurface, fvol, force );
 }
 
-void CGEPlayer::DoMuzzleFlash( void )
-{
-	CGEWeapon *pWeapon = ToGEWeapon( GetActiveWeapon() );
-	if (pWeapon && (pWeapon->IsSilenced() || pWeapon->IsAlwaysSilenced() || pWeapon->GetWeaponID() == WEAPON_D5K_SILENCED)) //TODO:: Take out D5K exception when we finish redoing silenced weapons
-		return;
-	else
-		BaseClass::DoMuzzleFlash();
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Sets the view model's location, set it closer when ducked
 // Input  : Eye position and angle
@@ -137,7 +128,13 @@ void CGEPlayer::CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAng
 	Vector newEyeOrigin = eyeOrigin;
 	Vector	forward, right;
 	AngleVectors( eyeAngles, &forward, &right, NULL );
-	if ( IsDucking() )
+
+	if ( IsObserver() ) // Dinky fix for now, spectator needs a complete rework.
+	{
+		flViewPullBack = 0;
+		flViewPullRight = 0;
+	}
+	else if ( IsDucking() )
 	{
 		// We are in transition, figure out our extent of pull based on our current height
 		float fraction = RemapValClamped( GetViewOffset().z, VEC_DUCK_VIEW.z, VEC_VIEW.z, 1.0f, 0 );

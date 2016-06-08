@@ -71,6 +71,7 @@ ConVar ge_autoautoteam("ge_autoautoteam", "1", FCVAR_GAMEDLL, "If set to 1, serv
 ConVar ge_gameplay_mode( "ge_gameplay_mode", "0", FCVAR_GAMEDLL, "Mode to choose next gameplay: \n\t0=Same as last map, \n\t1=Random from Gameplay Cycle file, \n\t2=Ordered from Gameplay Cycle file" );
 ConVar ge_gameplay( "ge_gameplay", "DeathMatch", FCVAR_GAMEDLL, "Sets the current gameplay mode.\nDefault is 'deathmatch'", GEGameplay_Callback );
 
+ConVar ge_gameplay_threshold("ge_gameplay_threshold", "4", FCVAR_GAMEDLL, "Playercount that must be exceeded before gamemodes other than Deathmatch will be randomly chosen.");
 
 #define GAMEPLAY_MODE_FIXED		0
 #define GAMEPLAY_MODE_RANDOM	1
@@ -232,7 +233,15 @@ void CGEBaseGameplayManager::BroadcastRoundEnd( bool showreport )
 	IGameEvent* pEvent = gameeventmanager->CreateEvent("round_end");
 	if ( pEvent )
 	{
+		int winnerindex = GEMPRules()->GetRoundWinner();
+		int winnerscore = -1;
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex(winnerindex);
+
+		if (pPlayer)
+			winnerscore = ToGEMPPlayer(pPlayer)->GetRoundScore();
+
 		pEvent->SetInt( "winnerid", GEMPRules()->GetRoundWinner() );
+		pEvent->SetInt( "winnerscore", winnerscore );
 		pEvent->SetInt( "teamid", GEMPRules()->GetRoundTeamWinner() );
 		pEvent->SetBool( "isfinal", false );
 		pEvent->SetBool( "showreport", showreport );
@@ -253,7 +262,16 @@ void CGEBaseGameplayManager::BroadcastMatchEnd()
 	IGameEvent* pEvent = gameeventmanager->CreateEvent("round_end");
 	if ( pEvent )
 	{
+		int winnerindex = GEMPRules()->GetRoundWinner();
+		int winnerscore = -1;
+		CBasePlayer *pPlayer = UTIL_PlayerByIndex(winnerindex);
+
+		if (pPlayer)
+			winnerscore = ToGEMPPlayer(pPlayer)->GetMatchScore();
+
+
 		pEvent->SetInt( "winnerid", GEMPRules()->GetRoundWinner() );
+		pEvent->SetInt( "winnerscore", winnerscore );
 		pEvent->SetInt( "teamid", GEMPRules()->GetRoundTeamWinner() );
 		pEvent->SetBool( "isfinal", true );
 		pEvent->SetBool( "showreport", true );
@@ -337,6 +355,9 @@ const char *CGEBaseGameplayManager::GetNextScenario()
 			if (engine->GetPlayerNetInfo(i))
 				iNumConnections++;
 		}
+
+		if (iNumConnections <= ge_gameplay_threshold.GetInt())
+			return "deathmatch";
 
 		// Random game mode according to map script.  
 		GEMPRules()->GetMapManager()->GetMapGameplayList(gamemodes, weights, iNumConnections >= teamthresh);

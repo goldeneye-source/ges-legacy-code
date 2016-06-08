@@ -37,6 +37,7 @@ public:
 	DECLARE_NETWORKCLASS(); 
 	DECLARE_PREDICTABLE();
 
+	virtual void	Precache(void);
 	virtual GEWeaponID GetWeaponID( void ) const { return WEAPON_KLOBB; }
 	
 	DECLARE_ACTTABLE();
@@ -84,4 +85,21 @@ CWeaponKlobb::CWeaponKlobb()
 {
 	// NPC Ranging
 	m_fMaxRange1 = 1024;
+}
+
+void CWeaponKlobb::Precache(void)
+{
+	PrecacheModel("models/weapons/klobb/v_klobb.mdl");
+	PrecacheModel("models/weapons/klobb/w_klobb.mdl");
+
+	PrecacheMaterial("sprites/hud/weaponicons/kf7");
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_rifle");
+
+	PrecacheScriptSound("Weapon.Reload");
+	PrecacheScriptSound("Weapon_klobb.Single");
+	PrecacheScriptSound("Weapon_klobb.NPC_Single");
+	PrecacheScriptSound("Weapon.Special1");
+	PrecacheScriptSound("Weapon.Special2");
+
+	BaseClass::Precache();
 }

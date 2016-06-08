@@ -75,6 +75,8 @@ CGEWeaponMine::CGEWeaponMine( void )
 
 void CGEWeaponMine::Precache( void )
 {
+	PrecacheScriptSound( "weapon_mines.Throw" );
+
 	BaseClass::Precache();
 	m_iCrateModelIndex = PrecacheModel( BABYCRATE_MODEL );
 	m_iWorldModelIndex = PrecacheModel( BaseClass::GetWorldModel() );
@@ -319,6 +321,14 @@ int CWeaponRemoteMine::ActivityListCount( void )
 
 void CWeaponRemoteMine::Precache( void )
 {
+	PrecacheModel( "models/weapons/mines/v_remotemine.mdl" );
+	PrecacheModel( "models/weapons/mines/w_mine.mdl" );
+
+	PrecacheMaterial( "sprites/hud/weaponicons/mine_remote" );
+	PrecacheMaterial( "sprites/hud/ammoicons/ammo_remotemine" );
+
+	PrecacheScriptSound( "weapon_mines.WatchBeep" );
+
 	m_iWatchModelIndex = CBaseEntity::PrecacheModel( "models/weapons/mines/w_watch.mdl" );
 	BaseClass::Precache();
 }
@@ -573,6 +583,19 @@ void CWeaponProximityMine::Spawn( void )
 	m_nSkin = FAMILY_GROUP_PROXIMITY;
 }
 
+void CWeaponProximityMine::Precache(void)
+{
+	PrecacheModel("models/weapons/mines/v_proximitymine.mdl");
+	PrecacheModel("models/weapons/mines/w_mine.mdl");
+
+	PrecacheMaterial("sprites/hud/weaponicons/mine_proximity");
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_proximitymine");
+
+	PrecacheScriptSound("weapon_mines.Throw");
+
+	BaseClass::Precache();
+}
+
 void CWeaponProximityMine::Equip( CBaseCombatCharacter *pOwner )
 {
 	BaseClass::Equip( pOwner );
@@ -624,6 +647,19 @@ void CWeaponTimedMine::Spawn( void )
 {
 	BaseClass::Spawn();
 	m_nSkin = FAMILY_GROUP_TIMED;
+}
+
+void CWeaponTimedMine::Precache(void)
+{
+	PrecacheModel("models/weapons/mines/v_timedmine.mdl");
+	PrecacheModel("models/weapons/mines/w_mine.mdl");
+
+	PrecacheMaterial("sprites/hud/weaponicons/mine_timed");
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_timedmine");
+
+	PrecacheScriptSound("weapon_mines.Throw");
+
+	BaseClass::Precache();
 }
 
 void CWeaponTimedMine::Equip( CBaseCombatCharacter *pOwner )

@@ -147,6 +147,7 @@ void CGEPlayer::GiveAllItems( void )
 	SetHealth( GetMaxHealth() );
 	AddArmor( GetMaxArmor() );
 
+
 	CBasePlayer::GiveAmmo( AMMO_9MM_MAX, AMMO_9MM );
 	CBasePlayer::GiveAmmo( AMMO_GOLDENGUN_MAX, AMMO_GOLDENGUN );
 	CBasePlayer::GiveAmmo( AMMO_MAGNUM_MAX, AMMO_MAGNUM );
@@ -199,7 +200,7 @@ void CGEPlayer::GiveAllItems( void )
 
 int CGEPlayer::GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound )
 {
-	int amt = BaseClass::GiveAmmo( nCount, nAmmoIndex, bSuppressSound );
+	int amt = CBasePlayer::GiveAmmo(nCount, nAmmoIndex, bSuppressSound);
 
 	if( amt > 0 )
 	{
@@ -428,7 +429,7 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 			m_iExpDmgTakenThisInterval = info.GetDamage();
 			m_flEndExpDmgTime = gpGlobals->curtime + INVULN_PERIOD; // If we get hit again, we get more invuln time.
 
-			if (info.GetDamage() == 398)
+			if (inputinfo.GetDamage() == 398)
 				SetLastHitGroup(HITGROUP_HEAD); // Used to mark direct hits
 			else
 				SetLastHitGroup(HITGROUP_GENERIC); // Set this here to avoid explosive headshot kills
@@ -746,7 +747,7 @@ void CGEPlayer::Event_DamagedOther( CGEPlayer *pOther, int dmgTaken, const CTake
 
 	if (dmgTaken <= 0) // We hit someone but didn't actually do any damage.
 	{
-		if (!m_iFrameDamageOutput)  // We haven't hit anyone yet, add a flag that says we hit someone in invuln.
+		if (m_iFrameDamageOutput <= 0)  // We haven't hit anyone yet, add a flag that says we hit someone in invuln.
 			m_iFrameDamageOutput = -1;
 	}
 	else
@@ -795,10 +796,8 @@ void CGEPlayer::Event_Killed( const CTakeDamageInfo &info )
 			SF_ENVEXPLOSION_NOSMOKE | SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS, 0.0f, NULL);
 	}
 
-
 	KnockOffHat();
 	DropAllTokens();
-	DropTopWeapons();
 
 	BaseClass::Event_Killed( info );
 }
@@ -850,10 +849,6 @@ void CGEPlayer::DropTopWeapons()
 
 		CGEWeapon *pGEWeapon = ToGEWeapon(pWeapon);
 		if (!pGEWeapon)
-			continue;
-
-		// If we don't have any ammo for this weapon, we might as well not have it at all.
-		if (!HasAnyAmmoOfType(pGEWeapon->GetPrimaryAmmoType()))
 			continue;
 
 		// Weapons with strength lower than 1 do not have pickups and thus should not be dropped.
@@ -942,7 +937,29 @@ void CGEPlayer::GiveHat()
 	SpawnHat( hatModel );
 }
 
-void CGEPlayer::SpawnHat( const char* hatModel, Vector offset, QAngle angOffset )
+CON_COMMAND(ge_giveplayerhat, "Usage: ge_giveplayerhat hatmodel playername")
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+		return;
+
+	if (args.ArgC() < 2)
+		return;
+
+	CBasePlayer *pTarget = NULL;
+
+	if (args.ArgC() == 2)
+		pTarget = UTIL_GetCommandClient();
+
+	if (args.ArgC() > 2)
+		pTarget = UTIL_PlayerByName( args[2] );
+
+	CGEPlayer *pGETarget = ToGEPlayer(pTarget);
+
+	if ( pGETarget )
+		pGETarget->SpawnHat( args[1] );
+}
+
+void CGEPlayer::SpawnHat( const char* hatModel )
 {
 	if (IsObserver() && !IsAlive()) // Observers can't have any hats.  Need this here so direct hat assignment doesn't make floating hats.
 		return;

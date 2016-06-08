@@ -1218,9 +1218,9 @@ void CGameMovement::FinishMove( void )
 	mv->m_nOldButtons = mv->m_nButtons;
 }
 #ifdef GE_DLL
-#define PUNCH_DAMPING		15.0f		// bigger number makes the response more damped, smaller is less damped
+#define PUNCH_DAMPING		25.0f		// bigger number makes the response more damped, smaller is less damped
 										// currently the system will overshoot, with larger damping values it won't
-#define PUNCH_SPRING_CONSTANT	398.0f	// bigger number increases the speed at which the view corrects
+#define PUNCH_SPRING_CONSTANT	800.0f	// bigger number increases the speed at which the view corrects
 #else
 #define PUNCH_DAMPING		9.0f		// bigger number makes the response more damped, smaller is less damped
 // currently the system will overshoot, with larger damping values it won't

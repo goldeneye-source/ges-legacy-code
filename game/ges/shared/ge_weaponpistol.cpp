@@ -144,26 +144,13 @@ void CGEWeaponPistol::ItemPostFrame( void )
 //-----------------------------------------------------------------------------
 Activity CGEWeaponPistol::GetPrimaryAttackActivity( void )
 {
-	if ( IsSilenced() )
-	{
-		if ( m_nNumShotsFired < 1 )
-			return ACT_VM_PRIMARYATTACK_SILENCED;
-		if ( m_nNumShotsFired < 2 )
-			return ACT_VM_RECOIL1_SILENCED;
-		if ( m_nNumShotsFired < 3 )
-			return ACT_VM_RECOIL2_SILENCED;
-		return ACT_VM_RECOIL3_SILENCED;
-	} 
-	else 
-	{
-		if ( m_nNumShotsFired < 1 )
-			return ACT_VM_PRIMARYATTACK;
-		if ( m_nNumShotsFired < 2 )
-			return ACT_VM_RECOIL1;
-		if ( m_nNumShotsFired < 3 )
-			return ACT_VM_RECOIL2;
-		return ACT_VM_RECOIL3;
-	}
+	if ( m_nNumShotsFired < 1 )
+		return ACT_VM_PRIMARYATTACK;
+	if ( m_nNumShotsFired < 2 )
+		return ACT_VM_RECOIL1;
+	if ( m_nNumShotsFired < 3 )
+		return ACT_VM_RECOIL2;
+	return ACT_VM_RECOIL3;
 }
 
 //-----------------------------------------------------------------------------

@@ -60,6 +60,8 @@ private:
 
 	float m_flSpawnTime;
 	CHandle<SmokeTrail> m_hSmokeTrail;
+
+	bool m_bHitPlayer;
 };
 
 #endif

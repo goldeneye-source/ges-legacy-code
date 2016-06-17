@@ -180,6 +180,8 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(GiveNamedWeapon_overloads, CGEPlayer::Giv
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(BotGiveNamedWeapon_overloads, CGEBotPlayer::GiveNamedWeapon, 2, 3);
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(ChangeTeam_overloads, CGEMPPlayer::ChangeTeam, 1, 2);
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(BotChangeTeam_overloads, CGEBotPlayer::ChangeTeam, 1, 2);
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(KnockOffHat_overloads, CGEPlayer::KnockOffHat, 0, 1);
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(BotKnockOffHat_overloads, CGEBotPlayer::KnockOffHat, 0, 1);
 
 BOOST_PYTHON_MODULE(GEPlayer)
 {
@@ -238,6 +240,7 @@ BOOST_PYTHON_MODULE(GEPlayer)
 		.def("GetPlayerModel", &CGEPlayer::GetCharIdent)
 		.def("SetPlayerModel", pySetPlayerModel)
 		.def("SetHat", &CGEPlayer::SpawnHat)
+		.def("KnockOffHat", &CGEPlayer::KnockOffHat, KnockOffHat_overloads())
 		.def("SetDamageMultiplier", &CGEPlayer::SetDamageMultiplier)
 		.def("SetSpeedMultiplier", &CGEPlayer::SetSpeedMultiplier)
 		.def("SetScoreBoardColor", &CGEPlayer::SetScoreBoardColor)
@@ -274,5 +277,6 @@ BOOST_PYTHON_MODULE(GEPlayer)
 	class_<CGEBotPlayer, bases<CGEMPPlayer>, boost::noncopyable>("CGEBotPlayer", no_init)
 		.def("GiveNamedWeapon", &CGEBotPlayer::GiveNamedWeapon, BotGiveNamedWeapon_overloads())
 		.def("ChangeTeam", &CGEBotPlayer::ChangeTeam, BotChangeTeam_overloads())
-		.def("StripAllWeapons", &CGEBotPlayer::StripAllWeapons);
+		.def("StripAllWeapons", &CGEBotPlayer::StripAllWeapons)
+		.def("KnockOffHat", &CGEBotPlayer::KnockOffHat, BotKnockOffHat_overloads());
 }

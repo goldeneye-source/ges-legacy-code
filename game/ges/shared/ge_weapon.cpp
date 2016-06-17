@@ -264,16 +264,16 @@ void CGEWeapon::PrimaryAttack(void)
 		return;
 
 //	CGEPlayer *pGEPlayer = ToGEPlayer(pPlayer);
-	
+
 	// MUST call sound before removing a round from the clip of a CMachineGun
 	WeaponSound( SINGLE );
 
 	pPlayer->DoMuzzleFlash();
 
-	SendWeaponAnim(ACT_VM_PRIMARYATTACK);
+	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
 
 	//This stops silent firing...
-	if(pPlayer->m_nButtons & IN_RELOAD)
+	if (pPlayer->m_nButtons & IN_RELOAD)
 	{
 		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
 		return;
@@ -292,7 +292,7 @@ void CGEWeapon::PrimaryAttack(void)
 	AddViewKick();
 
 	// Prepare to fire the bullets
-	PrepareFireBullets(1, pPlayer, vecSrc, vecAiming, true);
+	PrepareFireBullets( 1, pPlayer, vecSrc, vecAiming, true );
 
 	if (!m_iClip1 && pPlayer->GetAmmoCount(m_iPrimaryAmmoType) <= 0)
 	{
@@ -944,8 +944,8 @@ void CGEWeapon::SwitchBodygroup(int bodygroup, int value)
 	if (vm == NULL)
 		return;
 
-
-	vm->SetBodygroup(bodygroup, value);
+	vm->SetBodygroup(bodygroup, value); // viewmodel
+	SetBodygroup(bodygroup, value); // worldmodel
 }
 
 void CGEWeapon::MakeTracer( const Vector &vecTracerSrc, const trace_t &tr, int iTracerType )

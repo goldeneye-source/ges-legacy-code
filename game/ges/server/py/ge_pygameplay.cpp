@@ -613,7 +613,7 @@ public:
 		bool is_official = false;
 
 		char pyFile[128];
-		Q_snprintf( pyFile, 128, "%s\\GamePlay\\%s.py", GEPy()->GetRootPath(), ident );
+		Q_snprintf( pyFile, 128, "%s\\ges\\GamePlay\\%s.py", GEPy()->GetRootPath(), ident );
 
 		// Calculate the MD5 sum of the Python file
 		if ( filesystem->ReadFile( pyFile, "MOD", buf ) )
@@ -643,7 +643,7 @@ public:
 		m_md5Hashes = bp::list();
 
 		KeyValues *pKV = new KeyValues("Hashes" );
-		char *szFilename = "scripts/python/gphashes.txt";
+		char *szFilename = "python/gphashes.txt";
 
 		CUtlBuffer buffer;
 		// Decrypt the file so we can read it
@@ -657,8 +657,9 @@ public:
 		{
 			while ( pKey )
 			{
-				if ( !Q_strcasecmp( pKey->GetName(), "hash" ) )
-					m_md5Hashes.append( pKey->GetString() );
+				if ( !Q_strcasecmp(pKey->GetName(), "hash") )
+					m_md5Hashes.append(pKey->GetString());
+
 				pKey = pKey->GetNextKey();
 			}
 		}

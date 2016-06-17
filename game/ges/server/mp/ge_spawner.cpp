@@ -15,7 +15,7 @@
 #include "tier0/memdbgon.h"
 
 #define SPAWNER_THINK_INTERVAL		0.5f
-#define SPAWNER_MAX_MOVE_DIST		(float)(40*40)
+#define SPAWNER_MAX_MOVE_DIST		4096.0f	//This value is 64 squared.
 #define SPAWNER_MOVE_CHECK_INTERVAL 5.0f
 
 BEGIN_DATADESC( CGESpawner )

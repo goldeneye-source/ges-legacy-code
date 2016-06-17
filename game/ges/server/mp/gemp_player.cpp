@@ -312,9 +312,10 @@ void CGEMPPlayer::Spawn()
 	{
 		// Prespawn and spectating always observer
 		if ( !IsObserver() )
+		{
 			State_Transition( STATE_OBSERVER_MODE );
-
-		ObserverTransistion(); // Always do this to generate valid spectator view settings.
+			ObserverTransistion(); // Do this to generate valid spectator view settings.
+		}
 	}
 	else if ( !GERules()->FPlayerCanRespawn(this) )
 	{
@@ -388,19 +389,18 @@ void CGEMPPlayer::Spawn()
 		// First decypher their skins code, if they have one.
 		if (m_iClientSkinsCode && !noSkins)
 		{
-			DevMsg("Parsing client skin code of %d\n", m_iClientSkinsCode);
+			DevMsg( "Parsing client skin code of %d for %s\n", m_iClientSkinsCode );
 
 			for (int i = 0; i < WEAPON_RANDOM; i++)
 			{
 				iDummySkinList[i] = (m_iClientSkinsCode >> (i * 2)) & 3;
-				DevMsg("Skin for weapon %d set to %d\n", i, iDummySkinList[i]);
 			}
 		}
 
 		// Then look at the server authenticated skin code, this overwrites the client skins.
 		if (m_iSkinsCode && noSkins <= 1)
 		{
-			DevMsg("Parsing skin code of %d\n", m_iSkinsCode);
+			DevMsg( "Parsing server skin code of %d\n", m_iSkinsCode );
 			uint64 shiftvalue = 0;
 
 			for ( int i = 0; i < WEAPON_RANDOM; i++ )
@@ -409,7 +409,6 @@ void CGEMPPlayer::Spawn()
 				if (shiftvalue != 0)
 				{
 					iDummySkinList[i] = shiftvalue;
-					DevMsg("Skin for weapon %d set to %d\n", i, iDummySkinList[i]);
 				}
 			}
 		}
@@ -768,6 +767,10 @@ void CGEMPPlayer::ChangeTeam( int iTeam, bool bWasForced /* = false */ )
 	if ( !GEGameplay()->GetScenario()->CanPlayerChangeTeam( this, GetTeamNumber(), iTeam ) )
 		return;
 
+	// If we didn't just join the server, we're alive, and this was by choice, force a suicide.
+	if ( iTeam == TEAM_SPECTATOR && bKill )
+		CommitSuicide(false, true);
+
 	BaseClass::ChangeTeam( iTeam );
 
 	m_flNextTeamChangeTime = gpGlobals->curtime + TEAM_CHANGE_INTERVAL;
@@ -779,14 +782,10 @@ void CGEMPPlayer::ChangeTeam( int iTeam, bool bWasForced /* = false */ )
 		BaseClass::SetPlayerModel();
 
 	// We are changing teams, drop any tokens we might have
-	DropAllTokens();
+	DropAllTokens(); // Mostly just a failsafe against force switches at this point since we usually force suicide.
 
 	if ( iTeam == TEAM_SPECTATOR )
 	{
-		// If we didn't just join the server, we're alive, and this was by choice, force a suicide.
-		if ( bKill )
-			CommitSuicide();
-
 		RemoveAllItems( true );
 		ResetObserverMode();
 		State_Transition( STATE_OBSERVER_MODE );

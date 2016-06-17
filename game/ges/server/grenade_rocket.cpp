@@ -221,6 +221,7 @@ void CGERocket::ExplodeTouch( CBaseEntity *pOther )
 	if( tr.surface.flags & SURF_SKY )
 	{
 		// Game Over, we hit the sky box, remove the rocket from the world (no explosion)
+		StopSound("Weapon_RocketLauncher.Ignite");
 		UTIL_Remove(this);
 		return;
 	}

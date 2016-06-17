@@ -221,15 +221,20 @@ void CGEWeaponMine::ThrowMine( void )
 	rot2 = randarray[1] * randarray[1] * 10 * (randarray[2] % 2 == 0 ? 1 : -1);
 
 	CGEMine *pMine = (CGEMine *)CBaseEntity::Create( "npc_mine", vecSrc, angAiming, NULL );
+	float timescale = phys_timescale.GetFloat();
+
 
 	pMine->SetThrower( pOwner );
 	pMine->SetOwnerEntity( pOwner );
-	pMine->SetSourceWeapon(this);
-	pMine->ApplyAbsVelocityImpulse( vecThrow );
-	pMine->SetLocalAngularVelocity(QAngle(rot1, rot2, 0));
+	pMine->SetSourceWeapon( this );
+	pMine->ApplyAbsVelocityImpulse( vecThrow * timescale );
+	pMine->SetLocalAngularVelocity( QAngle(rot1, rot2, 0) * timescale );
 	pMine->SetMineType( GetWeaponID() );
 	pMine->SetDamage( GetGEWpnData().m_iDamage );
 	pMine->SetDamageRadius( GetGEWpnData().m_flDamageRadius );
+
+	if ( timescale != 1 )
+		pMine->SetGravity( timescale*timescale );
 
 	// Tell the owner what we threw to implement anti-spamming
 	if ( pOwner->IsPlayer() )

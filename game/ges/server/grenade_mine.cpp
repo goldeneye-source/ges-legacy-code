@@ -67,8 +67,6 @@ void CGEMine::Spawn( void )
 	Precache();
 	BaseClass::Spawn();
 
-	SetModel( "models/weapons/mines/w_mine.mdl" );
-
 	SetSolid( SOLID_VPHYSICS );
 	SetMoveType( MOVETYPE_FLYGRAVITY );
 
@@ -126,7 +124,10 @@ void CGEMine::InputExplode( inputdata_t &inputdata )
 void CGEMine::Precache( void )
 {
 	BaseClass::Precache();
-	PrecacheModel( "models/weapons/mines/w_mine.mdl" );
+	PrecacheModel("models/weapons/mines/w_proximitymine.mdl");
+	PrecacheModel("models/weapons/mines/w_remotemine.mdl");
+	PrecacheModel("models/weapons/mines/w_timedmine.mdl");
+
 	PrecacheScriptSound( "weapon_mines.Attach" );
 	PrecacheScriptSound( "Mine.Beep" );
 }
@@ -136,13 +137,13 @@ void CGEMine::SetMineType( GEWeaponID type )
 	m_iWeaponID = type;
 
 	if ( type == WEAPON_REMOTEMINE ) {
-		m_nSkin = FAMILY_GROUP_REMOTE;
+		SetModel("models/weapons/mines/w_remotemine.mdl");
 		SetClassname( "npc_mine_remote" );
 	} else if ( type == WEAPON_TIMEDMINE ) {
-		m_nSkin = FAMILY_GROUP_TIMED;
+		SetModel("models/weapons/mines/w_timedmine.mdl");
 		SetClassname( "npc_mine_timed" );
 	} else if ( type == WEAPON_PROXIMITYMINE ) {
-		m_nSkin = FAMILY_GROUP_PROXIMITY;
+		SetModel("models/weapons/mines/w_proximitymine.mdl");
 		SetClassname( "npc_mine_proximity" );
 	} else {
 		Warning( "Mine set to invalid weapon ID!\n");

@@ -80,10 +80,6 @@ void CGEWeaponMelee::ItemPostFrame( void )
 	{
 		PrimaryAttack();
 	} 
-	else if ( (pOwner->m_nButtons & IN_ATTACK2) && (m_flNextSecondaryAttack <= gpGlobals->curtime) )
-	{
-		SecondaryAttack();
-	}
 	else 
 	{
 		WeaponIdle();
@@ -171,10 +167,10 @@ void CGEWeaponMelee::PrimaryAttack()
 // Input   :
 // Output  :
 //------------------------------------------------------------------------------
-void CGEWeaponMelee::SecondaryAttack()
+/*void CGEWeaponMelee::SecondaryAttack()
 {
 	Swing( true );
-}
+}*/
 
 
 //------------------------------------------------------------------------------
@@ -329,6 +325,8 @@ bool CGEWeaponMelee::ImpactWater( const Vector &start, const Vector &end )
 //-----------------------------------------------------------------------------
 void CGEWeaponMelee::ImpactEffect( trace_t &traceHit )
 {
+	return; // Avoid doing melee impact effects for 5.0
+
 	// See if we hit water (we don't do the other impact effects in this case)
 	if ( ImpactWater( traceHit.startpos, traceHit.endpos ) )
 		return;

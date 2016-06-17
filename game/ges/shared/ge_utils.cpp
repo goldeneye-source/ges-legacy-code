@@ -618,31 +618,14 @@ uint64 GEUTIL_EventCodeToSkin( int code )
 	uint64 skincode = 0;
 
 	if (code & 1)
-		skincode |= 64; // Ivory DD44
+		skincode |= 64; // Black DD44
 	if (code & 2)
-		skincode |= 67108864; // Ivory D5K
+		skincode |= 128; // Ivory DD44
 	if (code & 4)
 		skincode |= 16777216; // Ivory ZMG
-	if (code & 8)
-		skincode |= 4096; // Ivory CMAG
-	if (code & 16)
-		skincode |= 1099511627776; // Ivory Grenade Launcher
-	if (code & 32)
-		skincode |= 70368744177664; // Retro Knife
 
 	return skincode;
 }
-
-CON_COMMAND(ge_readmystuff, "gesdata testing")
-{
-	Warning("Value is %d", GEUTIL_GetUniqueSkinData( 4075811109u ));
-}
-
-CON_COMMAND(ge_writemystuff, "gesdata testing")
-{
-	GEUTIL_WriteUniqueSkinData(atoi(args[1]), 4075811109u);
-}
-
 #endif
 
 // Valid hints are 0->9, a->z, |

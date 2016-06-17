@@ -271,9 +271,9 @@ void CGEWeaponRocketLauncher::LaunchRocket( void )
 
 	if ( pOwner->IsPlayer() )
 	{
-		VectorMA( vecSrc, 3.0f, vRight, vecSrc );
-		VectorMA( vecSrc, 20.0f, vForward, vecSrc );
-		VectorMA( vecSrc, -2.0f, vUp, vecSrc );
+		VectorMA( vecSrc, 4.5f, vRight, vecSrc ); // 3.0, 5.0
+		VectorMA( vecSrc, 16.5f, vForward, vecSrc ); // 20, 19
+		VectorMA( vecSrc, -5.25f, vUp, vecSrc ); // -2, -6, -5, 5.25
 	}
 	else
 	{

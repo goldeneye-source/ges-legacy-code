@@ -252,10 +252,7 @@ void CGEHudDeathNotice::FireGameEvent( IGameEvent * event )
 			if (Q_strncmp(szTriggerMessage, "#", 1) == 0) //If the string starts with a pound sign it's probably localized.
 			{
 				if (!strcmp(szTriggerMessage, "#GES_Pit_Death")) //Just a quick addition for easy generic death pit messages.
-				{
-					RandomSeed(CBaseEntity::GetPredictionRandomSeed());
-					Q_snprintf(szTriggerMessage, sizeof(szTriggerMessage), "%s%d", szTriggerMessage, rand() % 6);
-				}
+					Q_snprintf( szTriggerMessage, sizeof(szTriggerMessage), "%s%d", szTriggerMessage, GERandom<int>(6) );
 
 				m_DeathMsgInfo.wszFormat = g_pVGuiLocalize->Find(szTriggerMessage); //So look for it
 				Q_snprintf(szConMsg, sizeof(szConMsg), "%s died to a trap.", m_DeathMsgInfo.Victim.szName);
@@ -338,10 +335,7 @@ void CGEHudDeathNotice::FireGameEvent( IGameEvent * event )
 			if (Q_strncmp(szTriggerMessage, "#", 1) == 0) //If the string starts with a pound sign it's probably localized.
 			{
 				if (!strcmp(szTriggerMessage, "#GES_Pit_Kill")) //Just a quick addition for easy generic death pit messages.
-				{
-					RandomSeed(CBaseEntity::GetPredictionRandomSeed());
-					Q_snprintf(szTriggerMessage, sizeof(szTriggerMessage), "%s%d", szTriggerMessage, rand() % 6);
-				}
+					Q_snprintf(szTriggerMessage, sizeof(szTriggerMessage), "%s%d", szTriggerMessage, GERandom<int>(6));
 				
 				m_DeathMsgInfo.wszFormat = g_pVGuiLocalize->Find(szTriggerMessage); //So look for it
 			}

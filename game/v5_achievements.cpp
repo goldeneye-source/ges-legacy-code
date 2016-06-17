@@ -58,7 +58,7 @@ protected:
 			if (gpGlobals->curtime <= m_flLastKillTime + 0.2f)
 			{
 				// If it's not LTK just give it to them instantly.
-				if (!IsScenario("ltk", false))
+				if (!IsScenario("ltk"))
 				{
 					SetCount(GetGoal() - 1);
 					IncrementCount();
@@ -590,7 +590,7 @@ protected:
 				return;
 
 			// If we're the one that triggered the event, we did it!
-			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID())
+			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && IsScenario("arsenal"))
 				IncrementCount();
 		}
 	}
@@ -644,7 +644,7 @@ protected:
 			if (!Q_stricmp(event->GetString("name"), "ar_completedarsenal"))
 			{
 				// If we completed the arsenal (no force round end victories), there are more than 3 players, and we only used slappers, we did it!
-				if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && m_bOnlySlappers && CalcPlayerCount() > 3)
+				if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && m_bOnlySlappers && CalcPlayerCount() > 3 && IsScenario("arsenal"))
 					IncrementCount();
 			}
 		}
@@ -747,7 +747,7 @@ protected:
 				return;
 
 			// If we're the one that triggered the event, and the weapon is slappers, we did it!
-			if (Q_atoi(event->GetString("value2")) == pPlayer->GetUserID() && !Q_stricmp(event->GetString("value3"), "weapon_slappers"))
+			if (Q_atoi(event->GetString("value2")) == pPlayer->GetUserID() && !Q_stricmp(event->GetString("value3"), "weapon_slappers") && IsScenario("yolt"))
 				IncrementCount();
 		}
 	}
@@ -800,7 +800,7 @@ protected:
 			if (!Q_stricmp(event->GetString("name"), "yolt_lastmanstanding"))
 			{
 				// If we were the last man standing, we had less than 2 kills, and there were more than 3 players in the round, we did it!
-				if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && m_iKillCount < 2 && Q_atoi(event->GetString("value2")) > 3)
+				if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && m_iKillCount < 2 && Q_atoi(event->GetString("value2")) > 3 && IsScenario("yolt"))
 					IncrementCount();
 			}
 		}
@@ -838,7 +838,7 @@ protected:
 				return;
 
 			// If we're the one that triggered the event, and the grenade was traded for the golden gun, we did it!
-			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && !Q_stricmp(event->GetString("value3"), "weapon_grenade") && (!Q_strnicmp(event->GetString("value4"), "weapon_gold", 11)))
+			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && !Q_stricmp(event->GetString("value3"), "weapon_grenade") && (!Q_strnicmp(event->GetString("value4"), "weapon_gold", 11)) && IsScenario("guntrade"))
 				IncrementCount();
 		}
 	}
@@ -887,7 +887,7 @@ protected:
 				}
 				else if (m_bState) // We're on Silver PP7
 				{
-					if (!Q_stricmp(event->GetString("value3"), "weapon_silver_pp7") && (!Q_stricmp(event->GetString("value4"), "weapon_golden_pp7")))
+					if (!Q_stricmp(event->GetString("value3"), "weapon_silver_pp7") && (!Q_stricmp(event->GetString("value4"), "weapon_golden_pp7")) && IsScenario("guntrade"))
 						IncrementCount(); // We got to gold PP7!
 					else
 						m_bState = false; // Killed with wrong weapon or started with wrong weapon somehow.
@@ -903,7 +903,7 @@ protected:
 				}
 				else if (m_bState) // We're on Silver PP7
 				{
-					if (!Q_stricmp(event->GetString("value4"), "weapon_silver_pp7") && (!Q_stricmp(event->GetString("value3"), "weapon_golden_pp7")))
+					if (!Q_stricmp(event->GetString("value4"), "weapon_silver_pp7") && (!Q_stricmp(event->GetString("value3"), "weapon_golden_pp7")) && IsScenario("guntrade"))
 						IncrementCount(); // We got to gold PP7!
 					else
 						m_bState = false; // Killed with wrong weapon or started with wrong weapon somehow.
@@ -961,7 +961,7 @@ protected:
 			else if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID())
 			{
 				// If our weapon was the weapon we were killed with, and the victim was our previous killer, we did it!
-				if ( m_iKillerID == atoi(event->GetString("value2")) && !Q_stricmp(event->GetString("value3"), m_sWeapon) )
+				if (m_iKillerID == atoi(event->GetString("value2")) && !Q_stricmp(event->GetString("value3"), m_sWeapon) && IsScenario("guntrade"))
 					IncrementCount();
 			}
 		}
@@ -1025,7 +1025,7 @@ protected:
 					m_iKillCount++;
 
 					// If we managed to get 10 kills without using the golden gun, we did it!
-					if ( m_iKillCount >= 10 )
+					if ( m_iKillCount >= 10 && IsScenario("mwgg") )
 						IncrementCount();
 				}
 				else
@@ -1083,7 +1083,7 @@ protected:
 			m_bOnlyUsedGG = true;
 		else if (!m_bOnlyUsedGG)
 			return;
-		else if (!IsScenario("mwgg", false))
+		else if (!IsScenario("mwgg"))
 			m_bOnlyUsedGG = false;
 		else if (!Q_stricmp(event->GetName(), "player_death"))
 		{
@@ -1095,7 +1095,7 @@ protected:
 		}
 		else if (!Q_stricmp(event->GetName(), "round_end"))
 		{
-			if (pPlayer->entindex() == event->GetInt("winnerid"))
+			if ( pPlayer->entindex() == event->GetInt("winnerid") && IsScenario("mwgg") )
 				IncrementCount();
 		}
 	}
@@ -1129,7 +1129,7 @@ protected:
 			if (!pPlayer)
 				return;
 
-			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID())
+			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && IsScenario("mwgg"))
 				IncrementCount();
 		}
 	}
@@ -1176,7 +1176,7 @@ protected:
 		{
 			if (event->GetInt("attacker") == pPlayer->GetUserID())
 			{
-				if ( !IsScenario("ltk", false) )
+				if ( !IsScenario("ltk") )
 					return;
 
 				if (pPlayer->GetAbsOrigin() == m_vecLastKillPos)
@@ -1202,7 +1202,7 @@ private:
 DECLARE_GE_ACHIEVEMENT( CAchCrouchingTiger, ACHIEVEMENT_GES_CROUCHINGTIGER, "GES_CROUCHINGTIGER", 100, GE_ACH_UNLOCKED );
 
 
-// Licence To Spree Kill: Kill 4 enemies within 2 seconds in LTK
+// Licence To Spree Kill: Kill 4 enemies within 7 seconds in LTK
 class CAchLicenceToSpreeKill : public CGEAchievement
 {
 protected:
@@ -1240,10 +1240,10 @@ protected:
 		{
 			if (event->GetInt("attacker") == pPlayer->GetUserID())
 			{
-				if (!IsScenario("ltk", false))
+				if (!IsScenario("ltk"))
 					return;
 
-				if (m_flKillTime >= gpGlobals->curtime - 2)
+				if (m_flKillTime >= gpGlobals->curtime - 7)
 				{
 					m_iKillCount++;
 
@@ -1309,7 +1309,7 @@ protected:
 			m_bKilledSomeone = false; //Reset our kill flag.
 		else if (!Q_stricmp(event->GetName(), "round_end"))
 		{
-			if (!m_bKilledSomeone && pPlayer->entindex() == event->GetInt("winnerid") && IsScenario("viewtoakill", false))
+			if (!m_bKilledSomeone && pPlayer->entindex() == event->GetInt("winnerid") && IsScenario("viewtoakill"))
 				IncrementCount();
 		}
 	}
@@ -1342,7 +1342,7 @@ protected:
 			if (!pPlayer)
 				return;
 
-			if ( Q_atoi(event->GetString("value1") ) == pPlayer->GetUserID())
+			if ( Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && IsScenario("viewtoakill") )
 				IncrementCount();
 		}
 	}
@@ -1385,7 +1385,7 @@ protected:
 
 			m_iStolenSeconds += max( Q_atoi(event->GetString("value3")), 0 );
 
-			while ( m_iStolenSeconds >= 60 )
+			while ( m_iStolenSeconds >= 60 && IsScenario("viewtoakill") )
 			{
 				m_iStolenSeconds -= 60;
 				IncrementCount();
@@ -1422,7 +1422,7 @@ protected:
 			if (!pPlayer)
 				return;
 
-			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && !Q_stricmp(event->GetString("value3"), "flaghit"))
+			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && !Q_stricmp(event->GetString("value3"), "flaghit") && IsScenario("livingdaylights"))
 				IncrementCount();
 		}
 	}
@@ -1452,7 +1452,7 @@ protected:
 
 		if ( !Q_stricmp(event->GetName(), "round_end") )
 		{
-			if (pPlayer->entindex() == event->GetInt("winnerid") && event->GetInt("winnerscore") <= 10 && IsScenario("livingdaylights", false))
+			if (pPlayer->entindex() == event->GetInt("winnerid") && event->GetInt("winnerscore") <= 10 && IsScenario("livingdaylights"))
 				IncrementCount();
 		}
 	}
@@ -1483,7 +1483,7 @@ protected:
 			if (!pPlayer)
 				return;
 
-			if ( Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() )
+			if ( Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && IsScenario("capturetheflag") )
 				IncrementCount();
 		}
 	}
@@ -1514,7 +1514,7 @@ protected:
 				return;
 
 			// If we defended our flag using a flag, we killed their token holder while we were a token holder!
-			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && !Q_strnicmp(event->GetString("value4"), "token_", 6))
+			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && !Q_strnicmp(event->GetString("value4"), "token_", 6) && IsScenario("capturetheflag"))
 				IncrementCount();
 		}
 	}
@@ -1684,7 +1684,7 @@ protected:
 			{
 				m_iKillcount++;
 
-				if (m_iKillcount > 4 && IsScenario( "deathmatch", false ))
+				if (m_iKillcount > 4 && IsScenario( "deathmatch" ))
 					IncrementCount();
 			}
 		}
@@ -1728,7 +1728,7 @@ protected:
 			return;
 
 		m_iKillInterp++;
-		if ( IsScenario( "ltk", false ) && m_iKillInterp % 3 )
+		if ( IsScenario( "ltk" ) && m_iKillInterp % 3 )
 			return;
 
 		IncrementCount();

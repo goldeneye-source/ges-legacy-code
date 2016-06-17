@@ -392,11 +392,14 @@ inline void CHudGameplay::InsertTokenWithBar(const char* token, int length)
 		length = HUDWP_BARLENGTH;
 
 	float width = ScreenWidth();
+	int height = ScreenHeight();
 
 	float scalevalue = min(sqrt(width / 1680), 1.0);
 	
-	if (ScreenHeight() % 768 == 0 || ScreenHeight() == 720) // Some dinky font glitch makes this neccecery.
+	if ( height % 768 == 0 || height == 720 || height == 800 || height == 1200 || height == 864 ) // Some dinky font glitch makes this neccecery.
 		scalevalue *= 0.5;
+
+
 
 	int iBarlength = round(HUDWP_BARLENGTH * scalevalue);
 	length = round(length * scalevalue);

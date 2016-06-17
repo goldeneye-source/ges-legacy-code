@@ -28,6 +28,7 @@
 
 ConVar ge_mapchooser_avoidteamplay("ge_mapchooser_avoidteamplay", "0", FCVAR_GAMEDLL, "If set to 1, server will avoid choosing maps where the current playercount is above the team threshold.");
 ConVar ge_mapchooser_avoidtransistions("ge_mapchooser_avoidtransistions", "0", FCVAR_GAMEDLL, "If set to 1, server will avoid choosing maps where a transition through ge_transition is neccecery.");
+ConVar ge_mapchooser_usemapcycle("ge_mapchooser_usemapcycle", "0", FCVAR_GAMEDLL, "If set to 1, server will just use the mapcycle file and not choose randomly based on map script files.");
 
 
 CGEMapManager::CGEMapManager(void)
@@ -273,7 +274,7 @@ void CGEMapManager::ParseMapData(const char *mapname)
 
 					if (previndex != -1)
 					{
-						Warning("Matched %s, overwriting weight with %d\n", data[0], atoi(data[1]));
+						DevMsg("Matched %s, overwriting weight with %d\n", data[0], atoi(data[1]));
 						m_pMapGamemodeWeights[previndex] = atoi(data[1]);
 					}
 					else
@@ -417,7 +418,7 @@ void CGEMapManager::GetViableMapList(int iNumPlayers, CUtlVector<char*> &mapname
 	if (m_pCurrentSelectionData)
 		currentResIntensity = m_pCurrentSelectionData->resintensity;
 
-	Msg("---Choosing Map for playercount %d---\n", iNumPlayers);
+	DevMsg("---Choosing Map for playercount %d---\n", iNumPlayers);
 
 	for (int i = 0; i < m_pSelectionData.Count(); i++)
 	{
@@ -427,7 +428,7 @@ void CGEMapManager::GetViableMapList(int iNumPlayers, CUtlVector<char*> &mapname
 		if (ge_mapchooser_avoidteamplay.GetBool()) // If we want to avoid teamplay our playercount has to come in below the teamthresh.
 			upperbound = min(m_pSelectionData[i]->teamthreshold, m_pSelectionData[i]->maxplayers + 1);
 
-		Msg("Looking at %s, with high %d, low %d\n", m_pSelectionData[i]->mapname, upperbound, lowerbound);
+		DevMsg("Looking at %s, with high %d, low %d\n", m_pSelectionData[i]->mapname, upperbound, lowerbound);
 		if (lowerbound < iNumPlayers && upperbound > iNumPlayers && engine->IsMapValid(m_pSelectionData[i]->mapname)) //It's within range, calculate weight adjustment.
 		{
 			mapnames.AddToTail(m_pSelectionData[i]->mapname);
@@ -441,7 +442,7 @@ void CGEMapManager::GetViableMapList(int iNumPlayers, CUtlVector<char*> &mapname
 			if (m_pSelectionData[i] == m_pCurrentSelectionData)
 				currentmapindex = mapnames.Count() - 1; // Record the current map index so we can remove it later if we have any other viable maps.
 
-			Msg("Added %s with weight %d\n", m_pSelectionData[i]->mapname, finalweight);
+			DevMsg("Added %s with weight %d\n", m_pSelectionData[i]->mapname, finalweight);
 
 			mapweights.AddToTail(finalweight);
 			mapintensities.AddToTail(m_pSelectionData[i]->resintensity);
@@ -453,7 +454,7 @@ void CGEMapManager::GetViableMapList(int iNumPlayers, CUtlVector<char*> &mapname
 
 	if (currentmapindex != -1 && mapnames.Count() > 1) // Our current map is in the list and we have another map to use.
 	{
-		Msg("Removing current map, which is %s\n", mapnames[currentmapindex]);
+		DevMsg("Removing current map, which is %s\n", mapnames[currentmapindex]);
 		mapnames.Remove(currentmapindex);
 		mapweights.Remove(currentmapindex);
 		mapintensities.Remove(currentmapindex);
@@ -466,7 +467,7 @@ void CGEMapManager::GetViableMapList(int iNumPlayers, CUtlVector<char*> &mapname
 		{
 			if (mapintensities[i] + currentResIntensity >= 10)
 			{
-				Msg("Removing %s, because it has total resintensity %d\n", mapnames[i], mapintensities[i] + currentResIntensity);
+				DevMsg("Removing %s, because it has total resintensity %d\n", mapnames[i], mapintensities[i] + currentResIntensity);
 				mapnames.Remove(i);
 				mapweights.Remove(i);
 				mapintensities.Remove(i);
@@ -476,14 +477,14 @@ void CGEMapManager::GetViableMapList(int iNumPlayers, CUtlVector<char*> &mapname
 		}
 	}
 
-	Msg("---Map list finished with %d maps total---\n", mapnames.Count());
+	DevMsg("---Map list finished with %d maps total---\n", mapnames.Count());
 
 	return;
 }
 
 const char* CGEMapManager::SelectNewMap( void )
 {
-	if (!m_pSelectionData.Count()) // We don't actually have any maps to choose from.
+	if (!m_pSelectionData.Count() || ge_mapchooser_usemapcycle.GetBool()) // We don't actually have any maps to choose from.
 		return NULL;
 
 	CUtlVector<char*> mapnames;
@@ -544,17 +545,56 @@ void CGEMapManager::PrintMapDataLists(void)
 	}
 }
 
-void CGEMapManager::PrintMapSelectionWeights(int pcount)
+static int mapWeightSort(MapWeightData* const *a, MapWeightData* const *b)
+{
+	if ((*a)->weight >(*b)->weight)
+		return -1;
+	else if ((*a)->weight == (*b)->weight)
+		return 0;
+	else return 1;
+}
+
+// Prints the map selection weights for all the viable maps for the given playercount.
+void CGEMapManager::PrintMapSelectionWeights(int pcount, bool sorted)
 {
 	CUtlVector<char*> mapnames;
 	CUtlVector<int> mapweights;
+	CUtlVector<int> sortedmapweights;
 
 	GetViableMapList( pcount, mapnames, mapweights );
 
-	Msg("Map : Weight\n");
-	for (int i = 0; i < mapnames.Count(); i++)
+	if (sorted)
 	{
-		Msg("%s : %d\n", mapnames[i], mapweights[i]);
+		CUtlVector<MapWeightData*> mapweightsgroup;
+
+		for (int i = 0; i < mapnames.Count(); i++)
+		{
+			MapWeightData *pWeightNameGroup = new MapWeightData;
+
+			pWeightNameGroup->weight = mapweights[i];
+			Q_strncpy(pWeightNameGroup->mapname, mapnames[i], 32);
+
+			mapweightsgroup.AddToTail(pWeightNameGroup);
+		}
+
+		mapweightsgroup.Sort(mapWeightSort);
+
+		Msg("Map:Weight\n");
+		for (int i = 0; i < mapnames.Count(); i++)
+		{
+			Msg("%s:%d\n", mapweightsgroup[i]->mapname, mapweightsgroup[i]->weight);
+		}
+
+		// Delete all those group objects because we do not need them now.
+		mapweightsgroup.PurgeAndDeleteElements();
+	}
+	else
+	{
+		Msg("Map:Weight\n");
+		for (int i = 0; i < mapnames.Count(); i++)
+		{
+			Msg("%s:%d\n", mapnames[i], mapweights[i]);
+		}
 	}
 }
 
@@ -582,7 +622,7 @@ CON_COMMAND(ge_print_current_map_data, "Prints the current map's data ")
 		GEMPRules()->GetMapManager()->PrintMapDataLists();
 }
 
-CON_COMMAND(ge_print_map_selection_weights, "Prints the map selection chance for given playercount")
+CON_COMMAND(ge_print_map_selection_weights, "Prints the map selection chance for given playercount, use 1 as second parameter to sort.")
 {
 	if (!UTIL_IsCommandIssuedByServerAdmin())
 	{
@@ -590,17 +630,25 @@ CON_COMMAND(ge_print_map_selection_weights, "Prints the map selection chance for
 		return;
 	}
 
-	if ( GEMPRules() && args.ArgC() > 1 )
-		GEMPRules()->GetMapManager()->PrintMapSelectionWeights(atoi(args[1]));
-	else
-	{
-		int iNumPlayers = 0;
+	if (!GEMPRules())
+		return;
 
+	int iNumPlayers = 0;
+	bool bPrintSorted = false;
+
+	if ( args.ArgC() < 2 )
+	{
 		FOR_EACH_MPPLAYER(pPlayer)
 			if (pPlayer->IsConnected())
 				iNumPlayers++;
 		END_OF_PLAYER_LOOP()
-
-		GEMPRules()->GetMapManager()->PrintMapSelectionWeights(iNumPlayers);
 	}
+	else
+		iNumPlayers = atoi(args[1]);
+
+	if (args.ArgC() > 2 && atoi(args[2]) > 0)
+		bPrintSorted = true;
+
+
+	GEMPRules()->GetMapManager()->PrintMapSelectionWeights(iNumPlayers, bPrintSorted);
 }

@@ -78,7 +78,7 @@ int CGEWeaponSpawner::ShouldRespawn( void )
 		return 2;
 
 	// Obey our game rules
-	if (!GEMPRules()->WeaponShouldRespawn(GetEntClass()))
+	if ( !GEMPRules()->WeaponShouldRespawn(GetBaseClass()) )
 		return 0;
 
 	return basestate;

@@ -165,6 +165,7 @@ void CWeaponCMag::PrimaryAttack( void )
 	m_bPreShoot = true;
 	m_flShootTime = gpGlobals->curtime + GetFireDelay();
 	
+	WeaponSound( SPECIAL1 );
 	SendWeaponAnim( GetPrimaryAttackActivity() );
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );
 	ToGEPlayer(pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
@@ -231,6 +232,7 @@ void CWeaponCMag::HandleFireOnEmpty()
 	if ( m_flNextEmptySoundTime <= gpGlobals->curtime )
 	{
 		SendWeaponAnim( ACT_VM_DRYFIRE );
+		WeaponSound( SPECIAL1 );
 
 		m_bPreShoot = true;
 		m_flShootTime = gpGlobals->curtime + GetFireDelay();

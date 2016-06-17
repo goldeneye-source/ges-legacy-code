@@ -52,7 +52,6 @@ public:
 	float		GetRange( void )		{ return KNIFE_RANGE; }
 
 	void		AddViewKick( void );
-	void		SecondaryAttack( void );
 
 	virtual		void Precache(void);
 
@@ -212,14 +211,6 @@ void CWeaponKnife::Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCha
 }
 #endif
 
-
-void CWeaponKnife::SecondaryAttack()
-{
-#ifndef CLIENT_DLL
-	SwitchToThrowing();
-#endif
-}
-
 #ifndef CLIENT_DLL
 void CWeaponKnife::SwitchToThrowing()
 {
@@ -251,6 +242,8 @@ void CWeaponKnife::SwitchToThrowing()
 
 void CWeaponKnife::ImpactEffect( trace_t &traceHit )
 {
+	return; // Avoid doing melee impact effects for 5.0
+
 	// See if we hit water (we don't do the other impact effects in this case)
 	if ( ImpactWater( traceHit.startpos, traceHit.endpos ) )
 		return;

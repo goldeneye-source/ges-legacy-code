@@ -71,7 +71,7 @@ public:
 	// Main way to assign hats to characters.  Uses model specific hats.
 	virtual void GiveHat( void );
 	// Method of assigning whatever hat you want to a player.
-	virtual void SpawnHat( const char* hatModel );
+	virtual void SpawnHat( const char* hatModel, bool canBeRemoved = true );
 
 	void HideBloodScreen( void );
 
@@ -179,6 +179,7 @@ protected:
 	int m_iScoreBoardColor;
 	int m_iCharIndex;
 	int m_iSkinIndex;
+	int m_bRemovableHat;
 
 	float m_flDamageMultiplier;
 	float m_flSpeedMultiplier;

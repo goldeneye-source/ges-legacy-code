@@ -408,7 +408,7 @@ CGEMPRules::CGEMPRules()
 
 	m_bTeamPlayDesired	 = false;
 	m_bInTeamBalance	 = false;
-	m_bUseTeamSpawns	 = true;
+	m_bUseTeamSpawns	 = false;
 	m_bSwappedTeamSpawns = false;
 
 	m_bGlobalInfAmmo = false;
@@ -549,14 +549,15 @@ void CGEMPRules::OnScenarioInit()
 	SetAmmoSpawnState( true );
 	SetWeaponSpawnState( true );
 	SetArmorSpawnState( true );
-	SetTeamSpawn( true );
+	SetTeamSpawn( false ); // Only CTF uses teamspawns nowadays.
 
 	SetGlobalInfAmmoState( ge_infiniteammo.GetBool() );
 	SetGamemodeInfAmmoState( false );
 	SetScoreboardMode( 0 ); //Default points.
 
-	SetSpawnInvulnInterval(GES_DEFAULT_SPAWNINVULN);
-	SetSpawnInvulnCanBreak(GES_DEFAULT_SPAWNBREAK);
+	SetSpawnInvulnInterval( GES_DEFAULT_SPAWNINVULN );
+	SetSpawnInvulnCanBreak( GES_DEFAULT_SPAWNBREAK );
+	SetSuperfluousAreasState( true ); // Superlous areas allowed by default.
 
 	// Make sure the round timer is enabled
 	// NOTE: The match timer can not be disabled

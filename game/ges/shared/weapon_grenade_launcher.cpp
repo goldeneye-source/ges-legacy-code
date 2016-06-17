@@ -425,9 +425,9 @@ void CGEWeaponGrenadeLauncher::LaunchGrenade( void )
 
 	if ( pOwner->IsPlayer() )
 	{
-		VectorMA( vecSrc, 3.5f, vRight, vecSrc );
-		VectorMA( vecSrc, 9.0f, vForward, vecSrc );
-		VectorMA( vecSrc, -6.0f, vUp, vecSrc );
+		VectorMA( vecSrc, 3.5f, vRight, vecSrc ); // 3.5
+		VectorMA( vecSrc, 6.0f, vForward, vecSrc ); // 9.0
+		VectorMA( vecSrc, -3.0f, vUp, vecSrc ); // -6, -3
 	}
 
 	CheckLaunchPosition( pOwner->EyePosition(), vecSrc );

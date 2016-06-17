@@ -50,7 +50,6 @@ public:
 	void		AddViewKick( void );
 
 	virtual void PrimaryAttack();
-	virtual void SecondaryAttack();
 
 	virtual void ThrowKnife();
 	virtual void SwitchToKnife();
@@ -219,11 +218,6 @@ void CWeaponKnifeThrowing::PrimaryAttack()
 	ToGEPlayer(pOwner)->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 }
 
-void CWeaponKnifeThrowing::SecondaryAttack()
-{
-	SwitchToKnife();
-}
-
 void CWeaponKnifeThrowing::SwitchToKnife()
 {
 	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
@@ -280,6 +274,16 @@ void CWeaponKnifeThrowing::ThrowKnife()
 	AngleVectors( pOwner->EyeAngles(), &vForward, &vRight, NULL );
 	vForward[2] += 0.1f;
 	
+	if (pOwner->IsPlayer())
+	{
+		VectorMA(vecSrc, 3.0f, vRight, vecSrc); // 3.0, 5.0
+		VectorMA(vecSrc, 2.0f, vForward, vecSrc); // 20, 19
+	}
+	else
+	{
+		VectorMA(vecSrc, 20.0, vForward, vecSrc);
+	}
+
 	Vector vecThrow;
 	pOwner->GetVelocity( &vecThrow, NULL );
 	if ( pOwner->GetWaterLevel() == 3 )

@@ -23,6 +23,12 @@ struct MapSelectionData
 	int		resintensity;
 };
 
+struct MapWeightData
+{
+	char	mapname[32];
+	int		weight;
+};
+
 class CGEMapManager
 {
 public:
@@ -47,7 +53,7 @@ public:
 	void PrintMapDataLists(void);
 
 	// Prints out the liklyhood of picking a given map at this playercount.
-	void PrintMapSelectionWeights(int pcount);
+	void PrintMapSelectionWeights( int pcount, bool sorted );
 
 	// Get selection data for a specific map and write it to mincount and maxcount
 	MapSelectionData* GetMapSelectionData(const char *mapname);

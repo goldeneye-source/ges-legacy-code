@@ -31,7 +31,8 @@ public:
 	
 	// Handle overrides to the base entity
 	void		SetOverride( const char *szClassname, float secToSpawn = 0 );
-	const char *GetEntClass()	{ return IsOverridden() ? m_szOverrideEntity : m_szBaseEntity; }
+	const char *GetBaseClass()	{ return m_szBaseEntity; }
+	const char *GetOverrideClass()	{ return m_szOverrideEntity; }
 
 	bool		IsOverridden()	{ return m_szOverrideEntity[0] != 0; }
 	bool		IsValid()		{ return m_szBaseEntity[0] != 0; }

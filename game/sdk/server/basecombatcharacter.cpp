@@ -1547,8 +1547,11 @@ void CBaseCombatCharacter::Event_Killed( const CTakeDamageInfo &info )
 #ifdef GE_DLL
 	CGEPlayer *pGEPlayer = ToGEPlayer(this);
 
-	if (pGEPlayer) // We have to do this here for ideal weapon drop behavior (like allowing gamemodes to prevent it)
-		pGEPlayer->DropTopWeapons();
+	if (pGEPlayer)
+	{
+		pGEPlayer->DropAllTokens(); // Doing this here so OnPlayerKilled is called before OnTokenDropped.
+		pGEPlayer->DropTopWeapons(); // We have to do this here for ideal weapon drop behavior (like allowing gamemodes to prevent it)
+	}
 #endif
 
 	CBaseCombatWeapon *pDroppedWeapon = m_hActiveWeapon.Get();

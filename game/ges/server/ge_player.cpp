@@ -77,6 +77,7 @@ CGEPlayer::CGEPlayer()
 	m_flEndInvulTime = 0.0f;
 
 	m_iCharIndex = m_iSkinIndex = -1;
+	m_bRemovableHat = true;
 
 	m_iFavoriteWeapon = WEAPON_NONE;
 	m_iScoreBoardColor = 0;
@@ -133,6 +134,10 @@ bool CGEPlayer::AddArmor( int amount )
 
 		// Tell plugins what we picked up
 		NotifyPickup( amount < MAX_ARMOR ? "item_armorvest_half" : "item_armorvest", 2 );
+
+		// Picking up armor ends spawn invulnerability.
+		if ( GEMPRules()->GetSpawnInvulnCanBreak() )
+			StopInvul();
 
 		return true;
 	}
@@ -196,6 +201,13 @@ void CGEPlayer::GiveAllItems( void )
 	GiveNamedItem( "weapon_proximitymine" );
 	GiveNamedItem( "weapon_timedmine" );
 	GiveNamedItem( "weapon_grenade" );
+
+	// Quick fix for the ammo deduction that ammo spawn weapons get causing the cheat to not give full ammo for them.
+	CBasePlayer::GiveAmmo(AMMO_REMOTEMINE_MAX, AMMO_REMOTEMINE);
+	CBasePlayer::GiveAmmo(AMMO_PROXIMITYMINE_MAX, AMMO_PROXIMITYMINE);
+	CBasePlayer::GiveAmmo(AMMO_TIMEDMINE_MAX, AMMO_TIMEDMINE);
+	CBasePlayer::GiveAmmo(AMMO_GRENADE_MAX, AMMO_GRENADE);
+	CBasePlayer::GiveAmmo(AMMO_TKNIFE_MAX, AMMO_TKNIFE);
 }
 
 int CGEPlayer::GiveAmmo( int nCount, int nAmmoIndex, bool bSuppressSound )
@@ -796,8 +808,7 @@ void CGEPlayer::Event_Killed( const CTakeDamageInfo &info )
 			SF_ENVEXPLOSION_NOSMOKE | SF_ENVEXPLOSION_NOSPARKS | SF_ENVEXPLOSION_NODLIGHTS, 0.0f, NULL);
 	}
 
-	KnockOffHat();
-	DropAllTokens();
+	KnockOffHat(!m_bRemovableHat); // If our hat isn't removable we have to delete it on death.
 
 	BaseClass::Event_Killed( info );
 }
@@ -878,6 +889,28 @@ void CGEPlayer::DropTopWeapons()
 	}
 }
 
+CON_COMMAND(ge_knockoffhat, "Usage: ge_knockoffhat playername deletehat")
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+		return;
+
+	CBasePlayer *pTarget = NULL;
+	bool removehat = false;
+
+	if (args.ArgC() < 2)
+		pTarget = UTIL_GetCommandClient();
+	else
+		pTarget = UTIL_PlayerByName(args[1]);
+
+	if (args.ArgC() > 2)
+		removehat = atoi(args[2]) > 0;
+
+	CGEPlayer *pGETarget = ToGEPlayer(pTarget);
+
+	if (pGETarget)
+		pGETarget->KnockOffHat( removehat );
+}
+
 ConVar ge_sillyhats("ge_sillyhats", "0", FCVAR_GAMEDLL, "Hats get extra silly!");
 
 void CGEPlayer::KnockOffHat( bool bRemove /* = false */, const CTakeDamageInfo *dmg /* = NULL */ )
@@ -886,9 +919,11 @@ void CGEPlayer::KnockOffHat( bool bRemove /* = false */, const CTakeDamageInfo *
 
 	if ( bRemove )
 	{
-		UTIL_Remove( pHat );
+		UTIL_Remove(pHat);
 	}
-	else if (pHat)
+	else if ( !m_bRemovableHat )
+		return; // If it's not possible to knock off don't knock it off.
+	else if ( pHat )
 	{
 		Vector origin = EyePosition();
 		origin.z += 8.0f;
@@ -937,7 +972,7 @@ void CGEPlayer::GiveHat()
 	SpawnHat( hatModel );
 }
 
-CON_COMMAND(ge_giveplayerhat, "Usage: ge_giveplayerhat hatmodel playername")
+CON_COMMAND(ge_giveplayerhat, "Usage: ge_giveplayerhat hatmodel playername canshootoff")
 {
 	if (!UTIL_IsCommandIssuedByServerAdmin())
 		return;
@@ -946,20 +981,23 @@ CON_COMMAND(ge_giveplayerhat, "Usage: ge_giveplayerhat hatmodel playername")
 		return;
 
 	CBasePlayer *pTarget = NULL;
+	bool removable = true;
 
 	if (args.ArgC() == 2)
 		pTarget = UTIL_GetCommandClient();
-
-	if (args.ArgC() > 2)
+	else
 		pTarget = UTIL_PlayerByName( args[2] );
+
+	if (args.ArgC() > 3)
+		removable = atoi(args[3]) > 0;
 
 	CGEPlayer *pGETarget = ToGEPlayer(pTarget);
 
 	if ( pGETarget )
-		pGETarget->SpawnHat( args[1] );
+		pGETarget->SpawnHat( args[1], removable );
 }
 
-void CGEPlayer::SpawnHat( const char* hatModel )
+void CGEPlayer::SpawnHat( const char* hatModel, bool canBeRemoved )
 {
 	if (IsObserver() && !IsAlive()) // Observers can't have any hats.  Need this here so direct hat assignment doesn't make floating hats.
 		return;
@@ -976,6 +1014,8 @@ void CGEPlayer::SpawnHat( const char* hatModel )
 	CBaseEntity *hat = CreateNewHat(EyePosition(), GetAbsAngles(), hatModel);
 	hat->FollowEntity(this, true);
 	m_hHat = hat;
+
+	m_bRemovableHat = canBeRemoved;
 }
 
 void CGEPlayer::InitialSpawn( void )

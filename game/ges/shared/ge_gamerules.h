@@ -33,6 +33,8 @@ public:
 	CGERules();
 	~CGERules();
 
+	bool CheckInPVS(CBaseEntity *ent, byte iPVS[MAX_MAP_CLUSTERS / 8]);
+
 	// ---------------
 	// GES Functions
 #ifdef GAME_DLL

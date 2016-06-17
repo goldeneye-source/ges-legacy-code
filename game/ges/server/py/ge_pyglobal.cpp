@@ -27,10 +27,11 @@ BOOST_PYTHON_MODULE(GEGlobal)
 	self.attr("API_VERSION_1_0_0") = "1.0.0";
 	self.attr("API_VERSION_1_1_0") = "1.1.0";
 	self.attr("API_VERSION_1_1_1") = "1.1.1";
+	self.attr("API_VERSION_1_2_0") = "1.2.0";
 
 	// Current version level of AI and GamePlay
 	self.attr("API_AI_VERSION") = self.attr("API_VERSION_1_1_0");
-	self.attr("API_GP_VERSION") = self.attr("API_VERSION_1_1_1");
+	self.attr("API_GP_VERSION") = self.attr("API_VERSION_1_2_0");
 
 	self.attr("SAY_COMMAND1") = "!voodoo";
 	self.attr("SAY_COMMAND2") = "!gesrocks";

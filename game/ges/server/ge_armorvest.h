@@ -25,11 +25,18 @@ public:
 	virtual void Precache( void );
 
 	virtual CBaseEntity *Respawn( void );
+	virtual void RespawnThink( void );
 	virtual void Materialize( void );
 
+	virtual void AliveThink();
 	virtual void ItemTouch( CBaseEntity *pEntity );
 	virtual bool MyTouch( CBasePlayer *pPlayer );
 	int CalcSpawnProgress();
+	void AddSpawnProgressMod(CBasePlayer *pPlayer, int amount);
+	void ClearSpawnProgressMod(CBasePlayer *pPlayer);
+	void ClearAllSpawnProgress();
+
+	void DEBUG_ShowProgress(float duration, int progress);
 
 	void SetEnabled( bool state );
 	bool IsEnabled() { return m_bEnabled; }
@@ -39,6 +46,13 @@ public:
 	void InputDisable( inputdata_t &inputdata );
 	void InputToggle( inputdata_t &inputdata );	
 
+	int	m_iSpawnCheckRadius;
+	int m_iSpawnCheckRadiusSqr;
+	int m_iSpawnCheckHalfRadiusSqr;
+
+	int m_iPlayerPointContribution[MAX_PLAYERS];
+	bool m_bEnabled;
+
 protected:
 	void OnEnabled();
 	void OnDisabled();
@@ -47,7 +61,6 @@ private:
 	int		m_iAmount;
 	int		m_iSpawnpoints;
 	int		m_iSpawnpointsgoal;
-	bool	m_bEnabled;
 };
 
 #endif

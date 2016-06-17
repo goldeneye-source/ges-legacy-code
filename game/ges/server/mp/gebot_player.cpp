@@ -142,6 +142,8 @@ void CGEBotPlayer::InitialSpawn( void )
 	CBaseEntity::SetAllowPrecache( allowPrecache );
 }
 
+ConVar ge_bot_givespawninvuln("ge_bot_givespawninvuln", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Bots are allowed to have spawn invulnerability.");
+
 void CGEBotPlayer::Spawn( void )
 {
 	Vector oldPos = GetAbsOrigin();
@@ -192,6 +194,9 @@ void CGEBotPlayer::Spawn( void )
 		m_pNPC->AddSolidFlags( FSOLID_NOT_SOLID );
 		m_pNPC->SetCondition( COND_NPC_FREEZE );
 	}
+
+	if ( !ge_bot_givespawninvuln.GetBool() )
+		StopInvul(); // Bots don't usually get spawn invuln since they don't care if they get spawn killed.
 }
 
 void CGEBotPlayer::ForceRespawn( void )
@@ -401,7 +406,7 @@ void CGEBotPlayer::SetPlayerModel( const char* szCharName, int iCharSkin /*=0*/,
 void CGEBotPlayer::FireBullets( const FireBulletsInfo_t &info )
 {
 	// We never fire bullets, this is just to disable spawn invuln when we shoot essentially
-	if ( m_bInSpawnInvul && !IsObserver() )
+	if ( m_bInSpawnInvul && !IsObserver() && GEMPRules()->GetSpawnInvulnCanBreak() )
 		StopInvul();
 }
 
@@ -509,20 +514,39 @@ void CGEBotPlayer::PostThink( void )
 
 void CGEBotPlayer::GiveHat()
 {
-	if ( m_hHat.Get() )
+	if (IsObserver())
+	{
+		// Make sure we DO NOT have a hat as an observer
+		KnockOffHat(true);
+		return;
+	}
+
+	if (m_hHat.Get())
 		return;
 
 	const char* hatModel = GECharacters()->Get(m_iCharIndex)->m_pSkins[m_iSkinIndex]->szHatModel;
-	if ( !hatModel || hatModel[0] == '\0' )
+	if (!hatModel || hatModel[0] == '\0')
 		return;
+
+	SpawnHat(hatModel);
+}
+
+void CGEBotPlayer::SpawnHat(const char* hatModel, bool canBeRemoved)
+{
+	if (IsObserver() && !IsAlive()) // Observers can't have any hats.  Need this here so direct hat assignment doesn't make floating hats.
+		return;
+
+	// Get rid of any hats we're currently wearing.
+	if (m_hHat.Get())
+		KnockOffHat(true);
 
 	// Simple check to ensure consistency
 	int setnum, boxnum;
-	if ( m_pNPC->LookupHitbox( "hat", setnum, boxnum ) )
-		m_pNPC->SetHitboxSet( setnum );
+	if (m_pNPC->LookupHitbox("hat", setnum, boxnum))
+		m_pNPC->SetHitboxSet(setnum);
 
-	CBaseEntity *hat = CreateNewHat( EyePosition(), GetAbsAngles(), hatModel );
-	hat->FollowEntity( m_pNPC, true );
+	CBaseEntity *hat = CreateNewHat(EyePosition(), GetAbsAngles(), hatModel);
+	hat->FollowEntity(m_pNPC, true);
 	m_hHat = hat;
 }
 
@@ -569,12 +593,9 @@ void CGEBotPlayer::GiveDefaultItems( void )
 
 	const CGELoadout *loadout = GEMPRules()->GetLoadoutManager()->CurrLoadout();
 	if ( loadout )
-	{
-		if ( ge_startarmed.GetInt() >= 1 )
-			pGivenWeapon = m_pNPC->GiveNamedItem( "weapon_knife" );			
-
+	{		
 		// Give the weakest weapon in our set if more conditions are met
-		if ( ge_startarmed.GetInt() >= 2 )
+		if ( ge_startarmed.GetInt() >= 1 )
 		{
 			int wID = loadout->GetFirstWeapon();
 			int aID = GetAmmoDef()->Index( GetAmmoForWeapon(wID) );
@@ -583,6 +604,9 @@ void CGEBotPlayer::GiveDefaultItems( void )
 			m_pNPC->GiveAmmo( GetAmmoDef()->CrateAmount(aID), aID );
 			pGivenWeapon = m_pNPC->GiveNamedItem( WeaponIDToAlias(wID) );
 		}
+
+		//if (ge_startarmed.GetInt() >= 2)
+		//	pGivenWeapon = m_pNPC->GiveNamedItem("weapon_knife");
 	} 
 	else
 	{
@@ -590,8 +614,9 @@ void CGEBotPlayer::GiveDefaultItems( void )
 		pGivenWeapon = m_pNPC->GiveNamedItem( "weapon_knife" );
 	}
 
+	// Switch to the best given weapon
 	if ( pGivenWeapon )
-		m_pNPC->Weapon_Switch( (CBaseCombatWeapon*) pGivenWeapon );
+		m_pNPC->Weapon_Switch((CBaseCombatWeapon*)pGivenWeapon);
 }
 
 CBaseCombatWeapon *CGEBotPlayer::GetActiveWeapon()

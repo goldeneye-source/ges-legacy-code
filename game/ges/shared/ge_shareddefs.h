@@ -134,6 +134,7 @@ typedef enum GES_WEAPONS
 	WEAPON_ROCKET_LAUNCHER,
 
 	WEAPON_MOONRAKER,
+	WEAPON_KNIFE,
 
 	WEAPON_SPAWNMAX, // Don't spawn weapons in GEWeaponSpawner below this!
 
@@ -147,11 +148,14 @@ typedef enum GES_WEAPONS
 	WEAPON_RANDOM_MAX,
 
 	WEAPON_SLAPPERS,
-	WEAPON_KNIFE,
 
-	WEAPON_RANDOM,		// For weapon spawning system!
+	WEAPON_RANDOM,		// For weapon spawning system, weighted random weapon.
 	WEAPON_EXPLOSION,	// Generic explosion (not from any particular weapon)
+	WEAPON_TRAP,		// Map entity kills
 	WEAPON_TOKEN,
+	WEAPON_RANDOM_HITSCAN,		// For weapon spawning system, weighted random hitscan weapon.
+	WEAPON_RANDOM_EXPLOSIVE,	// For weapon spawning system, weighted random explosive weapon.
+	WEAPON_ULTRA_RANDOM,		// For weapon spawning system, unweighted random weapon.
 
 	WEAPON_MAX,
 } GEWeaponID;
@@ -163,6 +167,7 @@ typedef struct
 	const char		*ammo;
 	const char		*printname;
 	int				randweight;
+	int				strength;
 } GEWeaponInfo_t;
 	
 
@@ -173,57 +178,61 @@ typedef struct
 //
 static const GEWeaponInfo_t GEWeaponInfo[] = 
 {
-	{WEAPON_NONE,			"weapon_none",			AMMO_NONE,		"#GE_NOWEAPON",		50	},
+	{WEAPON_NONE,			"weapon_none",			AMMO_NONE,		"#GE_NOWEAPON",		0,		-1	},
 	
 	// These are spawnable weapons (eg they can be created)
-	{WEAPON_PP7,			"weapon_pp7",			AMMO_9MM,		"#GE_PP7",			10	},
-	{WEAPON_PP7_SILENCED,	"weapon_pp7_silenced",	AMMO_9MM,		"#GE_PP7_SILENCED",	20	},
-	{WEAPON_DD44,			"weapon_dd44",			AMMO_9MM,		"#GE_DD44",			20	},
-	{WEAPON_SILVERPP7,		"weapon_silver_pp7",	AMMO_9MM,		"#GE_SilverPP7",	5	},
-	{WEAPON_GOLDENPP7,		"weapon_golden_pp7",	AMMO_9MM,		"#GE_GoldPP7",		1	},
-	{WEAPON_COUGAR_MAGNUM,	"weapon_cmag",			AMMO_MAGNUM,	"#GE_CougarMagnum",	10	},
-	{WEAPON_GOLDENGUN,		"weapon_golden_gun",	AMMO_GOLDENGUN,	"#GE_GoldenGun",	2	},
+	{WEAPON_PP7,			"weapon_pp7",			AMMO_9MM,		"#GE_PP7",			5,		2	},
+	{WEAPON_PP7_SILENCED,	"weapon_pp7_silenced",	AMMO_9MM,		"#GE_PP7_SILENCED",	5,		2	},
+	{WEAPON_DD44,			"weapon_dd44",			AMMO_9MM,		"#GE_DD44",			10,		2	},
+	{WEAPON_SILVERPP7,		"weapon_silver_pp7",	AMMO_MAGNUM,	"#GE_SilverPP7",    10,		7   },
+	{WEAPON_GOLDENPP7,		"weapon_golden_pp7",	AMMO_GOLDENGUN, "#GE_GoldPP7",		8,		8   },
+	{WEAPON_COUGAR_MAGNUM,	"weapon_cmag",			AMMO_MAGNUM,	"#GE_CougarMagnum",	12,		5	},
+	{WEAPON_GOLDENGUN,		"weapon_golden_gun",	AMMO_GOLDENGUN,	"#GE_GoldenGun",	10,		8	},
 
-	{WEAPON_SHOTGUN,		"weapon_shotgun",		AMMO_BUCKSHOT,	"#GE_Shotgun",		20	},
-	{WEAPON_AUTO_SHOTGUN,	"weapon_auto_shotgun",	AMMO_BUCKSHOT,	"#GE_AutoShotgun",	10	},
+	{WEAPON_SHOTGUN,		"weapon_shotgun",		AMMO_BUCKSHOT,	"#GE_Shotgun",		12,		5	},
+	{WEAPON_AUTO_SHOTGUN,	"weapon_auto_shotgun",	AMMO_BUCKSHOT,	"#GE_AutoShotgun",	10,		7	},
 
-	{WEAPON_KF7,			"weapon_kf7",			AMMO_RIFLE,		"#GE_KF7Soviet",	20	},
-	{WEAPON_KLOBB,			"weapon_klobb",			AMMO_9MM,		"#GE_Klobb",		20	},
-	{WEAPON_ZMG,			"weapon_zmg",			AMMO_9MM,		"#GE_ZMG",			20	},
-	{WEAPON_D5K,			"weapon_d5k",			AMMO_9MM,		"#GE_D5K",			10	},
-	{WEAPON_D5K_SILENCED,	"weapon_d5k_silenced",	AMMO_9MM,		"#GE_D5K_SILENCED",	20	},
-	{WEAPON_RCP90,			"weapon_rcp90",			AMMO_9MM,		"#GE_RCP90",		10	},
-	{WEAPON_AR33,			"weapon_ar33",			AMMO_RIFLE,		"#GE_AR33",			10	},
-	{WEAPON_PHANTOM,		"weapon_phantom",		AMMO_9MM,		"#GE_Phantom",		15	},
-	{WEAPON_SNIPER_RIFLE,	"weapon_sniper_rifle",	AMMO_RIFLE,		"#GE_SniperRifle",	15	},
+	{WEAPON_KF7,			"weapon_kf7",			AMMO_RIFLE,		"#GE_KF7Soviet",	10,		3	},
+	{WEAPON_KLOBB,			"weapon_klobb",			AMMO_9MM,		"#GE_Klobb",		10,		1	},
+	{WEAPON_ZMG,			"weapon_zmg",			AMMO_9MM,		"#GE_ZMG",			10,		4	},
+	{WEAPON_D5K,			"weapon_d5k",			AMMO_9MM,		"#GE_D5K",			5,		3	},
+	{WEAPON_D5K_SILENCED,	"weapon_d5k_silenced",	AMMO_9MM,		"#GE_D5K_SILENCED",	5,		3	},
+	{WEAPON_RCP90,			"weapon_rcp90",			AMMO_9MM,		"#GE_RCP90",		10,		6	},
+	{WEAPON_AR33,			"weapon_ar33",			AMMO_RIFLE,		"#GE_AR33",			10,		6	},
+	{WEAPON_PHANTOM,		"weapon_phantom",		AMMO_9MM,		"#GE_Phantom",		9,		5	},
+	{WEAPON_SNIPER_RIFLE,	"weapon_sniper_rifle",	AMMO_RIFLE,		"#GE_SniperRifle",	10,		4	},
 
-	{WEAPON_KNIFE_THROWING, "weapon_knife_throwing",AMMO_TKNIFE,	"#GE_ThrowingKnife",10	},
+	{WEAPON_KNIFE_THROWING, "weapon_knife_throwing",AMMO_TKNIFE,	"#GE_ThrowingKnife",12,		4	},
 
-	{WEAPON_GRENADE_LAUNCHER, "weapon_grenade_launcher",	AMMO_SHELL,	"#GE_GrenadeLauncher",3	},
-	{WEAPON_ROCKET_LAUNCHER,  "weapon_rocket_launcher",		AMMO_ROCKET,"#GE_RocketLauncher", 3	},
+	{WEAPON_GRENADE_LAUNCHER, "weapon_grenade_launcher",	AMMO_SHELL,	"#GE_GrenadeLauncher",7,		8	},
+	{WEAPON_ROCKET_LAUNCHER,  "weapon_rocket_launcher",		AMMO_ROCKET,"#GE_RocketLauncher", 7,		7	},
 	
-	{WEAPON_MOONRAKER,	"weapon_moonraker",			AMMO_MOONRAKER,	"#GE_Moonraker",  3	},
+	{WEAPON_MOONRAKER,	"weapon_moonraker",			AMMO_MOONRAKER,	"#GE_Moonraker",  10,		7	},
+	{WEAPON_KNIFE,		"weapon_knife",				AMMO_NONE,		"#GE_Knife",	  4,		3  },
 
-	{WEAPON_SPAWNMAX,	NULL,						AMMO_NONE,			"",				  0	},
+	{WEAPON_SPAWNMAX,	NULL,						AMMO_NONE,			"",				  0,		-1	},
 
 	// These spawn in ammo crates only
-	{WEAPON_TIMEDMINE,	"weapon_timedmine",			AMMO_TIMEDMINE,		"#GE_TimedMine",  3	},
-	{WEAPON_REMOTEMINE, "weapon_remotemine",		AMMO_REMOTEMINE,	"#GE_RemoteMine", 3	},
-	{WEAPON_PROXIMITYMINE, "weapon_proximitymine",	AMMO_PROXIMITYMINE,	"#GE_ProximityMine", 3	},
-	{WEAPON_GRENADE,	"weapon_grenade",			AMMO_GRENADE,		"#GE_Grenade",	  3 },
+	{WEAPON_TIMEDMINE,	"weapon_timedmine",			AMMO_TIMEDMINE,		"#GE_TimedMine",  6,		3	},
+	{WEAPON_REMOTEMINE, "weapon_remotemine",		AMMO_REMOTEMINE,	"#GE_RemoteMine", 10,		6	},
+	{WEAPON_PROXIMITYMINE, "weapon_proximitymine",	AMMO_PROXIMITYMINE,	"#GE_ProximityMine", 1,		5	},
+	{WEAPON_GRENADE,	"weapon_grenade",			AMMO_GRENADE,		"#GE_Grenade",	  10,		4 },
 
-	{WEAPON_RANDOM_MAX,	NULL,						AMMO_NONE,			"",				0	},
+	{WEAPON_RANDOM_MAX,	NULL,						AMMO_NONE,			"",				0,		-1	},
 
 	// These are weapons that shouldn't spawn in the weapon spawners!
-	{WEAPON_SLAPPERS,	"weapon_slappers",			AMMO_NONE,		"#GE_Slapper",		0	},
-	{WEAPON_KNIFE,		"weapon_knife",				AMMO_NONE,		"#GE_Knife",		0	},
+	{WEAPON_SLAPPERS,	"weapon_slappers",			AMMO_NONE,		"#GE_Slapper",		0,		-1	},
 
 	// For weapon spawning system only!
-	{WEAPON_RANDOM,		"weapon_random",			AMMO_NONE,		"",					0	},
-	{WEAPON_EXPLOSION,  NULL,						AMMO_NONE,		"#GE_Explosion",	0	},
-	{WEAPON_TOKEN,		NULL,						AMMO_NONE,		"",					0	},
+	{WEAPON_RANDOM,		"weapon_random",			AMMO_NONE,		"",					0,		-1	},
+	{WEAPON_EXPLOSION,  NULL,						AMMO_NONE,		"#GE_Explosion",	0,		-1	},
+	{WEAPON_TRAP,		NULL,						AMMO_NONE,		"#GE_Trap",			0,		-1  },
+	{WEAPON_TOKEN,		NULL,						AMMO_NONE,		"",					0,		-1	},
+	{WEAPON_RANDOM_HITSCAN, "weapon_random_hitscan",		AMMO_NONE,		"",				0,		-1	},
+	{WEAPON_RANDOM_EXPLOSIVE, "weapon_random_explosive",	AMMO_NONE,		"",				0,		-1	},
+	{WEAPON_ULTRA_RANDOM,	"weapon_ultra_random",		AMMO_NONE,		"",					0,		-1	},
 
-	{WEAPON_MAX,		NULL,						AMMO_NONE,		"",					0	},
+	{WEAPON_MAX,		NULL,						AMMO_NONE,		"",					0,		-1		},
 };
 
 enum WeaponEvents
@@ -269,6 +278,8 @@ extern int AliasToWeaponID( const char *alias );
 extern const char *GetAmmoForWeapon( int id );
 extern const char *GetWeaponPrintName( int id );
 extern int GetRandWeightForWeapon( int id );
+extern int GetStrengthOfWeapon(int id);
+extern int WeaponMaxDamageFromID(int id);
 
 // Team colors for the GE Teams
 static Color COLOR_JANUS	( 238,  54,  54, 255 );
@@ -303,8 +314,9 @@ const int MAX_HEALTH = 160;
 const float STARTING_ARMOR = 0;
 const float MAX_ARMOR = 160;
 
-#define GE_NORM_SPEED	200
-#define GE_AIMED_SPEED	110
+#define GE_NORM_SPEED	190
+#define GE_AIM_SPEED_MULT	0.58
+#define GE_AIMMODE_DELAY	0.1f
 
 #ifdef GAME_DLL
 	typedef enum
@@ -438,17 +450,27 @@ extern bool GetAwardSort( int id );
 
 #define GE_DEVELOPER 1
 #define GE_BETATESTER 2
-#define GE_SILVERACH 3
-#define GE_GOLDACH 4
+#define GE_CONTRIBUTOR 3
+#define GE_SILVERACH 4
+#define GE_GOLDACH 5
 
 #ifdef GAME_DLL
 extern CUtlVector<unsigned int> vDevsHash;
 extern CUtlVector<unsigned int> vTestersHash;
+extern CUtlVector<unsigned int> vContributorsHash;
 extern CUtlVector<unsigned int> vBannedHash;
+
+extern CUtlVector<unsigned int> vSkinsHash;
+extern CUtlVector<uint64> vSkinsValues;
+
+extern int iAwardEventCode; // Code for giving special event rewards.
+extern uint64 iAllowedClientSkins;
 
 static const int LIST_DEVELOPERS = 1;
 static const int LIST_TESTERS = 2;
-static const int LIST_BANNED = 3;
+static const int LIST_CONTRIBUTORS = 3;
+static const int LIST_SKINS = 4;
+static const int LIST_BANNED = 5;
 
 #define HASHLIST_END 4294967295u  // 2^32-1
 
@@ -525,9 +547,13 @@ T GERandom(const T limit = T(1.0))
    tm myTime;
    VCRHook_LocalTime( &myTime );
 
-   srand( myTime.tm_sec + myTime.tm_min + myTime.tm_hour );
-   seeded = true;
+//   srand( myTime.tm_sec + myTime.tm_min + myTime.tm_hour );
 
+   // Trying new formula to cut down on redundant seed values and hopefully stop so many repeating selections.
+   // This really should have a randomly chosen initial value but i can't figure out a seamless way of doing it right now.
+   srand( myTime.tm_sec + myTime.tm_min * 60 + myTime.tm_hour * 3600 );
+   seeded = true;
+   
    return GERandom<T>(limit);
 }
 

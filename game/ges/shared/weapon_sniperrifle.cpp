@@ -40,17 +40,19 @@ public:
 	CWeaponSniper(void)
 	{
 		SetAlwaysSilenced(true);
+		ToggleSilencer(false);
 		// NPC Ranging
 		m_fMinRange1 = 100;
 		m_fMaxRange1 = 8000;
 
 #ifdef CLIENT_DLL
-		// Hard coded since Valve sucks
-		m_iLastZoomOffset = -80;
+		m_iLastZoomOffset = -50;
 #endif
 	}
 
+	virtual void	Precache(void);
 	virtual GEWeaponID GetWeaponID(void) const { return WEAPON_SNIPER_RIFLE; }
+	virtual bool CanBeSilenced(void) { return true; }
 
 #ifdef CLIENT_DLL
 	virtual int KeyInput(int down, ButtonCode_t keynum, const char *pszCurrentBinding)
@@ -60,7 +62,7 @@ public:
 		if (pPlayer && (keynum == MOUSE_WHEEL_UP || keynum == MOUSE_WHEEL_DOWN))
 		{
 			// Check if we are allowed to zoom in/out
-			if (pPlayer->IsInAimMode() || pPlayer->GetAimModeState() != AIM_NONE)
+			if (pPlayer->StartedAimMode())
 			{
 				// Grab our current desired zoom
 				int cur_zoom = pPlayer->GetZoomEnd();
@@ -76,7 +78,7 @@ public:
 				cur_zoom = clamp(cur_zoom, (90 + GetGEWpnData().m_iZoomOffset) - pPlayer->GetDefaultFOV(), 0);
 
 				// Apply the new zoom to the player
-				pPlayer->SetZoom(cur_zoom);
+				pPlayer->SetDesiredZoomOffset(cur_zoom);
 
 				// Save it away
 				m_iLastZoomOffset = cur_zoom;
@@ -92,18 +94,6 @@ public:
 	virtual float GetZoomOffset()
 	{
 		return m_iLastZoomOffset;
-	}
-
-	virtual bool Holster(C_BaseCombatWeapon *pSwitchingTo)
-	{
-		// Reset the last zoom change
-		if (BaseClass::Holster(pSwitchingTo))
-		{
-			m_iLastZoomOffset = GetGEWpnData().m_iZoomOffset;
-			return true;
-		}
-
-		return false;
 	}
 
 private:
@@ -146,5 +136,23 @@ acttable_t CWeaponSniper::m_acttable[] =
 	{ ACT_MP_RELOAD_CROUCH, ACT_GES_GESTURE_RELOAD_AR33, false },
 
 	{ ACT_MP_JUMP, ACT_GES_JUMP_SNIPERRIFLE, false },
+	{ ACT_GES_CJUMP, ACT_GES_CJUMP_SNIPERRIFLE, false },
 };
 IMPLEMENT_ACTTABLE(CWeaponSniper);
+
+void CWeaponSniper::Precache(void)
+{
+	PrecacheModel("models/weapons/sniperrifle/v_sniperrifle.mdl");
+	PrecacheModel("models/weapons/sniperrifle/w_sniperrifle.mdl");
+
+	PrecacheMaterial("sprites/hud/weaponicons/sniper_rifle");
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_rifle");
+
+	PrecacheScriptSound("Weapon.Rifle_Reload");
+	PrecacheScriptSound("Weapon_sniper.Single");
+	PrecacheScriptSound("Weapon_sniper.NPC_Single");
+	PrecacheScriptSound("Weapon.Special1");
+	PrecacheScriptSound("Weapon.Special2");
+
+	BaseClass::Precache();
+}

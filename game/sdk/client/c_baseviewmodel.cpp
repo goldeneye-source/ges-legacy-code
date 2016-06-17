@@ -18,6 +18,9 @@
 #include "tools/bonelist.h"
 #include <KeyValues.h>
 #include "hltvcamera.h"
+#ifdef GE_DLL
+#include "ge_weapon.h"
+#endif
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -129,9 +132,11 @@ void C_BaseViewModel::FireEvent( const Vector& origin, const QAngle& angles, int
 #ifdef GE_DLL
 void C_BaseViewModel::ProcessMuzzleFlashEvent()
 {
-	// Hand the muzzle flash off to the weapon so that it can be virtualized easily
-	if ( GetWeapon() )
+	// Hand the muzzle flash off to the weapon if it's the laser because the laser has special flash effects.
+	if ( ToGEWeapon(GetWeapon()) && ToGEWeapon(GetWeapon())->GetWeaponID() == WEAPON_MOONRAKER )
 		GetWeapon()->ProcessMuzzleFlashEvent();
+	else // Otherwise just use the viewmodel so that muzzle flashes are properly trasmitted.  For whatever reason the above method breaks them.
+		BaseClass::ProcessMuzzleFlashEvent();
 }
 #endif
 

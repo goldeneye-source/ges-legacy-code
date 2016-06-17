@@ -110,6 +110,10 @@ void CGERoundReport::FireGameEvent( IGameEvent *event )
 		if ( !event->GetBool( "showreport" ) )
 			return;
 
+		// We may not have gotten a round start event since we always join after the first round started, and could have joined in the middle of this round.
+		// So make sure our teamplay state is correct.
+		m_RoundData.is_teamplay = GEMPRules()->IsTeamplay();
+
 		// Always play our music if we are scoring
 		PlayWinLoseMusic();
 
@@ -157,6 +161,7 @@ void CGERoundReport::FireGameEvent( IGameEvent *event )
 	{
 		// Store what our teamplay state is for use on end round
 		m_RoundData.is_teamplay = event->GetBool( "teamplay" );
+
 		// Store the gameplay name for the report
 		GEUTIL_GetGameplayName( m_RoundData.scenario_name, sizeof(m_RoundData.scenario_name) );
 
@@ -511,6 +516,8 @@ bool CGERoundReport::GetPlayerScoreInfo( int playerIndex, KeyValues *kv )
 		kv->SetInt("icon", 1);
 	else if ( iStatus == GE_BETATESTER )
 		kv->SetInt("icon", 2);
+	else if ( iStatus == GE_CONTRIBUTOR )
+		kv->SetInt("icon", 6);
 	else if ( iStatus == GE_SILVERACH )
 		kv->SetInt("icon", 3);
 	else if ( iStatus == GE_GOLDACH )
@@ -524,10 +531,21 @@ bool CGERoundReport::GetPlayerScoreInfo( int playerIndex, KeyValues *kv )
 	kv->SetString("name", GEUTIL_RemoveColorHints(name) );
 	if ( m_RoundData.is_teamplay )
 		kv->SetString("team", GEPlayerRes()->GetTeamName( GEPlayerRes()->GetTeam(playerIndex) ) );
-	kv->SetInt("score", GEPlayerRes()->GetPlayerScore( playerIndex ));
 	kv->SetInt("deaths", GEPlayerRes()->GetDeaths( playerIndex ));
 	kv->SetString("favweapon", GetWeaponPrintName( GEPlayerRes()->GetFavoriteWeapon(playerIndex) ));
 	kv->SetString( "char", GEPlayerRes()->GetCharName( playerIndex ) );
+
+	if (!GEMPRules()->GetScoreboardMode())
+		kv->SetInt("score", GEPlayerRes()->GetPlayerScore(playerIndex));
+	else
+	{
+		int seconds = GEPlayerRes()->GetPlayerScore(playerIndex);
+		int displayseconds = seconds % 60;
+		int displayminutes = floor(seconds / 60);
+
+		Q_snprintf(name, sizeof(name), "%d:%s%d", displayminutes, displayseconds < 10 ? "0" : "", displayseconds);
+		kv->SetString("score", name);
+	}
 
 	return true;
 }
@@ -702,10 +720,12 @@ void CGERoundReport::ApplySchemeSettings( vgui::IScheme *pScheme )
 	m_pImageList->AddImage( scheme()->GetImage( "scoreboard/ges_silverach", true ) );
 	m_pImageList->AddImage( scheme()->GetImage( "scoreboard/ges_goldach", true ) );
 	m_pImageList->AddImage( scheme()->GetImage( "roundreport/ges_bot", true ) );
+	m_pImageList->AddImage( scheme()->GetImage( "roundreport/ges_cc", true ));
 
 	m_pImageList->GetImage(1)->SetSize( size, size );
 	m_pImageList->GetImage(2)->SetSize( size, size );
 	m_pImageList->GetImage(5)->SetSize( size, size );
+	m_pImageList->GetImage(6)->SetSize( size, size );
 
 	FindOtherPanels();
 }

@@ -29,8 +29,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar ge_skipintro( "cl_ge_skipintro", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
-ConVar ge_skipintrobg( "cl_ge_skipintrobg", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
+ConVar ge_skipintro( "cl_ge_skipintro", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
+ConVar ge_skipintrobg( "cl_ge_skipintrobg", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
 
 #define BACKGROUNDVID_TIMEOUT 90.0f
 

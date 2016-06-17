@@ -610,12 +610,13 @@ void CGEMusicManager::DEBUG_NextSong()
 	m_fNextSongTime = 0;
 }
 
-#ifdef _DEBUG
-CON_COMMAND( fmod_nextsong, "Next song" )
+// This could actually be useful for players/musicians testing their tracks.
+CON_COMMAND( ge_nextsong, "Skips current track" )
 {
 	GEMusicManager()->DEBUG_NextSong();
 }
 
+#ifdef _DEBUG
 CON_COMMAND( fmod_playlist, "Playlist change" )
 {
 	if ( args.ArgC() > 1 )

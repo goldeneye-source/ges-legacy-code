@@ -45,11 +45,23 @@ public:
 
 protected:
 	virtual void Explode();
+	virtual Vector CalPath();
 
 private:
 	Vector m_vForward;
+	Vector m_vUp;
+	Vector m_vRight;
+
+	int m_iseed1;
+	int m_iseed2;
+	int m_iseed3;
+	float m_fthinktime;
+	float m_fFuseTime;
+
 	float m_flSpawnTime;
 	CHandle<SmokeTrail> m_hSmokeTrail;
+
+	bool m_bHitPlayer;
 };
 
 #endif

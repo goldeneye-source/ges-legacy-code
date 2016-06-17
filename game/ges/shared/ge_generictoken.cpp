@@ -99,6 +99,7 @@ acttable_t CGenericToken::m_acttable[] =
 	{ ACT_GES_DRAW,						ACT_GES_GESTURE_DRAW_KNIFE,				false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_KNIFE,						false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_KNIFE,					false },
 };
 IMPLEMENT_ACTTABLE( CGenericToken );
 
@@ -237,12 +238,18 @@ void CGenericToken::PrimaryAttack( void )
 bool CGenericToken::CanEquip( CBaseCombatCharacter *pOther )
 {
 	// Don't allow multiple pickups of the same token
-	if ( pOther->Weapon_OwnsThisType(GetClassname()) )
+	if ( pOther->Weapon_OwnsThisType( GetClassname()) )
 		return false;
 
 	// If we are a teamplay token don't allow opposite team to pick us up
 	if ( GEMPRules()->IsTeamplay() && GetTeamNumber() )
-		return GetTeamNumber() == pOther->GetTeamNumber();
+		if ( GetTeamNumber() == pOther->GetTeamNumber() )
+			return true;
+		else
+		{
+			GEGameplay()->GetScenario()->OnEnemyTokenTouched(this, ToGEPlayer(pOther));
+			return false;
+		}
 
 	return true;
 }

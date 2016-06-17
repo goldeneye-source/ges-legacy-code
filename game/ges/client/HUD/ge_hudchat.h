@@ -54,6 +54,8 @@ public:
 	virtual void	Init( void );
 	virtual void	Reset( void );
 
+	virtual bool	ShouldDraw(void);
+
 	virtual void	ApplySchemeSettings( vgui::IScheme *pScheme );
 
 	int				GetChatInputOffset( void );

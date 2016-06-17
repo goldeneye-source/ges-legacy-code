@@ -352,7 +352,7 @@ bool CHL2MPPlayerAnimState::HandleMoving( Activity &idealActivity )
 	float flSpeed = GetOuterXYSpeed();
 	if ( flSpeed > MOVING_MINIMUM_SPEED )
 	{
-		if ( flSpeed <= (float)GE_AIMED_SPEED + 20.0f )
+		if (flSpeed <= (float)(GE_NORM_SPEED*GE_AIM_SPEED_MULT) + 20.0f)
 			idealActivity = ACT_MP_WALK;
 		else
 			idealActivity = ACT_MP_RUN;
@@ -484,6 +484,11 @@ bool CHL2MPPlayerAnimState::HandleJumping( Activity &idealActivity )
 			}
 			else
 			{
+#ifdef GE_DLL
+				if (m_pHL2MPPlayer->GetFlags() & FL_DUCKING)
+					idealActivity = ACT_GES_CJUMP;
+				else
+#endif
 				idealActivity = ACT_MP_JUMP;
 			}
 		}

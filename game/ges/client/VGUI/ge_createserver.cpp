@@ -75,7 +75,7 @@ protected:
 		for ( KeyValues *pKVLoadout = pKeyValuesData->GetFirstSubKey(); pKVLoadout; pKVLoadout = pKVLoadout->GetNextKey() )
 		{
 			const char *szName = pKVLoadout->GetName();
-			if ( !Q_strstr(szName," ") && !Q_strstr(szName,",") )
+			if (!Q_strstr(szName, " ") && !Q_strstr(szName, ","))
 				g_GECreateServer->AddWeaponSet( group, pKVLoadout );
 		}
 	};
@@ -261,9 +261,12 @@ void CGECreateServer::PopulateControls( void )
 		const char *pFilename = filesystem->FindFirstEx( "maps\\*.bsp", "MOD", &findHandle );
 		while ( pFilename )
 		{
-			// Add the map to the list
-			Q_FileBase( pFilename, file, 32 );
-			maplist->AddItem( file, new KeyValues(file) );
+			if ( stricmp(pFilename, "ge_transition.bsp") ) //They don't need to pick our dinky crash avoidance map.
+			{
+				// Add the map to the list
+				Q_FileBase(pFilename, file, 32);
+				maplist->AddItem(file, new KeyValues(file));
+			}
 
 			pFilename = filesystem->FindNext( findHandle );
 		}
@@ -296,6 +299,9 @@ void CGECreateServer::PopulateControls( void )
 	
 		FOR_EACH_DICT( m_WeaponSets, idx )
 		{
+			if (Q_strstr(m_WeaponSets.GetElementName(idx), "_mhide"))
+				continue;
+
 			int id = weaponlist->AddItem( m_WeaponSets.GetElementName(idx), NULL );
 			weaponlist->GetMenu()->SetItemEnabled( id, false );
 

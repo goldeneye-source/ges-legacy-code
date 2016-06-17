@@ -56,6 +56,7 @@ public:
 
 	virtual void PrimaryAttack( void );
 	virtual void ItemPostFrame( void );
+	virtual void OnReloadOffscreen( void );
 
 	virtual void AddViewKick( void );
 
@@ -73,6 +74,8 @@ private:
 	void	CheckLaunchPosition( const Vector &vecEye, Vector &vecSrc );
 	void	LaunchRocket( void );
 	
+	int		m_iRocketGroup;
+
 	CNetworkVar( bool, m_bPreLaunch );
 	CNetworkVar( float, m_flRocketSpawnTime );
 
@@ -99,6 +102,7 @@ acttable_t	CGEWeaponRocketLauncher::m_acttable[] =
 	{ ACT_MP_RELOAD_CROUCH,				ACT_GES_GESTURE_RELOAD_PHANTOM,			false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_RL,						false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_RL,						false },
 };
 IMPLEMENT_ACTTABLE(CGEWeaponRocketLauncher);
 
@@ -138,19 +142,55 @@ CGEWeaponRocketLauncher::CGEWeaponRocketLauncher( void )
 	// NPC Ranging
 	m_fMinRange1 = 300;
 	m_fMaxRange1 = 5000;
+
+	m_iRocketGroup = 0;
 }
 
 bool CGEWeaponRocketLauncher::Deploy( void )
 {
 	m_bPreLaunch = false;
 	m_flRocketSpawnTime = -1;
-	return BaseClass::Deploy();
+
+	bool success = BaseClass::Deploy();
+
+	if (m_iClip1 > 0)
+		SwitchBodygroup(1, 0);
+	else
+		SwitchBodygroup(1, 1);
+
+	return success;
 }
 
 void CGEWeaponRocketLauncher::Precache( void )
 {
+	PrecacheModel("models/weapons/rocket_launcher/v_rocket_launcher.mdl");
+	PrecacheModel("models/weapons/rocket_launcher/w_rocket_launcher.mdl");
+
 	PrecacheModel("models/weapons/rocket_launcher/w_rocket.mdl");
+	PrecacheMaterial("models/weapons/w_models/w_gl/grenadeprojectile");
+
+	PrecacheMaterial("sprites/hud/weaponicons/rocket_launcher");
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_rocket");
+
+	PrecacheScriptSound("Weapon_RocketLauncher.Single");
+	PrecacheScriptSound("Weapon_RocketLauncher.Ignite");
+
 	BaseClass::Precache();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Put the rocket back on the end of the rocket launcher after we reload it.
+//-----------------------------------------------------------------------------
+void CGEWeaponRocketLauncher::OnReloadOffscreen(void)
+{
+	BaseClass::OnReloadOffscreen();
+
+	CBaseCombatCharacter *pOwner = GetOwner();
+	if (!pOwner)
+		return;
+
+	if (pOwner->GetActiveWeapon() == this)
+		SwitchBodygroup(1, 0);
 }
 
 //-----------------------------------------------------------------------------
@@ -231,9 +271,9 @@ void CGEWeaponRocketLauncher::LaunchRocket( void )
 
 	if ( pOwner->IsPlayer() )
 	{
-		VectorMA( vecSrc, 3.0f, vRight, vecSrc );
-		VectorMA( vecSrc, 20.0f, vForward, vecSrc );
-		VectorMA( vecSrc, -2.0f, vUp, vecSrc );
+		VectorMA( vecSrc, 4.5f, vRight, vecSrc ); // 3.0, 5.0
+		VectorMA( vecSrc, 16.5f, vForward, vecSrc ); // 20, 19
+		VectorMA( vecSrc, -5.25f, vUp, vecSrc ); // -2, -6, -5, 5.25
 	}
 	else
 	{
@@ -262,6 +302,7 @@ void CGEWeaponRocketLauncher::LaunchRocket( void )
 	{
 		pRocket->SetThrower( pOwner );
 		pRocket->SetOwnerEntity( pOwner );
+		pRocket->SetSourceWeapon(this);
 
 		pRocket->SetDamage( GetGEWpnData().m_iDamage );
 		pRocket->SetDamageRadius( GetGEWpnData().m_flDamageRadius );
@@ -275,6 +316,8 @@ void CGEWeaponRocketLauncher::LaunchRocket( void )
 	// Remove the rocket from our ammo pool
 	m_iClip1 -= 1;
 	WeaponSound( SINGLE );
+
+	SwitchBodygroup(1, 1);
 
 	//Add our view kick in
 	AddViewKick();

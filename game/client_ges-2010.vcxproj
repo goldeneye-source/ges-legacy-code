@@ -231,8 +231,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ges\client\c_ge_capturearea.cpp" />
+    <ClCompile Include="ges\client\c_ge_door_interp.cpp" />
     <ClCompile Include="ges\client\c_ge_player.cpp" />
     <ClCompile Include="ges\client\clientmode_ge.cpp" />
+    <ClCompile Include="ges\client\c_ge_point_follower.cpp" />
     <ClCompile Include="ges\client\c_npc_gebase.cpp" />
     <ClCompile Include="ges\client\ge_materialproxies.cpp" />
     <ClCompile Include="ges\client\ge_musicmanager.cpp" />
@@ -922,10 +924,12 @@
     <ClCompile Include="sdk\client\entity_client_tools.cpp" />
     <ClCompile Include="sdk\client\toolframework_client.cpp" />
     <ClCompile Include="sdk\client\mp3player.cpp" />
+    <ClCompile Include="v5_achievements.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ges\client\c_ge_player.h" />
     <ClInclude Include="ges\client\clientmode_ge.h" />
+    <ClInclude Include="ges\client\c_ge_point_follower.h" />
     <ClInclude Include="ges\client\c_npc_gebase.h" />
     <ClInclude Include="ges\client\ge_musicmanager.h" />
     <ClInclude Include="ges\client\ge_screeneffects.h" />

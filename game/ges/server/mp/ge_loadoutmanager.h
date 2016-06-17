@@ -48,14 +48,19 @@ private:
 	void ParseGameplayAffinity( void );
 	void ClearLoadouts( void );
 
+	// Adjusts weights according to weaponset grouping rules.
+	bool AdjustWeights(CUtlVector<int> &groups, CUtlVector<int> &weights);
+
 	struct GameplaySet
 	{
 		CUtlVector<char*>	loadouts;
 		CUtlVector<int>		weights;
+		CUtlVector<int>		groups;
 	};
 
 	// Our loadout information
 	CGELoadout *m_pCurrentLoadout;
+	int			m_iCurrentGroup[3];
 	CUtlDict<CGELoadout*, int>	m_Loadouts;
 	CUtlDict<GameplaySet*, int> m_GameplaySets;
 	// Used to select random_loadout or cycle_loadout

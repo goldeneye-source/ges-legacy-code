@@ -37,11 +37,21 @@ DECLARE_HUD_MESSAGE( CHudChat, TextMsg );
 //CHudChat
 //=====================
 
+ConVar cl_ge_drawchat("cl_ge_drawchat", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Draw the chat.");
+
 CHudChat::CHudChat( const char *pElementName ) : BaseClass( pElementName )
 {
 	m_IScheme = NULL;
 	m_pHudGameplay = NULL;
 	m_bIntermissionSet = false;
+}
+
+bool CHudChat::ShouldDraw(void)
+{
+	if (!cl_ge_drawchat.GetBool())
+		return false;
+
+	return true;
 }
 
 void CHudChat::CreateChatInputLine( void )

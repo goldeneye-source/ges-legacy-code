@@ -1767,6 +1767,33 @@
     <ClCompile Include="ges\shared\ge_game_timer.cpp">
       <Filter>GES\Entities</Filter>
     </ClCompile>
+    <ClCompile Include="ges\server\ge_triggers.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\server\ge_door.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\server\prop_ge_dynamic.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\server\ge_brush.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\server\ge_point_follower.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\server\ge_logic_gate.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\server\ge_door_interp.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\server\mp\ge_mapmanager.cpp">
+      <Filter>GES\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="ge_logic_bitflag.cpp">
+      <Filter>GES\Entities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sdk\server\plasma.h">
@@ -3493,6 +3520,27 @@
     </ClInclude>
     <ClInclude Include="ges\shared\ge_game_timer.h">
       <Filter>GES\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\server\ge_triggers.h">
+      <Filter>GES\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\server\ge_door.h">
+      <Filter>GES\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\shared\weapon_shotgun.h">
+      <Filter>GES\Weapons\Shotguns</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\server\ge_point_follower.h">
+      <Filter>GES\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\server\ge_logic_gate.h">
+      <Filter>GES\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\server\ge_door_interp.h">
+      <Filter>GES\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\server\mp\ge_mapmanager.h">
+      <Filter>GES\Gameplay</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

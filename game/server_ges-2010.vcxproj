@@ -459,9 +459,15 @@
     <ClCompile Include="ges\server\ai\ge_ai.cpp" />
     <ClCompile Include="ges\server\ai\ge_ai_concommands.cpp" />
     <ClCompile Include="ges\server\ai\npc_gebase_aiming.cpp" />
+    <ClCompile Include="ges\server\ge_brush.cpp" />
+    <ClCompile Include="ges\server\ge_door.cpp" />
+    <ClCompile Include="ges\server\ge_door_interp.cpp" />
     <ClCompile Include="ges\server\ge_gameplayinfo.cpp" />
+    <ClCompile Include="ges\server\ge_logic_gate.cpp" />
+    <ClCompile Include="ges\server\ge_point_follower.cpp" />
     <ClCompile Include="ges\server\mp\gebot_player.cpp" />
     <ClCompile Include="ges\server\mp\ge_gameplayresource.cpp" />
+    <ClCompile Include="ges\server\mp\ge_mapmanager.cpp" />
     <ClCompile Include="ges\server\mp\ge_playerspawn.cpp" />
     <ClCompile Include="ges\server\py\ge_pyaiconstants.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ge_pyprecom.h</PrecompiledHeaderFile>
@@ -484,7 +490,10 @@
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|Win32'">$(IntDir)server_py.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <ClCompile Include="ges\server\ge_recipientfilter.cpp" />
+    <ClCompile Include="ges\server\ge_triggers.cpp" />
+    <ClCompile Include="ges\server\prop_ge_dynamic.cpp" />
     <ClCompile Include="ges\shared\ge_webrequest.cpp" />
+    <ClCompile Include="ge_logic_bitflag.cpp" />
     <ClCompile Include="sdk\server\hl2\npc_bullseye.cpp" />
     <ClCompile Include="sdk\server\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -1392,12 +1401,19 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ges\server\ge_door.h" />
+    <ClInclude Include="ges\server\ge_door_interp.h" />
+    <ClInclude Include="ges\server\ge_logic_gate.h" />
+    <ClInclude Include="ges\server\ge_point_follower.h" />
     <ClInclude Include="ges\server\ge_recipientfilter.h" />
+    <ClInclude Include="ges\server\ge_triggers.h" />
     <ClInclude Include="ges\server\mp\ge_gameplayresource.h" />
+    <ClInclude Include="ges\server\mp\ge_mapmanager.h" />
     <ClInclude Include="ges\server\mp\ge_playerspawn.h" />
     <ClInclude Include="ges\server\mp\gebot_player.h" />
     <ClInclude Include="ges\server\py\ge_pyfuncs.h" />
     <ClInclude Include="ges\shared\ge_webrequest.h" />
+    <ClInclude Include="ges\shared\weapon_shotgun.h" />
     <ClInclude Include="sdk\server\hl2\npc_bullseye.h" />
     <ClInclude Include="sdk\server\plasma.h" />
     <ClInclude Include="sdk\server\smoke_trail.h" />

@@ -75,6 +75,8 @@ CGEWeaponMine::CGEWeaponMine( void )
 
 void CGEWeaponMine::Precache( void )
 {
+	PrecacheScriptSound( "weapon_mines.Throw" );
+
 	BaseClass::Precache();
 	m_iCrateModelIndex = PrecacheModel( BABYCRATE_MODEL );
 	m_iWorldModelIndex = PrecacheModel( BaseClass::GetWorldModel() );
@@ -184,14 +186,13 @@ void CGEWeaponMine::ThrowMine( void )
 	//Create a mine
 	Vector	vecSrc = pOwner->Weapon_ShootPosition();
 
-	Vector	vForward, vRight;
-	AngleVectors( pOwner->EyeAngles(), &vForward, &vRight, NULL );
-	vForward[2] += 0.1f;
+	Vector	vForward, vRight, vUp;
+	AngleVectors( pOwner->EyeAngles(), &vForward, &vRight, &vUp );
 	
 	Vector vecThrow;
 	pOwner->GetVelocity( &vecThrow, NULL );
-	vecThrow += vForward * 462;
-
+	vecThrow += vForward * 600 + vUp * 80; //Pretty close to original throwing behavior.
+	
 	QAngle angAiming;
 	VectorAngles( vecThrow, angAiming );
 
@@ -203,15 +204,37 @@ void CGEWeaponMine::ThrowMine( void )
 			pOwner = pNPC->GetBotPlayer();
 	}
 
+	int iSeed = CBaseEntity::GetPredictionRandomSeed();
+	int randarray[3];
+	int rot1, rot2;
+
+	for (int i = 0; i < 3; i++)
+	{
+		RandomSeed(iSeed + i * 7);
+		randarray[i] = rand() % 4 + 4;
+	}
+
+	// clip and square randarray values to give more diversity to rotations.
+	// Possible values are 16, 25, 36, 49.
+	// randarray[2] is used to flip signs as just subtracting off the average value to make it the x intercept will not work in this case.
+	rot1 = randarray[0] * randarray[0] * 10 * (randarray[2] > 3 ? 1 : -1);
+	rot2 = randarray[1] * randarray[1] * 10 * (randarray[2] % 2 == 0 ? 1 : -1);
+
 	CGEMine *pMine = (CGEMine *)CBaseEntity::Create( "npc_mine", vecSrc, angAiming, NULL );
+	float timescale = phys_timescale.GetFloat();
+
 
 	pMine->SetThrower( pOwner );
 	pMine->SetOwnerEntity( pOwner );
-	pMine->ApplyAbsVelocityImpulse( vecThrow );
-	pMine->SetLocalAngularVelocity( QAngle(450,0,0) );
+	pMine->SetSourceWeapon( this );
+	pMine->ApplyAbsVelocityImpulse( vecThrow * timescale );
+	pMine->SetLocalAngularVelocity( QAngle(rot1, rot2, 0) * timescale );
 	pMine->SetMineType( GetWeaponID() );
 	pMine->SetDamage( GetGEWpnData().m_iDamage );
 	pMine->SetDamageRadius( GetGEWpnData().m_flDamageRadius );
+
+	if ( timescale != 1 )
+		pMine->SetGravity( timescale*timescale );
 
 	// Tell the owner what we threw to implement anti-spamming
 	if ( pOwner->IsPlayer() )
@@ -266,6 +289,7 @@ acttable_t CWeaponRemoteMine::m_acttable_mine[] =
 	{ ACT_GES_DRAW,						ACT_GES_GESTURE_DRAW_MINE,			false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_MINE,					false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_MINE,					false },
 };
 
 acttable_t CWeaponRemoteMine::m_acttable_watch[] = 
@@ -281,6 +305,7 @@ acttable_t CWeaponRemoteMine::m_acttable_watch[] =
 	{ ACT_MP_ATTACK_CROUCH_PRIMARYFIRE,	ACT_GES_GESTURE_RANGE_ATTACK_WATCH,	true },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_WATCH,					false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_WATCH,				false },
 };
 
 // Explicitly define these so we can switch our activity table based on the state of the weapon
@@ -301,6 +326,14 @@ int CWeaponRemoteMine::ActivityListCount( void )
 
 void CWeaponRemoteMine::Precache( void )
 {
+	PrecacheModel( "models/weapons/mines/v_remotemine.mdl" );
+	PrecacheModel( "models/weapons/mines/w_mine.mdl" );
+
+	PrecacheMaterial( "sprites/hud/weaponicons/mine_remote" );
+	PrecacheMaterial( "sprites/hud/ammoicons/ammo_remotemine" );
+
+	PrecacheScriptSound( "weapon_mines.WatchBeep" );
+
 	m_iWatchModelIndex = CBaseEntity::PrecacheModel( "models/weapons/mines/w_watch.mdl" );
 	BaseClass::Precache();
 }
@@ -545,6 +578,7 @@ acttable_t CWeaponProximityMine::m_acttable[] =
 	{ ACT_GES_DRAW,						ACT_GES_GESTURE_DRAW_MINE,			false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_MINE,					false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_MINE,					false },
 };
 IMPLEMENT_ACTTABLE( CWeaponProximityMine );
 
@@ -552,6 +586,19 @@ void CWeaponProximityMine::Spawn( void )
 {
 	BaseClass::Spawn();
 	m_nSkin = FAMILY_GROUP_PROXIMITY;
+}
+
+void CWeaponProximityMine::Precache(void)
+{
+	PrecacheModel("models/weapons/mines/v_proximitymine.mdl");
+	PrecacheModel("models/weapons/mines/w_mine.mdl");
+
+	PrecacheMaterial("sprites/hud/weaponicons/mine_proximity");
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_proximitymine");
+
+	PrecacheScriptSound("weapon_mines.Throw");
+
+	BaseClass::Precache();
 }
 
 void CWeaponProximityMine::Equip( CBaseCombatCharacter *pOwner )
@@ -597,6 +644,7 @@ acttable_t CWeaponTimedMine::m_acttable[] =
 	{ ACT_GES_DRAW,						ACT_GES_GESTURE_DRAW_MINE,			false },
 
 	{ ACT_MP_JUMP,						ACT_GES_JUMP_MINE,					false },
+	{ ACT_GES_CJUMP,					ACT_GES_CJUMP_MINE,					false },
 };
 IMPLEMENT_ACTTABLE( CWeaponTimedMine );
 
@@ -604,6 +652,19 @@ void CWeaponTimedMine::Spawn( void )
 {
 	BaseClass::Spawn();
 	m_nSkin = FAMILY_GROUP_TIMED;
+}
+
+void CWeaponTimedMine::Precache(void)
+{
+	PrecacheModel("models/weapons/mines/v_timedmine.mdl");
+	PrecacheModel("models/weapons/mines/w_mine.mdl");
+
+	PrecacheMaterial("sprites/hud/weaponicons/mine_timed");
+	PrecacheMaterial("sprites/hud/ammoicons/ammo_timedmine");
+
+	PrecacheScriptSound("weapon_mines.Throw");
+
+	BaseClass::Precache();
 }
 
 void CWeaponTimedMine::Equip( CBaseCombatCharacter *pOwner )

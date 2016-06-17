@@ -4,6 +4,7 @@
 #include "utlbuffer.h"
 #include "gamestringpool.h"
 #include "ge_shareddefs.h"
+#include "ge_weapon_parse.h"
 
 #ifdef CLIENT_DLL
 	#include <vgui/VGUI.h>
@@ -218,7 +219,7 @@ int Q_ExtractData( const char *in, CUtlVector<char*> &out )
 
 #ifdef CLIENT_DLL
 
-void GEUTIL_DrawSprite3D( IMaterial *pMaterial, Vector offset, float width, float height )
+void GEUTIL_DrawSprite3D( IMaterial *pMaterial, Vector offset, float width, float height, int alpha = 255 )
 {
 	// Make sure we are allowed to access our orientation
 	Assert( IsCurrentViewAccessAllowed() );
@@ -255,22 +256,22 @@ void GEUTIL_DrawSprite3D( IMaterial *pMaterial, Vector offset, float width, floa
 	CMeshBuilder meshBuilder;
 	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
 
-	meshBuilder.Color4ub( 255, 255, 255, 255 );
+	meshBuilder.Color4ub( 255, 255, 255, alpha );
 	meshBuilder.TexCoord2f( 0,0,0 );
 	meshBuilder.Position3fv( (vOrigin + left + top).Base() );
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Color4ub( 255, 255, 255, 255 );
+	meshBuilder.Color4ub( 255, 255, 255, alpha );
 	meshBuilder.TexCoord2f( 0,1,0 );
 	meshBuilder.Position3fv( (vOrigin + right + top).Base() );
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Color4ub( 255, 255, 255, 255 );
+	meshBuilder.Color4ub( 255, 255, 255, alpha );
 	meshBuilder.TexCoord2f( 0,1,1 );
 	meshBuilder.Position3fv( (vOrigin + right + bottom).Base() );
 	meshBuilder.AdvanceVertex();
 
-	meshBuilder.Color4ub( 255, 255, 255, 255 );
+	meshBuilder.Color4ub( 255, 255, 255, alpha );
 	meshBuilder.TexCoord2f( 0,0,1 );
 	meshBuilder.Position3fv( (vOrigin + left + bottom).Base() );
 	meshBuilder.AdvanceVertex();
@@ -526,6 +527,105 @@ wchar_t *GEUTIL_GetGameplayName( wchar_t *out, int byte_size )
 
 	return out;
 }
+
+uint64 GEUTIL_GetUniqueSkinData(int steamhash)
+{
+	uint64 value = 0;
+	FileHandle_t file = filesystem->Open("gesdata.txt", "r", "GAME");
+
+	if (file)
+	{
+		char mixedvalue[32], writevalue[16], hashvalue[8];
+		int filehash = 0;
+
+		filesystem->Read(mixedvalue, 32, file);
+		filesystem->Close(file);
+
+		for (int i = 0; i < 32; i++)
+		{
+			if (i % 2 == 0)
+				writevalue[(int)(i / 2)] = mixedvalue[i];
+			else if ((i - 1) % 4 == 0)
+				hashvalue[(int)((i - 1) / 4)] = mixedvalue[i];
+		}
+
+		for (int i = 0; i < 8; i++)
+			filehash += (hashvalue[i] - i - 32) << (i * 4);
+
+		if (filehash != steamhash)
+		{
+			Warning("Invalid gesdata.txt!\n");
+			return 0;
+		}
+
+		for (int i = 0; i < 16; i++)
+			value += (writevalue[i] - i - 32) << (i * 4);
+	}
+
+	return value;
+}
+
+// This is just to scare off the people who aren't hardcore, and make it a pain to share the skins.
+// If you're not part of the project and found this on github, congratulations!  You can give yourself some cool skins.
+void GEUTIL_WriteUniqueSkinData( uint64 value, int steamhash )
+{
+	uint64 origbits = GEUTIL_GetUniqueSkinData(steamhash);
+	uint64 bits = 0;
+
+	for (int i = 0; i < 32; i++)
+	{
+		if ((value & (3 << (i*2))) > (origbits & (3 << (i*2))))
+			bits = bits | value & (3 << (i*2));
+		else
+			bits = bits | origbits & (3 << (i * 2));
+	}
+
+	FileHandle_t file = filesystem->Open("gesdata.txt", "w", "MOD");
+
+	if (file)
+	{
+		char writevalue[16], hashvalue[8], garbagevalue[8], mixedvalue[32];
+
+		for (int i = 0; i < 16; i++)
+			writevalue[i] = ((bits >> (i * 4)) & 15) + i + 32;
+
+		for (int i = 0; i < 8; i++)
+			hashvalue[i] = ((steamhash >> (i * 4)) & 15) + i + 32;
+
+		for (int i = 0; i < 8; i++)
+			garbagevalue[i] = (( (steamhash*steamhash - 398 * 28) >> (i * 4) ) & 15) + 32;
+
+		for (int i = 0; i < 32; i++)
+		{
+			if (i % 2 == 0)
+				mixedvalue[i] = writevalue[(int)(i/2)];
+			else if ((i - 1) % 4 == 0)
+				mixedvalue[i] = hashvalue[(int)((i - 1) / 4)];
+			else if (i == 31)
+				mixedvalue[i] = '\0';
+			else
+				mixedvalue[i] = garbagevalue[(int)((i+1)/4)];
+		}
+
+		filesystem->Write(mixedvalue, V_strlen(mixedvalue), file);
+
+		filesystem->Close(file);
+	}
+}
+
+uint64 GEUTIL_EventCodeToSkin( int code )
+{
+	uint64 skincode = 0;
+
+	if (code & 1)
+		skincode |= 64; // Black DD44
+	if (code & 2)
+		skincode |= 128; // Ivory DD44
+	if (code & 4)
+		skincode |= 16777216; // Ivory ZMG
+
+	return skincode;
+}
 #endif
 
 // Valid hints are 0->9, a->z, |
@@ -659,6 +759,10 @@ bool IsOnList( int listnum, const unsigned int hash )
 		return vDevsHash.Find(hash) != -1;
 	case LIST_TESTERS:
 		return vTestersHash.Find(hash) != -1;
+	case LIST_CONTRIBUTORS:
+		return vContributorsHash.Find(hash) != -1;
+	case LIST_SKINS:
+		return vSkinsHash.Find(hash) != -1;
 	case LIST_BANNED:
 		return vBannedHash.Find(hash) != -1;
 	}
@@ -669,7 +773,14 @@ bool IsOnList( int listnum, const unsigned int hash )
 // These are extern'd in shareddefs.h
 CUtlVector<unsigned int> vDevsHash;
 CUtlVector<unsigned int> vTestersHash;
+CUtlVector<unsigned int> vContributorsHash;
 CUtlVector<unsigned int> vBannedHash;
+
+CUtlVector<unsigned int> vSkinsHash;
+CUtlVector<uint64> vSkinsValues;
+
+int iAwardEventCode = 0;
+uint64 iAllowedClientSkins = 0;
 
 void InitStatusLists( void )
 {
@@ -703,7 +814,7 @@ void UpdateStatusLists( const char *data )
 	while ( hash )
 	{
 		unsigned int uHash = strtoul( hash->GetString(), NULL, 0 );
-
+		
 		if ( !Q_stricmp("dev", hash->GetName()) )
 		{
 			if ( vDevsHash.Find( uHash ) == -1 )
@@ -714,10 +825,52 @@ void UpdateStatusLists( const char *data )
 			if ( vTestersHash.Find( uHash ) == -1 )
 				vTestersHash.AddToTail( uHash );
 		}
+		else if ( !Q_stricmp("cont", hash->GetName()) )
+		{
+			if ( vContributorsHash.Find( uHash ) == -1 )
+				vContributorsHash.AddToTail( uHash );
+		}
 		else if ( !Q_stricmp("ban", hash->GetName()) )
 		{
 			if ( vBannedHash.Find( uHash ) == -1 )
 				vBannedHash.AddToTail( uHash );
+		}
+		// Format is skin_x_y where x is the weapon to be skinned and y is the skin value of that weapon.
+		else if ( !Q_strnicmp("skin_", hash->GetName(), 5) )
+		{
+			CUtlVector <char*> skindata;
+			Q_SplitString(hash->GetName(), "_", skindata);
+
+			if (skindata.Count() > 2)
+			{
+				uint64 skinvalue = atoi(skindata[2]); // Have to transfer it here so we have a 64 bit value to shift.
+				uint64 bits = skinvalue << (atoi(skindata[1]) * 2); //2 bits per weapon.  
+
+				int plIndex = vSkinsHash.Find(uHash);
+
+				if (plIndex == -1) // We have no skins registered yet.
+				{
+					vSkinsHash.AddToTail(uHash);
+					vSkinsValues.AddToTail(bits);
+				}
+				else // We already have a skin so we need to adjust our bitflags.
+				{
+					uint64 newbits = vSkinsValues[plIndex] | bits; //Bitwise OR to combine our bitflags. 100 | 010 = 110
+					vSkinsValues[plIndex] = newbits;
+				}
+			}
+			else
+				Warning("Error parsing skin auth %s, Please bother E-S\n", hash->GetName());
+
+			skindata.PurgeAndDeleteElements();
+		}
+		else if (!Q_stricmp("event_code", hash->GetName()))
+		{
+			iAwardEventCode = uHash; //Not really a hash this time but oh well.
+		}
+		else if (!Q_stricmp("allowed_skins", hash->GetName()))
+		{
+			iAllowedClientSkins = strtoull(hash->GetString(), NULL, 0); //Need to get the long long of the hash this time.
 		}
 
 		hash = hash->GetNextKey();
@@ -829,6 +982,36 @@ int GetRandWeightForWeapon( int id )
 
 	return GEWeaponInfo[id].randweight;
 }
+
+int GetStrengthOfWeapon(int id)
+{
+	if ((id < 0) || (id >= WEAPON_MAX))
+		return 0;
+
+	return GEWeaponInfo[id].strength;
+}
+
+
+int WeaponMaxDamageFromID(int id)
+{
+	const CGEWeaponInfo *weap = NULL;
+	
+	const char *name = WeaponIDToAlias(id);
+	if (name && name[0] != '\0')
+	{
+		int h = LookupWeaponInfoSlot(name);
+		if (h == GetInvalidWeaponInfoHandle())
+			return 5000;
+
+		weap = dynamic_cast<CGEWeaponInfo*>(GetFileWeaponInfoFromHandle(h));
+
+		if (weap)
+			return weap->m_iDamageCap;
+	}
+
+	return 5000;
+}
+
 // End weapon helper functions
 
 #ifdef GAME_DLL

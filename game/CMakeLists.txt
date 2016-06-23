@@ -15,7 +15,7 @@ MACRO(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar
   LIST(APPEND ${SourcesVar} ${PrecompiledSource})
 ENDMACRO(ADD_MSVC_PRECOMPILED_HEADER)
 
-set(SHARED_LIBS m z dl ssl ldap rt util)
+set(SHARED_LIBS m z dl ssl ldap rt util nsl crypt)
 
 set(SERVER_LIBS
   ${CMAKE_SOURCE_DIR}/lib/linux/choreoobjects_486.a
@@ -234,6 +234,7 @@ set(SERVER_SOURCES
   ges/server/mp/ge_gameplayresource.cpp
   ges/server/mp/ge_loadout.cpp
   ges/server/mp/ge_loadoutmanager.cpp
+  ges/server/mp/ge_mapmanager.cpp
   ges/server/mp/ge_playerresource.cpp
   ges/server/mp/ge_playerspawn.cpp
   ges/server/mp/ge_radarresource.cpp

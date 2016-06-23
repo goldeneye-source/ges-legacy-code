@@ -175,6 +175,7 @@ void CGERocket::ExplodeTouch( CBaseEntity *pOther )
 			m_bHitPlayer = true; // Only deal one direct hit per projectile.
 		}
 		Explode();
+	}
 }
 
 int CGERocket::OnTakeDamage( const CTakeDamageInfo &inputInfo )

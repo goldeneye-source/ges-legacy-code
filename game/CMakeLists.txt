@@ -15,20 +15,7 @@ MACRO(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar
   LIST(APPEND ${SourcesVar} ${PrecompiledSource})
 ENDMACRO(ADD_MSVC_PRECOMPILED_HEADER)
 
-# TODO: These are for server
-add_definitions(-D_USRDLL -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE -DGAME_DLL -DVECTOR
-  -DPROTECTED_THINGS_ENABLE -Dsprintf=use_Q_snprintf_instead_of_sprintf -Dstrncpy=use_Q_strncpy_instead
-  -D_snprintf=use_Q_snprintf_instead -DHL2MP -DHL2_DLL -DVERSION_SAFE_STEAM_API_INTERFACES -DGE_DLL -DGE_USE_ROLLINGEXP
-  -DPy_ENABLE_SHARED -DBOOST_AUTO_LINK_NOMANGLE -DBOOST_PYTHON_STATIC_LIB -DBOOST_PYTHON_NO_PY_SIGNATURES
-  -DBOOST_SERIALIZATION_NO_LIB -DBOOST_PYTHON_MAX_ARITY=20 -DGE_AI -DCURL_STATICLIB)
-
-# TODO: These are for server
-include_directories("../common" "../public" "../public/tier0" "../public/tier1" "../utils/common" "../public/python"
-  "../public/curl" "ges/shared" "ges/shared/mp" "ges/shared/sp" "ges/server" "ges/server/mp" "ges/server/ai"
-  "ges/server/py" "ges/server/sp" "sdk/shared" "sdk/shared/hl2" "sdk/shared/hl2mp" "sdk/server"
-  "sdk/server/hl2" "sdk/server/hl2mp")
-
-set(SHARED_LIBS -lm -ldl -lz -lssl -lldap -lrt -lutil)
+set(SHARED_LIBS m z dl ssl ldap rt util)
 
 set(SERVER_LIBS
   ${CMAKE_SOURCE_DIR}/lib/linux/choreoobjects_486.a
@@ -39,8 +26,7 @@ set(SERVER_LIBS
   ${CMAKE_SOURCE_DIR}/lib/linux/tier1_486.a
   ${CMAKE_SOURCE_DIR}/lib/linux/mathlib_486.a
   ${CMAKE_SOURCE_DIR}/lib/curl/libcurl.a
-  ${CMAKE_SOURCE_DIR}/lib/python/libpython3.4m.a
-  ${CMAKE_SOURCE_DIR}/lib/python/boost_python.a
+  ${CMAKE_SOURCE_DIR}/lib/python/libpython3.5m.a
 )
 
 # Call these out separately for precompiled header on windows
@@ -204,7 +190,6 @@ set(SHARED_SOURCES
 )
 
 set(SERVER_SOURCES
-  ${SHARED_SOURCES}
   ../public/dt_send.cpp
   ../public/dt_utlvector_send.cpp
   ../public/editor_sendcommand.cpp
@@ -212,6 +197,12 @@ set(SERVER_SOURCES
   ../public/map_utils.cpp
   ../public/registry.cpp
   ../public/server_class.cpp
+  ${SHARED_SOURCES}
+  sdk/shared/ModelSoundsCache.cpp
+  sdk/shared/SceneCache.cpp
+  sdk/shared/hl2/survival_gamerules.cpp
+  sdk/shared/voice_gamemgr.cpp
+  sdk/shared/weapon_proficiency.cpp
   ges/server/ai/ge_ai.cpp
   ges/server/ai/ge_ai_concommands.cpp
   ges/server/ai/npc_gebase_aiming.cpp
@@ -610,15 +601,9 @@ set(SERVER_SOURCES
   sdk/server/wcedit.cpp
   sdk/server/weight_button.cpp
   sdk/server/world.cpp
-  sdk/shared/ModelSoundsCache.cpp
-  sdk/shared/SceneCache.cpp
-  sdk/shared/hl2/survival_gamerules.cpp
-  sdk/shared/voice_gamemgr.cpp
-  sdk/shared/weapon_proficiency.cpp
 )
 
 set(CLIENT_SOURCES
-  ${SHARED_SOURCES}
   ../common/compiledcaptionswap.cpp
   ../public/bone_accessor.cpp
   ../public/client_class.cpp
@@ -631,6 +616,15 @@ set(CLIENT_SOURCES
   ../public/tools/bonelist.cpp
   ../public/vallocator.cpp
   ../public/vgui_controls/vgui_controls.cpp
+  ${SHARED_SOURCES}
+  sdk/shared/hl2/achievements_hl2.cpp
+  sdk/shared/hl2/hl2_gamerules.cpp
+  sdk/shared/particle_property.cpp
+  sdk/shared/predictioncopy.cpp
+  sdk/shared/teamplayroundbased_gamerules.cpp
+  sdk/shared/voice_banmgr.cpp
+  sdk/shared/voice_status.cpp
+  v5_achievements.cpp
   ges/shared/b314_achievements.cpp
   ges/shared/b3_achievements.cpp
   ges/shared/b4_achievements.cpp
@@ -1016,34 +1010,64 @@ set(CLIENT_SOURCES
   sdk/client/warp_overlay.cpp
   sdk/client/weapon_selection.cpp
   sdk/client/weapons_resource.cpp
-  sdk/shared/hl2/achievements_hl2.cpp
-  sdk/shared/hl2/hl2_gamerules.cpp
-  sdk/shared/particle_property.cpp
-  sdk/shared/predictioncopy.cpp
-  sdk/shared/teamplayroundbased_gamerules.cpp
-  sdk/shared/voice_banmgr.cpp
-  sdk/shared/voice_status.cpp
-  v5_achievements.cpp
 )
 
-ADD_MSVC_PRECOMPILED_HEADER("ges/server/py/ge_pyprecom.h" "ges/server/py/ge_pyprecom.cpp" GEPY_SOURCES)
 ADD_MSVC_PRECOMPILED_HEADER("sdk/server/stdafx.h" "sdk/server/stdafx.cpp" SERVER_SOURCES)
 ADD_MSVC_PRECOMPILED_HEADER("sdk/client/stdafx.h" "sdk/client/stdafx.cpp" CLIENT_SOURCES)
 
-if(CMAKE_HOST_WIN32)
-  # Windows build server and client
-  add_library(server SHARED ${SERVER_SOURCES} ${GEPY_SOURCES})
-  target_link_libraries(server ${SHARED_LIBS})
+# Add the GE:S Python Sources to the server source list
+ADD_MSVC_PRECOMPILED_HEADER("ges/server/py/ge_pyprecom.h" "ges/server/py/ge_pyprecom.cpp" GEPY_SOURCES)
+LIST(APPEND SERVER_SOURCES ${GEPY_SOURCES})
 
+# Shared definitions
+add_definitions(-DHL2MP -DVERSION_SAFE_STEAM_API_INTERFACES -DGE_DLL -DGE_USE_ROLLINGEXP -DCURL_STATICLIB)
+
+# Shared include directories
+include_directories("../common" "../public" "../public/tier0" "../public/tier1" "../utils/common" "../public/curl"
+  "ges/shared" "ges/shared/mp" "ges/shared/sp" "sdk/shared" "sdk/shared/hl2" "sdk/shared/hl2mp")
+
+#######
+# SERVER LIBRARY
+#######
+add_library(server SHARED ${SERVER_SOURCES})
+
+target_link_libraries(server ${SERVER_LIBS} boost_python ${SHARED_LIBS})
+target_compile_definitions(server PUBLIC GAME_DLL HL2_DLL Py_ENABLE_SHARED GE_AI)
+target_include_directories(server PUBLIC "ges/server" "ges/server/mp" "ges/server/ai" "ges/server/py" "ges/server/sp")
+target_include_directories(server PUBLIC "sdk/server" "sdk/server/hl2" "sdk/server/hl2mp" "../public/python")
+
+if(CMAKE_HOST_UNIX)
+  # Linux library name is server_i486.so
+  set_target_properties(server PROPERTIES PREFIX "")
+  set_target_properties(server PROPERTIES OUTPUT_NAME server_i486)
+
+  # Link to pre-built libraries
+  add_library(steam_api SHARED IMPORTED)
+  find_library(STEAMAPI_SO steam_api_i486.so PATHS ${SDK_DIR}/bin NO_DEFAULT_PATH)
+  set_target_properties(steam_api PROPERTIES IMPORTED_LOCATION ${STEAMAPI_SO})
+
+  add_library(tier0 SHARED IMPORTED)
+  find_library(TIER0_SO tier0_i486.so PATHS ${SDK_DIR}/bin NO_DEFAULT_PATH)
+  set_target_properties(tier0 PROPERTIES IMPORTED_LOCATION ${TIER0_SO})
+
+  add_library(vstdlib SHARED IMPORTED)
+  find_library(VSTDLIB_SO vstdlib_i486.so PATHS ${SDK_DIR}/bin NO_DEFAULT_PATH)
+  set_target_properties(vstdlib PROPERTIES IMPORTED_LOCATION ${VSTDLIB_SO})
+
+  target_link_libraries(server steam_api tier0 vstdlib)
+endif()
+
+#######
+# CLIENT LIBRARY
+#######
+if(CMAKE_HOST_WIN32)
+  # Windows builds the client as well
   add_library(client SHARED ${CLIENT_SOURCES})
   target_link_libraries(client ${SHARED_LIBS})
-else()
-  add_library(steam_api_i486 SHARED IMPORTED)
-  set_target_properties(steam_api_i486 PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/linux_sdk/)
-  
-  # Linux build server only
-  add_library(server_i486 SHARED ${SERVER_SOURCES} ${GEPY_SOURCES})
-  set_target_properties(server_i486 PROPERTIES PREFIX "")
-  target_link_libraries(server_i486 ${SHARED_LIBS} steam_api_i486)
-  target_link_libraries(server_i486 ${SERVER_LIBS})
+  target_compile_definitions(client PUBLIC CLIENT_DLL HL2_CLIENT_DLL ENABLE_HTMLWINDOW)
+  target_include_directories(client PUBLIC "ges/client" "ges/client/sp" "ges/client/mp" "ges/client/sdk" "ges/client/vgui" "ges/client/hud")
+  target_include_directories(client PUBLIC "sdk/client" "sdk/client/game_controls" "sdk/client/hl2mp" "sdk/client/hl2mp/UI"
+    "sdk/client/hl2" "sdk/client/hl2/elements" "../vgui2/include" "../vgui2/controls")
 endif()
+
+install(TARGETS server LIBRARY DESTINATION ${INSTALL_DIR})

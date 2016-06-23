@@ -218,6 +218,7 @@ set(SERVER_SOURCES
   ges/server/ge_func_rebreakable_surf.cpp
   ges/server/ge_gameinterface.cpp
   ges/server/ge_gameplayinfo.cpp
+  ges/server/ge_logic_bitflag.cpp
   ges/server/ge_logic_gate.cpp
   ges/server/ge_md5util.cpp
   ges/server/ge_player.cpp

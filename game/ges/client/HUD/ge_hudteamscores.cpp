@@ -118,12 +118,8 @@ void CHudTeamScores::Paint( void )
 		if ( !pTeam )
 			continue;
 
-		// When we are in intermission time the round score is already applied to the match score
-		// but is not reset yet. Take this into account
-		if ( GEMPRules()->IsIntermission() )
-			iScore = GetGlobalTeam(i)->GetMatchScore();
-		else
-			iScore = GetGlobalTeam(i)->GetMatchScore() + GetGlobalTeam(i)->GetRoundScore();
+		// By popular request this displays only round score now.
+		iScore = GetGlobalTeam(i)->GetRoundScore();
 	
 		// Convert the team name into unicode
 		g_pVGuiLocalize->ConvertANSIToUnicode( pTeam->Get_Name(), TeamName, sizeof(TeamName) );

@@ -37,8 +37,6 @@ DECLARE_HUD_MESSAGE( CHudChat, TextMsg );
 //CHudChat
 //=====================
 
-ConVar cl_ge_drawchat("cl_ge_drawchat", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Draw the chat.");
-
 CHudChat::CHudChat( const char *pElementName ) : BaseClass( pElementName )
 {
 	m_IScheme = NULL;
@@ -48,9 +46,6 @@ CHudChat::CHudChat( const char *pElementName ) : BaseClass( pElementName )
 
 bool CHudChat::ShouldDraw(void)
 {
-	if (!cl_ge_drawchat.GetBool())
-		return false;
-
 	return true;
 }
 
@@ -81,14 +76,6 @@ void CHudChat::OnTick( void )
 			// Reset our view after intermission is over
 			ApplySchemeSettings( m_IScheme );
 		}
-	}
-
-	if ( !IsMouseInputEnabled() )
-	{
-		if ( m_pHudGameplay && m_pHudGameplay->IsRaised() )
-			SetVisible( false );
-		else if ( gViewPortInterface->FindPanelByName(PANEL_SCENARIOHELP)->IsVisible() )
-			SetVisible( false );
 	}
 
 	BaseClass::OnTick();

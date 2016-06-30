@@ -110,6 +110,9 @@ CBaseEntity *CGEArmorVest::Respawn(void)
 {
 	BaseClass::Respawn();
 
+	SetSolid( SOLID_NONE );
+	RemoveSolidFlags( FSOLID_TRIGGER );
+
 	m_iSpawnpointsgoal = (int)(ge_armorrespawntime.GetInt() * 10 - ge_armorrespawn_pc_scale.GetFloat() * pow(max((float)GEMPRules()->GetNumAlivePlayers() - 1, 0), ge_armorrespawn_pc_pow.GetFloat()));
 
 	// Let interested developers know our new goal.

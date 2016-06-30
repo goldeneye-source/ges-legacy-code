@@ -256,7 +256,7 @@ void CHudWeaponSelection::CycleToPrevWeapon( void )
 	// We didn't find a next one so we will return the LAST one!
 	if ( !pPrevWeapon || pPrevWeapon == pCurrWeapon )
 	{
-		for ( i=MAX_WEAPON_SLOTS-1,j=MAX_WEAPON_POSITIONS-1; i > 0; i-- )
+		for ( i=MAX_WEAPON_SLOTS-1,j=MAX_WEAPON_POSITIONS-1; i >= 0; i-- )
 		{
 			pPrevWeapon = GetPrevActivePos(i, j);
 			if ( pPrevWeapon )

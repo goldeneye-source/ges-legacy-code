@@ -174,7 +174,7 @@ CGEWeaponGrenadeLauncher::CGEWeaponGrenadeLauncher( void )
 	m_iDesiredShellVisAmount = m_iShellVisAmount;
 	m_iDesiredShellOffset = 0;
 
-	m_iShellBodyGroup[0] = { -1 };
+	m_iShellBodyGroup[0] = -1;
 	m_bPushShells = false;
 }
 
@@ -456,6 +456,11 @@ void CGEWeaponGrenadeLauncher::LaunchGrenade( void )
 		pShell->SetOwnerEntity( pOwner );
 		pShell->SetSourceWeapon(this);
 		pShell->SetVelocity( vecThrow, NULL );
+		
+		if (pOwner->GetTeamNumber() == TEAM_JANUS)
+			pShell->SetCollisionGroup(COLLISION_GROUP_GRENADE_JANUS);
+		else if (pOwner->GetTeamNumber() == TEAM_MI6)
+			pShell->SetCollisionGroup(COLLISION_GROUP_GRENADE_MI6);
 
 		pShell->SetDamage( GetGEWpnData().m_iDamage );
 		pShell->SetDamageRadius( GetGEWpnData().m_flDamageRadius );

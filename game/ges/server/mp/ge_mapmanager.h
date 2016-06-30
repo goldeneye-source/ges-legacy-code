@@ -40,7 +40,10 @@ public:
 	// Go through the map script files and store all of their data relevant to selection in m_pSelectionData
 	void ParseMapSelectionData(void);
 
-	// Get the current map script file and load all of its data into m_pCurrentSelectionData.
+	// Parse our rotation logs so we don't pick the same maps over and over
+	void ParseLogData(void);
+
+	// Get the current map script file and load all of its data into m_pCurrentSelectionData
 	void ParseMapData( const char *mapname );
 
 	// Get the current map script file and load all of its data into m_pCurrentSelectionData.
@@ -66,6 +69,9 @@ public:
 
 	// Get list of maps suitable for current playercount and conditions.
 	void GetViableMapList( int iNumPlayers, CUtlVector<char*> &mapnames, CUtlVector<int> &mapweights );
+
+	// Get the gameplay list for the map and write to the given addresses.
+	void GetRecentMaps( CUtlVector<const char*> &mapnames );
 
 	// Pick and return a new map using the current server conditions.
 	const char* SelectNewMap();
@@ -98,6 +104,9 @@ private:
 	CUtlVector<char*>	m_pMapTeamGamemodes;
 	// Array that holds data from the current map regarding team gamemode weights
 	CUtlVector<int>		m_pMapTeamGamemodeWeights;
+
+	// Array that holds the recently played maps, logged in a text file.
+	CUtlVector< MapSelectionData* >	m_pRecentMaps;
 };
 
 #endif //GE_MAPMANAGER_H

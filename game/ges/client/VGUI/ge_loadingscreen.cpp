@@ -107,14 +107,11 @@ void CGELevelLoadingPanel::FireGameEvent( IGameEvent *event )
 
 const char *CGELevelLoadingPanel::GetDefaultImage()
 {
-	if ( IsWidescreen() )
-		return "loadingscreens/_default_widescreen";
-	else
-		return "loadingscreens/_default";
+	return "loadingscreens/_default_widescreen";
 }
 
 void CGELevelLoadingPanel::SetMapImage( const char *levelname )
-{
+{		
 	// Make sure we are sized properly
 	SetBounds( 0, 0, ScreenWidth(), ScreenHeight() );
 
@@ -132,11 +129,7 @@ void CGELevelLoadingPanel::SetMapImage( const char *levelname )
 
 	char imgFile[256];
 
-	// Check for widescreen or not and load appropriately
-	if ( IsWidescreen() )
-		Q_snprintf( imgFile, 256, "vgui/loadingscreens/%s_widescreen", levelname );
-	else
-		Q_snprintf( imgFile, 256, "vgui/loadingscreens/%s", levelname );
+	Q_snprintf( imgFile, 256, "vgui/loadingscreens/%s_widescreen", levelname );
 
 	// Check the existance of our material
 	if ( IsErrorMaterial( materials->FindMaterial( imgFile, TEXTURE_GROUP_VGUI, false) ) )
@@ -149,6 +142,12 @@ void CGELevelLoadingPanel::SetMapImage( const char *levelname )
 		// Set the image, note that we chop off the "vgui/" since this is appended internally
 		m_pImagePanel->SetImage( imgFile+5 );
 		m_bMapImageSet = true;
+	}
+
+	if (!IsWidescreen())
+	{
+		m_pImagePanel->SetSize(ScreenHeight()*1.778, ScreenHeight());
+		m_pImagePanel->SetPos((ScreenWidth() - ScreenHeight()*1.778)*0.5, 0);
 	}
 
 	// Setup our music manager

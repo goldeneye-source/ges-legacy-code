@@ -64,6 +64,8 @@ END_DATADESC()
 ConVar ge_weapondroplimit("ge_weapondroplimit", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Cap on the number of weapons a player can drop on death in addition to their active one.");
 ConVar ge_limithalfarmorpickup("ge_limithalfarmorpickup", "0", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Prevent players from getting more than half armor from a half armor pickup."); //--TAKE OUT LATER--
 
+ConVar ge_exp_pushscale("ge_exp_pushscale", "1", FCVAR_GAMEDLL | FCVAR_NOTIFY, "Scale the amount of push force from explosions on players.");
+
 CGEPlayer::CGEPlayer()
 {
 	m_bInSpawnInvul = false;
@@ -295,7 +297,7 @@ void CGEPlayer::PostThink( void )
 		m_vDmgForceThisFrame *= m_iDmgTakenThisFrame / 160.0;
 		// Push force from explosions does not get scaled this way, however.
 		// Potential issue here in that simultaneous hits can result in weird push vectors, but it should be very uncommon.
-		m_vDmgForceThisFrame += m_vExpDmgForceThisFrame;
+		m_vDmgForceThisFrame += m_vExpDmgForceThisFrame * ge_exp_pushscale.GetFloat();;
 		DevMsg("Scaled damage force is %f\n", m_vDmgForceThisFrame.Length());
 	}
 
@@ -451,6 +453,7 @@ int CGEPlayer::OnTakeDamage( const CTakeDamageInfo &inputinfo )
 			// Lower the damage from successive hits based on how much damage has already been done this frame.
 			int weighteddamage = info.GetDamage() * info.GetDamage() / (m_iExpDmgTakenThisInterval + info.GetDamage());
 
+			info.ScaleDamageForce(info.GetDamage() / (m_iExpDmgTakenThisInterval + info.GetDamage()));
 			m_iExpDmgTakenThisInterval += weighteddamage;
 			info.SetDamage(weighteddamage);
 		}

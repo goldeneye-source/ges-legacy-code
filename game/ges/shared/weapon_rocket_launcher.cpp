@@ -307,6 +307,11 @@ void CGEWeaponRocketLauncher::LaunchRocket( void )
 		pRocket->SetDamage( GetGEWpnData().m_iDamage );
 		pRocket->SetDamageRadius( GetGEWpnData().m_flDamageRadius );
 
+		if (pOwner->GetTeamNumber() == TEAM_JANUS)
+			pRocket->SetCollisionGroup( COLLISION_GROUP_GRENADE_JANUS );
+		else if (pOwner->GetTeamNumber() == TEAM_MI6)
+			pRocket->SetCollisionGroup( COLLISION_GROUP_GRENADE_MI6 );
+
 		// Tell the owner what we threw to implement anti-spamming
 		if ( pOwner->IsPlayer() )
 			ToGEMPPlayer( pOwner )->AddThrownObject( pRocket );

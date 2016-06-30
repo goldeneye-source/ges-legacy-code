@@ -364,6 +364,8 @@ void CGenericToken::AddViewKick( void )
 
 void CGenericToken::ImpactEffect( trace_t &traceHit )
 {
+	return; // NIEN!!!!
+
 	// See if we hit water (we don't do the other impact effects in this case)
 	if ( ImpactWater( traceHit.startpos, traceHit.endpos ) )
 		return;

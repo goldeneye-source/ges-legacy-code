@@ -521,7 +521,7 @@ protected:
 		// If we're using the grenade launcher, and the game registered a headshot, we can consider this a kill.
 		if (event->GetInt("weaponid") == WEAPON_GRENADE_LAUNCHER && event->GetBool("headshot"))
 		{
-			if (gpGlobals->curtime - m_flLastKillTime < 0.1)
+			if (gpGlobals->curtime - m_flLastKillTime < 0.1 && CalcPlayerCount() >= 4)
 				IncrementCount();
 			else
 				m_flLastKillTime = gpGlobals->curtime;
@@ -747,7 +747,8 @@ protected:
 				return;
 
 			// If we're the one that triggered the event, and the weapon is slappers, we did it!
-			if (Q_atoi(event->GetString("value2")) == pPlayer->GetUserID() && !Q_stricmp(event->GetString("value3"), "weapon_slappers") && IsScenario("yolt"))
+			if (Q_atoi(event->GetString("value2")) == pPlayer->GetUserID() && !Q_stricmp(event->GetString("value3"), "weapon_slappers") 
+				&& IsScenario("yolt") && CalcPlayerCount() >= 4)
 				IncrementCount();
 		}
 	}
@@ -1025,7 +1026,7 @@ protected:
 					m_iKillCount++;
 
 					// If we managed to get 10 kills without using the golden gun, we did it!
-					if ( m_iKillCount >= 10 && IsScenario("mwgg") )
+					if ( m_iKillCount >= 10 && IsScenario("mwgg") && CalcPlayerCount() >= 4 )
 						IncrementCount();
 				}
 				else
@@ -1095,7 +1096,8 @@ protected:
 		}
 		else if (!Q_stricmp(event->GetName(), "round_end"))
 		{
-			if ( pPlayer->entindex() == event->GetInt("winnerid") && IsScenario("mwgg") )
+			if (pPlayer->entindex() == event->GetInt("winnerid") && IsScenario("mwgg") 
+				&& event->GetInt("roundlength") > 120 && CalcPlayerCount() >= 4)
 				IncrementCount();
 		}
 	}
@@ -1309,7 +1311,8 @@ protected:
 			m_bKilledSomeone = false; //Reset our kill flag.
 		else if (!Q_stricmp(event->GetName(), "round_end"))
 		{
-			if (!m_bKilledSomeone && pPlayer->entindex() == event->GetInt("winnerid") && IsScenario("viewtoakill"))
+			if (!m_bKilledSomeone && pPlayer->entindex() == event->GetInt("winnerid") && IsScenario("viewtoakill")
+				&& event->GetInt("roundlength") > 120 && CalcPlayerCount() >= 4)
 				IncrementCount();
 		}
 	}
@@ -1342,7 +1345,7 @@ protected:
 			if (!pPlayer)
 				return;
 
-			if ( Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && IsScenario("viewtoakill") )
+			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && IsScenario("viewtoakill") && CalcPlayerCount() >= 4)
 				IncrementCount();
 		}
 	}
@@ -1452,7 +1455,8 @@ protected:
 
 		if ( !Q_stricmp(event->GetName(), "round_end") )
 		{
-			if (pPlayer->entindex() == event->GetInt("winnerid") && event->GetInt("winnerscore") <= 10 && IsScenario("livingdaylights"))
+			if (pPlayer->entindex() == event->GetInt("winnerid") && event->GetInt("winnerscore") <= 10 && IsScenario("livingdaylights")
+				&& event->GetInt("roundlength") > 120 && CalcPlayerCount() >= 4)
 				IncrementCount();
 		}
 	}
@@ -1483,7 +1487,7 @@ protected:
 			if (!pPlayer)
 				return;
 
-			if ( Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && IsScenario("capturetheflag") )
+			if (Q_atoi(event->GetString("value1")) == pPlayer->GetUserID() && IsScenario("capturetheflag") && CalcPlayerCount() >= 4)
 				IncrementCount();
 		}
 	}
@@ -1684,7 +1688,7 @@ protected:
 			{
 				m_iKillcount++;
 
-				if (m_iKillcount > 4 && IsScenario( "deathmatch" ))
+				if ( m_iKillcount > 4 && IsScenario("deathmatch") && CalcPlayerCount() >= 4 )
 					IncrementCount();
 			}
 		}

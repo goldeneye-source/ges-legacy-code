@@ -764,7 +764,7 @@ void CGEMPPlayer::ChangeTeam( int iTeam, bool bWasForced /* = false */ )
 		return;
 
 	// Let the gameplay have a say (Warnings left up to GamePlay)
-	if ( !GEGameplay()->GetScenario()->CanPlayerChangeTeam( this, GetTeamNumber(), iTeam ) )
+	if ( !GEGameplay()->GetScenario()->CanPlayerChangeTeam( this, GetTeamNumber(), iTeam, bWasForced ))
 		return;
 
 	// If we didn't just join the server, we're alive, and this was by choice, force a suicide.

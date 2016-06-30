@@ -44,8 +44,8 @@ void CGERocket::Spawn( void )
 	m_bHitPlayer	= false;
 
 	// Default Damages they should be modified by the thrower
-	SetDamage( 320 );
-	SetDamageRadius( 260 );
+	SetDamage( 512 );
+	SetDamageRadius( 125 );
 
 	SetModel( "models/weapons/rocket_launcher/w_rocket.mdl" );
 	
@@ -58,7 +58,7 @@ void CGERocket::Spawn( void )
 
 //	UTIL_SetSize( this, Vector(-10,-5,-5), Vector(10,5,5) );
  	
-	SetCollisionGroup( COLLISION_GROUP_PROJECTILE );
+	SetCollisionGroup( COLLISION_GROUP_GRENADE );
 
 	SetThink( &CGERocket::IgniteThink );
 	SetNextThink( gpGlobals->curtime );
@@ -208,12 +208,8 @@ void CGERocket::ExplodeTouch( CBaseEntity *pOther )
 	if ( !pOther->IsSolid() )
 		return;
 
+	// This also handles teammate collisions.
 	if ( !g_pGameRules->ShouldCollide( GetCollisionGroup(), pOther->GetCollisionGroup() ) )
-		return;
-
-	// Don't collide with teammates
-	int myteam = GetThrower()->GetTeamNumber();
-	if ( myteam >= FIRST_GAME_TEAM && pOther->GetTeamNumber() == myteam && !friendlyfire.GetBool() )
 		return;
 
 	trace_t tr;

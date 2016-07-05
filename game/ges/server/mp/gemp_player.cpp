@@ -1393,21 +1393,6 @@ void CGEMPPlayer::Event_Killed( const CTakeDamageInfo &info )
 
 	NotifyOnDeath();
 
-	bool killedByTrigger = (!Q_stricmp("trigger_hurt", info.GetAttacker()->GetClassname()) || !Q_stricmp("trigger_trap", info.GetAttacker()->GetClassname()));
-	CBaseCombatWeapon *pWeapon;
-	
-	// Check if we were killed by a trigger and our active weapon is a token
-	// if so remove it from the world so we don't just drop it
-	if ( killedByTrigger )
-	{
-		pWeapon = GetActiveWeapon();
-		if ( pWeapon && GEMPRules()->GetTokenManager()->IsValidToken(pWeapon->GetClassname()) )
-		{
-			Weapon_Detach( pWeapon );
-			UTIL_Remove( pWeapon );
-		}
-	}
-
 	BaseClass::Event_Killed( info );
 
 	// Call into our anim handler and setup our death animations

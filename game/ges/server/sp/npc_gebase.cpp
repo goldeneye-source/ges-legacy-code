@@ -25,6 +25,7 @@
 #include "ge_weapon.h"
 #include "ge_gameplay.h"
 #include "ge_tokenmanager.h"
+#include "ge_door.h"
 #include "gemp_gamerules.h"
 
 #include "npc_gebase.h"
@@ -363,7 +364,21 @@ int CNPC_GEBase::GetSoundInterests( void )
 void CNPC_GEBase::NPCThink( void )
 {
 	if ( IsAlive() )
+	{
 		BaseClass::NPCThink();
+
+		// Valve decided they needed to do this for player.cpp, and it catches holes in player_lagcompensation.cpp
+		// so we're stuck doing it here too.  If you fix the lag compensation resets then you can remove this.
+		// but right now we need it to stop the bots from literally going huge.
+		if (GetFlags() & FL_DUCKING)
+		{
+			SetCollisionBounds(VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX);
+		}
+		else
+		{
+			SetCollisionBounds(VEC_HULL_MIN, VEC_HULL_MAX);
+		}
+	}
 	else
 		SetNextThink( gpGlobals->curtime + 0.1f );
 
@@ -1225,12 +1240,24 @@ bool CNPC_GEBase::OnObstructingDoor( AILocalMoveGoal_t *pMoveGoal, CBaseDoor *pD
 		
 		// Calculate the amount of time I have to wait
 		float moveDist = 0;
-		if ( FClassnameIs( pDoor, "func_door_rotating" ) )
+		if ( FClassnameIs(pDoor, "func_door_rotating") || FClassnameIs(pDoor, "func_ge_door_rotating") )
 			moveDist = (pDoor->m_vecAngle2 - pDoor->m_vecAngle1).Length();
 		else
 			moveDist = pDoor->m_vecPosition1.DistTo( pDoor->m_vecPosition2 );
 		
 		float delay;
+
+		if (FClassnameIs(pDoor, "func_ge_door_rotating") || FClassnameIs(pDoor, "func_ge_door"))
+		{
+			CGEDoor *pGEDoor = static_cast<CGEDoor*>(pDoor);
+
+			// The time it takes us to accelerate, decelerate, and the time we move at max speed.
+			// can't use m_flacceltime for this as that's the desired acceltime, not the acceltime in practice.
+			delay = sqrt((pGEDoor->m_flDeccelDist * 2) / pGEDoor->m_flAccelSpeed) * 2 + (moveDist - pGEDoor->m_flDeccelDist * 2) / pDoor->m_flSpeed;
+		}
+		else
+			delay = moveDist / pDoor->m_flSpeed;
+
 		if ( abs(pDoor->m_vecPosition1.z - pDoor->m_vecPosition2.z) > GetHullWidth() )
 			delay = min( GetHullHeight() * 1.2f, moveDist ) / pDoor->m_flSpeed;
 		else

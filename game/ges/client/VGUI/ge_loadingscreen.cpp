@@ -166,7 +166,12 @@ const char *CGELevelLoadingPanel::GetCurrentImage()
 void CGELevelLoadingPanel::DisplayTip( void )
 {
 	const GameplayTip *tip = GetClientModeGENormal()->GetRandomTip();
-	if ( tip )
+
+	if (!Q_strcmp(GetCurrentImage(), GetDefaultImage()))
+	{
+		m_pTipContainer->SetText(""); // No tips on the default loading screen.
+	}
+	else if ( tip )
 	{
 		wchar_t tmp[128];
 		g_pVGuiLocalize->ConstructString( tmp, sizeof(tmp), g_pVGuiLocalize->Find("#GE_TIP_TITLE"), 1, tip->name );

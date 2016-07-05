@@ -585,6 +585,8 @@ void CGEWeapon::SetupGlow( bool state, Color glowColor /*=Color(255,255,255)*/, 
 
 	if ( !GetOwner() || (GetOwner() && !GetOwner()->IsPlayer()) )
 		SetEnableGlow( state );
+
+	UpdateTransmitState();
 }
 
 void CGEWeapon::SetEnableGlow( bool state )
@@ -592,6 +594,13 @@ void CGEWeapon::SetEnableGlow( bool state )
 	m_bEnableGlow = state;
 }
 
+int CGEWeapon::UpdateTransmitState()
+{
+	if (m_bServerGlow)
+		return SetTransmitState(FL_EDICT_ALWAYS);
+	else
+		return BaseClass::UpdateTransmitState();
+}
 #endif
 
 void CGEWeapon::PreOwnerDeath()

@@ -356,8 +356,8 @@ void CGECreateServer::PopulateControls( void )
 		const char *pFilename = filesystem->FindFirstEx( PYDIR, "MOD", &findHandle );
 		while ( pFilename )
 		{
-			// Add the scenario to the list if not __init__
-			if ( !Q_stristr( pFilename, "__init__") )
+			// Add the scenario to the list if not __init__ or TDM
+			if ( !Q_stristr(pFilename, "__init__") && !Q_stristr(pFilename, "tournamentdm") )
 			{
 				Q_FileBase( pFilename, file, 32 );
 				scenariolist->AddItem( file, new KeyValues(file) );

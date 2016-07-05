@@ -16,6 +16,7 @@
 //GE_DLL
 #include "ai_basenpc.h"
 #include "ge_gamerules.h"
+#include "gebot_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -1269,11 +1270,29 @@ void CLagCompensationManager::FinishLagCompensation( CBasePlayer *player )
 		}
 
 #ifdef GE_DLL
-		// Modify Collision Bounds back to normal
-		if ( pPlayer->GetFlags() & FL_DUCKING )
-			pPlayer->SetCollisionBounds( VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX );
+		// Bot players need their NPC's hitboxes adjusted, not their player's.
+		CGEBotPlayer *pBotPlayer = ToGEBotPlayer(pPlayer);
+
+		if (pBotPlayer)
+		{
+			CNPC_GEBase *pBotNPC = pBotPlayer->GetNPC();
+			// Modify Collision Bounds back to normal
+			if (pBotNPC)
+			{
+				if (pBotNPC->GetFlags() & FL_DUCKING)
+					pBotNPC->SetCollisionBounds(VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX);
+				else
+					pBotNPC->SetCollisionBounds(VEC_HULL_MIN, VEC_HULL_MAX);
+			}
+		}
 		else
-			pPlayer->SetCollisionBounds( VEC_HULL_MIN, VEC_HULL_MAX );
+		{
+			// Modify Collision Bounds back to normal
+			if (pPlayer->GetFlags() & FL_DUCKING)
+				pPlayer->SetCollisionBounds(VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX);
+			else
+				pPlayer->SetCollisionBounds(VEC_HULL_MIN, VEC_HULL_MAX);
+		}
 #endif
 
 		LagRecord *restore = &m_RestoreData[ pl_index ];

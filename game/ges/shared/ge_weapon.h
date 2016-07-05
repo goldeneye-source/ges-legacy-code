@@ -74,6 +74,7 @@ public:
 #ifdef GAME_DLL
 	virtual void	Spawn();
 	virtual void	UpdateOnRemove();
+	virtual int		UpdateTransmitState();
 
 	virtual float	GetHeldTime() { return gpGlobals->curtime - m_flDeployTime; };
 	virtual bool	CanEquip( CBaseCombatCharacter *pOther ) { return true; };

@@ -26,8 +26,10 @@ public:
 	CGEBrush();
 
 	int m_iCustomCollideGroup; // Collision group of the brush
+	bool m_bPhysChecks;
 
 	void Spawn();
+	void VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
 	virtual void	RemoveTouch(CBaseEntity *pOther);
 
 	void InputChangeCollideGroup(inputdata_t &inputdata);
@@ -46,7 +48,8 @@ END_DATADESC()
 
 
 #define SF_REMOVE_TOUCHING 4
-#define SF_IGNORE_TRIGGERS 8
+#define SF_ROBUST_REMOVE_CHECKS 8
+#define SF_USE_VPHYSICS_REMOVE 16
 
 CGEBrush::CGEBrush()
 {
@@ -59,8 +62,9 @@ void CGEBrush::Spawn(void)
 	BaseClass::Spawn();
 
 	SetCollisionGroup(m_iCustomCollideGroup);
+	m_bPhysChecks = HasSpawnFlags(SF_USE_VPHYSICS_REMOVE) && HasSpawnFlags(SF_REMOVE_TOUCHING);
 
-	if (HasSpawnFlags(SF_REMOVE_TOUCHING))
+	if (HasSpawnFlags(SF_REMOVE_TOUCHING) && !m_bPhysChecks) // We have the remove touching flag and we have the bounding box remove one.
 		SetTouch(&CGEBrush::RemoveTouch);
 	else
 		SetTouch(NULL);
@@ -68,16 +72,27 @@ void CGEBrush::Spawn(void)
 
 void CGEBrush::RemoveTouch(CBaseEntity *pOther)
 {
-	if (HasSpawnFlags(SF_IGNORE_TRIGGERS) && !g_pGameRules->ShouldCollide(GetCollisionGroup(), pOther->GetCollisionGroup()))
+	if (!pOther || pOther == this || pOther->IsPlayer() || pOther->IsNPC()) // Don't remove players or bots.
 		return;
 
-	if (!pOther || pOther->IsPlayer() || pOther->IsNPC()) // Don't remove players or bots.
+	if (HasSpawnFlags(SF_ROBUST_REMOVE_CHECKS) && !g_pGameRules->ShouldCollide(GetCollisionGroup(), pOther->GetCollisionGroup()))
 		return;
 
 	if (!strncmp(pOther->GetClassname(), "item_armorvest", 14)) // We shouldn't remove armor, just force it to respawn.
-		((CGEArmorVest*)pOther)->Respawn();
+		((CGEArmorVest*)pOther)->Respawn(); // Weapons are fine because they just spawn new weapons, but armor just turns invisible.
 	else
 		UTIL_Remove(pOther);
+}
+
+void CGEBrush::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
+{
+	if (m_bPhysChecks)
+	{
+		RemoveTouch(pEvent->pEntities[0]);
+		RemoveTouch(pEvent->pEntities[1]);
+	}
+	
+	BaseClass::VPhysicsCollision(index, pEvent);
 }
 
 void CGEBrush::InputChangeCollideGroup(inputdata_t &inputdata)

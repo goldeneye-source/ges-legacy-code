@@ -318,6 +318,33 @@ void CGEBaseGameplayManager::BroadcastRoundEnd( bool showreport )
 		gameeventmanager->FireEvent(pEvent);
 	}
 
+	// Fire off an event that tells plugins the exact placement of each player in the round, primarily for ranking systems.
+	IGameEvent *event = gameeventmanager->CreateEvent("round_ranks");
+	if (event)
+	{
+		CUtlVector<CGEMPPlayer*> rankedPlayers;
+		GEMPRules()->GetRankSortedPlayers(rankedPlayers);
+		event->SetBool("isfinal", false);
+
+		for (int i = 0; i < 16; i++)
+		{
+			char strbuffer[8];
+			Q_snprintf(strbuffer, 8, "id%d", i + 1);
+			if ( i < rankedPlayers.Count() )
+				event->SetInt(strbuffer, rankedPlayers[i]->GetUserID());
+			else
+				event->SetInt(strbuffer, -1);
+
+			Q_snprintf(strbuffer, 8, "sc%d", i + 1);
+			if (i < rankedPlayers.Count())
+				event->SetInt(strbuffer, rankedPlayers[i]->GetRoundScore());
+			else
+				event->SetInt(strbuffer, -1);
+		}
+
+		gameeventmanager->FireEvent(event);
+	}
+
 	// Print it to the chat
 	UTIL_ClientPrintAll( HUD_PRINTTALK, "#GES_RoundEnd" );
 }
@@ -346,6 +373,33 @@ void CGEBaseGameplayManager::BroadcastMatchEnd()
 		pEvent->SetInt( "roundcount", m_iRoundCount );
 		GEStats()->SetAwardsInEvent( pEvent );
 		gameeventmanager->FireEvent(pEvent);
+	}
+
+	// Fire off an event that tells plugins the exact placement of each player in the round, primarily for ranking systems.
+	IGameEvent *event = gameeventmanager->CreateEvent("round_ranks");
+	if (event)
+	{
+		CUtlVector<CGEMPPlayer*> rankedPlayers;
+		GEMPRules()->GetRankSortedPlayers(rankedPlayers);
+		event->SetBool("isfinal", true);
+
+		for (int i = 0; i < 16; i++)
+		{
+			char strbuffer[8];
+			Q_snprintf(strbuffer, 8, "id%d", i + 1);
+			if (i < rankedPlayers.Count())
+				event->SetInt(strbuffer, rankedPlayers[i]->GetUserID());
+			else
+				event->SetInt(strbuffer, -1);
+
+			Q_snprintf(strbuffer, 8, "sc%d", i + 1);
+			if (i < rankedPlayers.Count())
+				event->SetInt( strbuffer, rankedPlayers[i]->GetMatchScore() );
+			else
+				event->SetInt( strbuffer, -1 );
+		}
+
+		gameeventmanager->FireEvent(event);
 	}
 
 	// Print it to the chat

@@ -273,11 +273,11 @@ void CGEWeapon::PrimaryAttack(void)
 	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
 
 	//This stops silent firing...
-	if (pPlayer->m_nButtons & IN_RELOAD)
-	{
-		m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
-		return;
-	}
+	//if (pPlayer->m_nButtons & IN_RELOAD)
+	//{
+	//	m_flNextPrimaryAttack = gpGlobals->curtime + GetFireRate();
+	//	return;
+	//}
 
 	// Send the animation event to the client/server
 	pPlayer->SetAnimation( PLAYER_ATTACK1 );

@@ -131,10 +131,8 @@ void CGEDoor::CalcMovementValues(Vector startpos, Vector endpos)
 		traveldistance += speed*speed / (2 * m_flAccelSpeed);
 	}
 
-	if (m_flDeccelDist > traveldistance / 2)
-	{
-		m_flDeccelDist = traveldistance / 2;
-	}
+	if (m_flDeccelDist > traveldistance * 0.5)
+		m_flDeccelDist = traveldistance * 0.5;
 
 	DevMsg("DeccelDist calculated to be %f \n", m_flDeccelDist);
 	m_flTargetDist = traveldistance;

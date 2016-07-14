@@ -1250,18 +1250,30 @@ bool CNPC_GEBase::OnObstructingDoor( AILocalMoveGoal_t *pMoveGoal, CBaseDoor *pD
 		if (FClassnameIs(pDoor, "func_ge_door_rotating") || FClassnameIs(pDoor, "func_ge_door"))
 		{
 			CGEDoor *pGEDoor = static_cast<CGEDoor*>(pDoor);
+			Vector diffvector = pDoor->m_vecPosition2 - pDoor->m_vecPosition1;
+			float botHeight = GetHullHeight() * 1.2; // Includes a bit of a fudge factor to account for integrator error and make sure they don't instantly go under doors.
 
 			// The time it takes us to accelerate, decelerate, and the time we move at max speed.
 			// can't use m_flacceltime for this as that's the desired acceltime, not the acceltime in practice.
-			delay = sqrt((pGEDoor->m_flDeccelDist * 2) / pGEDoor->m_flAccelSpeed) * 2 + (moveDist - pGEDoor->m_flDeccelDist * 2) / pDoor->m_flSpeed;
+
+			float fullAccelTime = sqrt((pGEDoor->m_flDeccelDist * 2) / pGEDoor->m_flAccelSpeed);
+			float topspeeddist = (moveDist - pGEDoor->m_flDeccelDist * 2);
+
+			// We might not want to wait for the entire opening sequence though, if the door goes up.
+			if (botHeight < diffvector.z && abs(diffvector.x) + abs(diffvector.y) <= 6) // Only do this logic if the door is moving almost entirely upward and goes high enough for us to pass under.
+			{
+				if (botHeight < pGEDoor->m_flDeccelDist) // We can actually pass under it before it's even finished accelerating.
+					delay = sqrt((GetHullHeight() * 3) / pGEDoor->m_flAccelSpeed);
+				else if (botHeight < pGEDoor->m_flDeccelDist + topspeeddist) // We can pass under while it's moving at full speed
+					delay = fullAccelTime + (botHeight - pGEDoor->m_flDeccelDist) / pDoor->m_flSpeed;
+				else // While it's decelerating
+					delay = fullAccelTime + topspeeddist / pDoor->m_flSpeed + sqrt(((GetHullHeight() - pGEDoor->m_flDeccelDist - topspeeddist) * 3) / pGEDoor->m_flAccelSpeed);
+			}
+			else // Just wait for the entire thing to open, since it's not going up high enough for us to pass under.
+				delay = fullAccelTime * 2 + topspeeddist / pDoor->m_flSpeed;
 		}
 		else
 			delay = moveDist / pDoor->m_flSpeed;
-
-		if ( abs(pDoor->m_vecPosition1.z - pDoor->m_vecPosition2.z) > GetHullWidth() )
-			delay = min( GetHullHeight() * 1.2f, moveDist ) / pDoor->m_flSpeed;
-		else
-			delay = min( GetHullWidth() * 1.5f, moveDist ) / pDoor->m_flSpeed;
 
 		DelayMoveStart( delay );
 		

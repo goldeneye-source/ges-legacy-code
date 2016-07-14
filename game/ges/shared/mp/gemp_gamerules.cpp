@@ -894,6 +894,46 @@ int CGEMPRules::GetRoundWinner()
 	return winnerid;
 }
 
+static int playerRoundRankSort(CGEMPPlayer* const *a, CGEMPPlayer* const *b)
+{
+	int ascore = (*a)->GetRoundScore();
+	int bscore = (*b)->GetRoundScore();
+
+	if (ascore > bscore)
+		return -1;
+	else if (ascore == bscore)
+		return 0;
+	else return 1;
+}
+
+static int playerMatchRankSort(CGEMPPlayer* const *a, CGEMPPlayer* const *b)
+{
+	int ascore = (*a)->GetMatchScore();
+	int bscore = (*b)->GetMatchScore();
+
+	if (ascore > bscore)
+		return -1;
+	else if (ascore == bscore)
+		return 0;
+	else return 1;
+}
+
+void CGEMPRules::GetRankSortedPlayers( CUtlVector<CGEMPPlayer*> &sortedplayers, bool matchRank )
+{
+	sortedplayers.RemoveAll();
+
+	// Add up all the players that have played in or are playing in the round.
+	FOR_EACH_MPPLAYER(pPlayer)
+		if (pPlayer->IsActive() || pPlayer->GetRoundScore() || pPlayer->GetRoundDeaths())
+			sortedplayers.AddToTail(pPlayer);
+	END_OF_PLAYER_LOOP()
+
+	if (matchRank)
+		sortedplayers.Sort(playerMatchRankSort);
+	else
+		sortedplayers.Sort(playerRoundRankSort);
+}
+
 void CGEMPRules::GetTaggedConVarList( KeyValues *pCvarTagList )
 {
 	BaseClass::GetTaggedConVarList( pCvarTagList );

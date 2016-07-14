@@ -656,13 +656,12 @@ void CGEMapManager::PrintMapSelectionWeights(int pcount, bool sorted)
 	CUtlVector<char*> mapnames;
 	CUtlVector<int> mapweights;
 	CUtlVector<int> sortedmapweights;
+	CUtlVector<MapWeightData*> mapweightsgroup;
 
 	GetViableMapList( pcount, mapnames, mapweights );
 
 	if (sorted)
 	{
-		CUtlVector<MapWeightData*> mapweightsgroup;
-
 		for (int i = 0; i < mapnames.Count(); i++)
 		{
 			MapWeightData *pWeightNameGroup = new MapWeightData;
@@ -678,11 +677,10 @@ void CGEMapManager::PrintMapSelectionWeights(int pcount, bool sorted)
 		Msg("Map:Weight\n");
 		for (int i = 0; i < mapnames.Count(); i++)
 		{
+			mapnames[i] = mapweightsgroup[i]->mapname;
+			mapweights[i] = mapweightsgroup[i]->weight;
 			Msg("%s:%d\n", mapweightsgroup[i]->mapname, mapweightsgroup[i]->weight);
 		}
-
-		// Delete all those group objects because we do not need them now.
-		mapweightsgroup.PurgeAndDeleteElements();
 	}
 	else
 	{
@@ -692,6 +690,26 @@ void CGEMapManager::PrintMapSelectionWeights(int pcount, bool sorted)
 			Msg("%s:%d\n", mapnames[i], mapweights[i]);
 		}
 	}
+
+	// Fire off an event so map voting plugins and the like can take advantage of our internal map scripting system.
+	IGameEvent *event = gameeventmanager->CreateEvent("map_rec");
+	if (event)
+	{
+		// Go through the first 10 maps and create event parameters for them.  Also make sure we have enough maps at each step.
+		for (int i = 0; i < 10; i++)
+		{
+			char curmapstr[64];
+			Q_snprintf(curmapstr, 64, "map%d", i + 1);
+			if (i < mapnames.Count())
+				event->SetString(curmapstr, mapnames[i]);
+			else
+				event->SetString(curmapstr, "None");
+		}
+		gameeventmanager->FireEvent(event);
+	}
+
+	if (sorted) // Need to keep this around for the event firing since the sorted list stores pointers to it.
+		mapweightsgroup.PurgeAndDeleteElements();
 }
 
 CON_COMMAND(ge_print_map_selection_data, "Prints the server's map selection data ")

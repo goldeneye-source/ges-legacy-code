@@ -13,6 +13,9 @@
 #include "ge_playerspawn.h"
 #include "gemp_gamerules.h"
 #include "gemp_player.h"
+#include "ai_network.h"
+#include "ge_ai.h"
+#include "ai_node.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -530,9 +533,13 @@ CON_COMMAND_F( ge_debug_checkplayerspawns, "Check player spawns against several 
 
 		// Check for height above the ground
 		UTIL_TraceLine( origin + Vector(0,0,1), origin + Vector(0,0,-100), MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_PLAYER_MOVEMENT, &trace );
-		if ( trace.fraction > 0.1f )
-			Warning( "[%0.2f, %0.2f, %0.2f] Spawn %s is too high off the ground (%0.1f units)!\n", origin.x, origin.y, origin.z, spawn->GetClassname(), trace.fraction*100.0f );
-
+		if (trace.fraction > 0.1f)
+		{
+			if (trace.fraction < 0.24f)
+				Msg("[%0.2f, %0.2f, %0.2f] Spawn %s is somewhat high off the ground (%0.1f units)!\n", origin.x, origin.y, origin.z, spawn->GetClassname(), trace.fraction*100.0f);
+			else
+				Warning("[%0.2f, %0.2f, %0.2f] Spawn %s is too high off the ground (%0.1f units)!\n", origin.x, origin.y, origin.z, spawn->GetClassname(), trace.fraction*100.0f);
+		}
 		// Check for overlapping spawn points
 		CBaseEntity *ents[128];
 		Vector mins, maxs;
@@ -540,14 +547,42 @@ CON_COMMAND_F( ge_debug_checkplayerspawns, "Check player spawns against several 
 		spawn->CollisionProp()->WorldSpaceAABB( &mins, &maxs );
 		int count = UTIL_EntitiesInBox( ents, ARRAYSIZE(ents), mins, maxs, 0 );
 		
-		for ( int k = 0; i < count; i++ )
+		for ( int k = 0; k < count; k++ )
 		{
 			// Check if we collide with a spawn of the same type (ignore spectator spawns)
-			if ( Q_strcmp( ents[k]->GetClassname(), "info_player_spectator" ) && !Q_strcmp( ents[k]->GetClassname(), spawn->GetClassname() ) )
+			if ( Q_strcmp(ents[k]->GetClassname(), "info_player_spectator") && !Q_strcmp(ents[k]->GetClassname(), spawn->GetClassname()) && ents[k] != spawn )
 			{
-				Warning( "[%0.2f, %0.2f, %0.2f] Spawn %s collides with another spawn of the same type!\n", origin.x, origin.y, origin.z, spawn->GetClassname() );
+				Msg( "[%0.2f, %0.2f, %0.2f] Spawn %s collides with another spawn of the same type!\n", origin.x, origin.y, origin.z, spawn->GetClassname() );
 				break;
 			}
+		}
+
+
+		// Now check and see if bots can find their way to the node network from here.
+		if (g_pBigAINet->NumNodes() >= 10 && !(spawn->GetSpawnFlags() & 1)) // We don't have enough nodes, or the spawn doesn't allow bots, so don't bug the mapper with this.
+		{
+			count = g_pBigAINet->NumNodes();
+			bool hitsomething = false;
+
+			for (int k = 0; k < count; k++)
+			{
+				CAI_Node *testnode = g_pBigAINet->GetNode(k);
+
+				if (!testnode)
+					continue;
+
+				UTIL_TraceEntity(pPlayer, pPlayer->GetAbsOrigin(), testnode->GetOrigin(), MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_PLAYER_MOVEMENT, &trace);
+
+				// Check if we can reach the node, and if we did then we found at least one node from here and can get to the network.
+				if (trace.endpos == testnode->GetOrigin())
+				{
+					hitsomething = true;
+					break;
+				}
+			}
+
+			if (!hitsomething)
+				Warning("[%0.2f, %0.2f, %0.2f] Spawn %s might trap bots!  Disable bot spawns or add a node it can see.\n", origin.x, origin.y, origin.z, spawn->GetClassname());
 		}
 	}
 

@@ -165,6 +165,7 @@ void CGEBotPlayer::Spawn( void )
 		m_pNPC->SetLocalOrigin( GetAbsOrigin() + Vector(0,0,5) );
 		m_pNPC->SetAbsVelocity( vec3_origin );
 		m_pNPC->SetLocalAngles( GetLocalAngles() );
+		m_pNPC->CleanupScriptsOnTeleport( false );
 
 		m_pNPC->Spawn();
 		m_pNPC->Activate();

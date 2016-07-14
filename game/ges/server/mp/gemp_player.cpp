@@ -1322,10 +1322,9 @@ void CGEMPPlayer::PreThink()
 				else if ( IsOnList( LIST_BANNED, m_iSteamIDHash) )
 				{
 					char command[255];
-					Q_snprintf(command, 255, "banid 0 %s kick\n", steamID);
-					Msg("Hardcode Banned %s [%s]\n", steamID, command);
+					Q_snprintf(command, 255, "kick %d\n", GetUserID());
+					Msg("%s is GE:S Auth Server Banned [%s]\n", steamID, command);
 					engine->ServerCommand(command);
-					engine->ServerCommand("writeid\n");
 				}
 
 				if (IsOnList(LIST_SKINS, m_iSteamIDHash))

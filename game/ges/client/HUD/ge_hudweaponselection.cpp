@@ -33,6 +33,7 @@
 using namespace vgui;
 
 ConVar cl_ge_hud_fastswitchlist("cl_ge_hud_fastswitchlist", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Show all held weapons on fast switch.");
+ConVar cl_ge_hud_noswitchlist("cl_ge_hud_noswitchlist", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Hide weaponlist entirely on switch.");
 
 //-----------------------------------------------------------------------------
 // Purpose: Selection of weapons for GE:Source
@@ -147,6 +148,9 @@ bool CHudWeaponSelection::ShouldDraw()
 			HideSelection();
 		return false;
 	}
+
+	if (cl_ge_hud_noswitchlist.GetBool())
+		return false;
 
 	if ( !CBaseHudWeaponSelection::ShouldDraw() )
 		return false;

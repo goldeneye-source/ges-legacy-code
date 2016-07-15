@@ -26,6 +26,8 @@ using namespace vgui;
 
 DECLARE_HUDELEMENT( CGEHudAmmo );
 
+ConVar cl_ge_show_ammocount("cl_ge_show_ammocount", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Show the match time when rounds are disabled instead of --:--");
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -150,6 +152,9 @@ void CGEHudAmmo::UpdateAmmoDisplays( void )
 bool CGEHudAmmo::ShouldDraw( void )
 {
 	bool ret = CHudElement::ShouldDraw();
+
+	if ( !cl_ge_show_ammocount.GetBool() )
+		return false;
 
 	CBasePlayer *pPlayer = CBasePlayer::GetLocalPlayer();
 	if ( !pPlayer )

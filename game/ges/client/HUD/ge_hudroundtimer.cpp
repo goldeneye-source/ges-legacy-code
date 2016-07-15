@@ -27,7 +27,7 @@
 
 using namespace vgui;
 
-ConVar cl_ge_show_matchtime( "cl_ge_show_matchtime", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Show the match time when rounds are disabled instead of --:--" );
+ConVar cl_ge_show_matchtime( "cl_ge_show_matchtime", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Show the match time when rounds are disabled instead of --:--" );
 
 class CGEHudRoundTimer : public CHudNumericDisplay, public CHudElement
 {
@@ -73,6 +73,10 @@ void CGEHudRoundTimer::Reset()
 
 bool CGEHudRoundTimer::ShouldDraw()
 {
+	// Don't show if we don't want it, but still function.
+	if ( !cl_ge_show_matchtime.GetBool() )
+		return false;
+
 	// Don't show if we are in intermission time!
 	if ( GEMPRules() && GEMPRules()->IsIntermission() )
 	{

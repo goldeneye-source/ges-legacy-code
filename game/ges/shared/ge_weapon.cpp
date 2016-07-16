@@ -150,6 +150,12 @@ void CGEWeapon::Spawn()
 
 	// Notify the token manager we are arriving
 	GEMPRules()->GetTokenManager()->OnTokenSpawned( this );
+
+	// Notify Python about the weapon
+	if ( GetScenario() )
+	{
+		GetScenario()->OnWeaponSpawned( this );
+	}
 }
 
 void CGEWeapon::UpdateOnRemove( void )
@@ -158,6 +164,13 @@ void CGEWeapon::UpdateOnRemove( void )
 	// Notify the token manager we are going away
 	if ( GEMPRules() && GEMPRules()->GetTokenManager() )
 		GEMPRules()->GetTokenManager()->OnTokenRemoved( this );
+
+
+	// Notify Python about the weapon disappearing
+	if ( GetScenario() )
+	{
+		GetScenario()->OnWeaponRemoved( this );
+	}
 }
 
 #endif //GAME_DLL
@@ -186,6 +199,12 @@ void CGEWeapon::Equip( CBaseCombatCharacter *pOwner )
 
 	// Disable Glowing (but preserve our set color)
 	SetEnableGlow( false );
+
+	// Notify Python about the weapon disappearing
+	if ( GetScenario() )
+	{
+		GetScenario()->OnWeaponRemoved( this );
+	}
 #endif
 
 	// Fill this bad boy up with ammo if we have any for it to use!

@@ -13,6 +13,7 @@
 class CGEPlayer;
 class CBaseEntity;
 class CGEWeapon;
+class CGEArmorVest;
 class CGECaptureArea;
 
 // --------------------
@@ -66,6 +67,7 @@ public:
 	virtual bool ShouldForcePickup(CGEPlayer *pPlayer, CBaseEntity *pEntity)=0;
 	virtual void CalculateCustomDamage(CGEPlayer *pVictim, const CTakeDamageInfo &inputInfo, float &health, float &armor)=0;
 
+	virtual void BeforeSetupRound()=0;
 	virtual void OnRoundBegin()=0;
 	virtual void OnRoundEnd()=0;
 	virtual void OnThink()=0;
@@ -85,6 +87,15 @@ public:
 	virtual void OnTokenDropped(CGEWeapon *pToken, CGEPlayer *pPlayer)=0;
 	virtual void OnEnemyTokenTouched(CGEWeapon *pToken, CGEPlayer *pPlayer) = 0;
 	virtual void OnTokenAttack(CGEWeapon *pToken, CGEPlayer *pPlayer, Vector position, Vector forward)=0;
+
+	virtual void OnWeaponSpawned(CGEWeapon *pWeapon)=0;
+	virtual void OnWeaponRemoved(CGEWeapon *pWeapon)=0;
+
+	virtual void OnArmorSpawned(CBaseEntity *pArmor)=0;
+	virtual void OnArmorRemoved(CBaseEntity *pArmor)=0;
+
+	virtual void OnAmmoSpawned(CBaseEntity *pAmmo)=0;
+	virtual void OnAmmoRemoved(CBaseEntity *pAmmo)=0;
 
 private:
 	bool m_bIsOfficial;

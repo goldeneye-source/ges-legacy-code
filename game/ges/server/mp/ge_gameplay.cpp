@@ -706,6 +706,8 @@ void CGEBaseGameplayManager::StartRound()
 			ge_teamplay.SetValue(0);
 	}
 
+	GetScenario()->BeforeSetupRound();
+
 	// Reload the world sparing only level designer placed entities
 	// This must be called before the ROUND_START event
 	GEMPRules()->SetupRound();

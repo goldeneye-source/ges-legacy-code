@@ -479,6 +479,7 @@
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)server_py.pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='ReleaseTest|Win32'">$(IntDir)server_py.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
+    <ClCompile Include="ges\server\py\ge_pyammocrate.cpp" />
     <ClCompile Include="ges\server\py\ge_pyfuncs.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ge_pyprecom.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='DebugTest|Win32'">ge_pyprecom.h</PrecompiledHeaderFile>

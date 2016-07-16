@@ -38,6 +38,8 @@ CGEAmmoCrate::CGEAmmoCrate( void )
 	m_iAmmoID = -1;
 	m_iAmmoAmount = 0;
 	m_bGaveGlobalAmmo = false;
+	m_iWeaponID = 0;
+	m_iWeight = 0;
 }
 
 void CGEAmmoCrate::Spawn( void )
@@ -66,12 +68,25 @@ void CGEAmmoCrate::Precache( void )
 void CGEAmmoCrate::Materialize( void )
 {
 	BaseClass::Materialize();
+
+	// Notify Python about the ammobox
+	if ( GetScenario() )
+	{
+		GetScenario()->OnAmmoSpawned( this );
+	}
+
 	// Override base's ItemTouch for NPC's
 	SetTouch( &CGEAmmoCrate::ItemTouch );
 }
 
 CBaseEntity *CGEAmmoCrate::Respawn( void )
 {
+	// Notify Python about the ammobox
+	if ( GetScenario() )
+	{
+		GetScenario()->OnAmmoRemoved( this );
+	}
+
 	// Reset our global ammo flag
 	m_bGaveGlobalAmmo = false;
 
@@ -116,6 +131,26 @@ void CGEAmmoCrate::RefillThink( void )
 	}
 }
 
+void CGEAmmoCrate::SetWeaponID( int id )
+{
+	m_iWeaponID = id;
+
+	// Get our info
+	const char *name = WeaponIDToAlias( id );
+	if ( name && name[0] != '\0' )
+	{
+		int h = LookupWeaponInfoSlot( name );
+		if ( h == GetInvalidWeaponInfoHandle() )
+			return;
+
+		CGEWeaponInfo *weap = dynamic_cast<CGEWeaponInfo*>( GetFileWeaponInfoFromHandle( h ) );
+		if ( weap )
+		{
+			m_iWeight = weap->iWeight;
+		}
+	}
+}
+
 void CGEAmmoCrate::SetAmmoType( int id )
 { 
 	if ( GetAmmoDef()->GetAmmoOfIndex( id ) )
@@ -127,6 +162,11 @@ void CGEAmmoCrate::SetAmmoType( int id )
 	{
 		DevWarning( "[AmmoCrate] Invalid ammo type passed, ignored\n" );
 	}
+}
+
+int CGEAmmoCrate::GetAmmoType( void )
+{
+	return m_iAmmoID;
 }
 
 bool CGEAmmoCrate::HasAmmo( void )

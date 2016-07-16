@@ -85,6 +85,12 @@ void CGEArmorVest::Spawn( void )
 		m_iPlayerPointContribution[i] = 0;
 	}
 
+	// Notify Python about the armor
+	if ( GetScenario() )
+	{
+		GetScenario()->OnArmorSpawned( this );
+	}
+
 	// Override base's ItemTouch for NPC's
 	SetTouch( &CGEArmorVest::ItemTouch );
 
@@ -109,6 +115,12 @@ void CGEArmorVest::Precache( void )
 CBaseEntity *CGEArmorVest::Respawn(void)
 {
 	BaseClass::Respawn();
+
+	if ( GetScenario() )
+	{
+		// Notify Python about the armor
+		GetScenario()->OnArmorRemoved( this );
+	}
 
 	SetSolid( SOLID_NONE );
 	RemoveSolidFlags( FSOLID_TRIGGER );
@@ -171,6 +183,13 @@ void CGEArmorVest::Materialize(void)
 	if (GEMPRules()->ArmorShouldRespawn() && m_bEnabled)
 	{
 		BaseClass::Materialize();
+
+		// Notify Python about the armor
+		if ( GetScenario() )
+		{
+			GetScenario()->OnArmorSpawned( this );
+		}
+
 		// Override base's ItemTouch for NPC's
 		SetTouch(&CGEArmorVest::ItemTouch);
 

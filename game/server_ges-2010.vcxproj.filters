@@ -1794,6 +1794,9 @@
     <ClCompile Include="ge_logic_bitflag.cpp">
       <Filter>GES\Entities</Filter>
     </ClCompile>
+    <ClCompile Include="ges\server\py\ge_pyammocrate.cpp">
+      <Filter>GES\Python\modules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sdk\server\plasma.h">

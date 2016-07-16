@@ -314,7 +314,7 @@ void CNPC_GEBase::Spawn( void )
 	m_flSumDamage		= 0;
 	m_NPCState			= NPC_STATE_IDLE;
 	m_lifeState			= LIFE_ALIVE;
-	m_flFieldOfView		= 0.7;
+	m_flFieldOfView		= 0.3;
 	m_bDidDeathCleanup	= false;
 
 	// We want to attack bullseyes!
@@ -924,8 +924,17 @@ bool CNPC_GEBase::BumpWeapon( CGEWeapon *pWeapon )
 		Weapon_Equip( pWeapon );
 		pWeapon->SetWeaponVisible( false );
 
-		// TODO: Call into python here?
-		// pBot->OnItemPicked( ... )
+		ClearCondition(COND_LOW_WEAPON_WEIGHT);
+
+		if (pBot)
+		{
+			try {
+				m_pPyNPC->OnPickupItem();
+			}
+			catch (...) {
+				DevWarning("[GEAi] OnPickupItem exception!\n");
+			}
+		}
 	}
 	else if ( pBot && (GERules()->ShouldForcePickup(pBot, pWeapon) || pWeapon->GetWeaponID() == WEAPON_MOONRAKER) )
 	{
@@ -1128,6 +1137,7 @@ void CNPC_GEBase::Event_Killed( const CTakeDamageInfo &info )
 		SetThink( &CAI_BaseNPC::CallNPCThink );
 		SetNextThink( gpGlobals->curtime );
 
+		ClearAllSchedules();
 		// Freeze us in place
 		SetCondition( COND_NPC_FREEZE );
 

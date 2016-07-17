@@ -1,9 +1,15 @@
 set(subdir_2  Modules)
 set(subdir_3  Programs)
 
+if (${PY_VERSION_MAJOR} EQUAL 3 AND ${PY_VERSION_MINOR} EQUAL 4)
+  set(PYTHON_SOURCES
+      ${SRC_DIR}/${subdir_2}/python.c
+  )
+else()
 set(PYTHON_SOURCES
     ${SRC_DIR}/${subdir_${PY_VERSION_MAJOR}}/python.c
 )
+endif()
 
 add_executable(python ${PYTHON_SOURCES})
 set_property(

@@ -89,7 +89,6 @@ set(OBJECT3_SOURCES
     ${SRC_DIR}/Objects/accu.c
     ${SRC_DIR}/Objects/bytesobject.c
     ${SRC_DIR}/Objects/namespaceobject.c
-    ${SRC_DIR}/Objects/odictobject.c
 )
 if(MSVC)
     list(APPEND OBJECT3_SOURCES
@@ -188,8 +187,6 @@ set(PYTHON3_COMMON_SOURCES
     ${SRC_DIR}/Python/dynamic_annotations.c
     ${SRC_DIR}/Python/fileutils.c
     ${SRC_DIR}/Python/pyhash.c
-    ${SRC_DIR}/Python/pylifecycle.c
-    ${SRC_DIR}/Python/pystrhex.c
     ${SRC_DIR}/Python/pystrtod.c
     ${SRC_DIR}/Python/pytime.c
 )
@@ -373,7 +370,7 @@ if(IS_PY3)
 
 # Build _freeze_importlib executable
 add_executable(_freeze_importlib
-  ${SRC_DIR}/Programs/_freeze_importlib.c
+  ${SRC_DIR}/Modules/_freeze_importlib.c
   ${LIBPYTHON_OMIT_FROZEN_SOURCES}
   )
 target_link_libraries(_freeze_importlib ${LIBPYTHON_TARGET_LIBRARIES})
@@ -387,15 +384,10 @@ add_custom_command(
   OUTPUT ${LIBPYTHON_FROZEN_SOURCES}
   COMMAND
     ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:_freeze_importlib>
-      ${SRC_DIR}/Lib/importlib/_bootstrap_external.py
-      ${SRC_DIR}/Python/importlib_external.h
-  COMMAND
-    ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:_freeze_importlib>
       ${SRC_DIR}/Lib/importlib/_bootstrap.py
       ${SRC_DIR}/Python/importlib.h
   DEPENDS
     _freeze_importlib
-    ${SRC_DIR}/Lib/importlib/_bootstrap_external.py
     ${SRC_DIR}/Lib/importlib/_bootstrap.py
 )
 

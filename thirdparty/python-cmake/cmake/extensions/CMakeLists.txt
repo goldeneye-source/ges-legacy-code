@@ -110,7 +110,7 @@ add_python_extension(_testbuffer REQUIRES IS_PY3 SOURCES _testbuffer.c)
 # Test loading multiple modules from one compiled file (http://bugs.python.org/issue16421)
 add_python_extension(_testimportmultiple REQUIRES IS_PY3 SOURCES _testimportmultiple.c)
 # Test multi-phase extension module init (PEP 489)
-add_python_extension(_testmultiphase REQUIRES IS_PY3 SOURCES _testmultiphase.c)
+#add_python_extension(_testmultiphase REQUIRES IS_PY3 SOURCES _testmultiphase.c)
 # debug tool to trace memory blocks allocated by Python
 add_python_extension(_tracemalloc BUILTIN REQUIRES IS_PY3 SOURCES hashtable.c _tracemalloc.c)
 add_python_extension(_weakref BUILTIN REQUIRES IS_PY3 SOURCES _weakref.c)

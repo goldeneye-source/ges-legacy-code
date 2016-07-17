@@ -18,7 +18,7 @@ extern PyObject* PyInit__string(void);
 
 extern PyObject* PyInit_errno(void);
 extern PyObject* PyInit__codecs(void);
-extern PyObject* PyInit__signal(void);
+extern PyObject* PyInit_signal(void);
 extern PyObject* PyInit__sre(void);
 extern PyObject* PyInit__symtable(void);
 extern PyObject* PyInit__weakref(void);
@@ -55,7 +55,7 @@ struct _inittab _PyImport_Inittab[] = {
 
     {"errno", PyInit_errno},
     {"_codecs", PyInit__codecs},
-    {"_signal", PyInit__signal},
+    {"signal", PyInit_signal},
     {"_sre", PyInit__sre},
     {"_symtable", PyInit__symtable},
     {"_weakref", PyInit__weakref},

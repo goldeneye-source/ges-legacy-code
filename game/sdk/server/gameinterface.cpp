@@ -98,7 +98,6 @@
 extern void PythonInit();
 extern void PythonShutdown();
 extern void InitStatusLists();
-extern void GE_DumpMemoryLeaks();
 extern void GE_OverrideCommands();
 #endif
 
@@ -788,10 +787,6 @@ void CServerGameDLL::DLLShutdown( void )
 	DisconnectTier2Libraries();
 	ConVar_Unregister();
 	DisconnectTier1Libraries();
-
-#if defined(GE_DLL) && defined(_DEBUG)
-	GE_DumpMemoryLeaks();
-#endif
 }
 
 

@@ -68,10 +68,13 @@ ConVar ge_gp_cyclefile( "ge_gp_cyclefile", "gameplaycycle.txt", FCVAR_GAMEDLL, "
 ConVar ge_autoteam( "ge_autoteam", "0", FCVAR_REPLICATED|FCVAR_NOTIFY, "Automatically toggles teamplay based on the player count (supplied value) [4-32]",  true, 0, true, MAX_PLAYERS );
 
 ConVar ge_autoautoteam("ge_autoautoteam", "1", FCVAR_GAMEDLL, "If set to 1, server will set ge_autoteam to the value specified in the current map script file.");
-ConVar ge_gameplay_mode( "ge_gameplay_mode", "0", FCVAR_GAMEDLL, "Mode to choose next gameplay: \n\t0=Same as last map, \n\t1=Random from Gameplay Cycle file, \n\t2=Ordered from Gameplay Cycle file" );
+ConVar ge_gameplay_mode( "ge_gameplay_mode", "1", FCVAR_GAMEDLL, "Mode to choose next gameplay: \n\t0=Same as last map, \n\t1=Random from current map file, \n\t2=Ordered from Gameplay Cycle file" );
 ConVar ge_gameplay( "ge_gameplay", "DeathMatch", FCVAR_GAMEDLL, "Sets the current gameplay mode.\nDefault is 'deathmatch'", GEGameplay_Callback );
 
 ConVar ge_gameplay_threshold("ge_gameplay_threshold", "4", FCVAR_GAMEDLL, "Playercount that must be exceeded before gamemodes other than Deathmatch will be randomly chosen.");
+
+ConVar ge_gameplay_modebuffercount("ge_gameplay_modebuffercount", "5", FCVAR_GAMEDLL, "How many other maps need to be played since the last time a map was played before it can be selected randomly without penalties.");
+ConVar ge_gameplay_modebufferpenalty("ge_gameplay_modebufferpenalty", "500", FCVAR_GAMEDLL, "How much to take off of the weight of a mode for each time it appears in the buffer.");
 
 #define GAMEPLAY_MODE_FIXED		0
 #define GAMEPLAY_MODE_RANDOM	1
@@ -186,6 +189,9 @@ void CGEBaseGameplayManager::Init()
 	LoadGamePlayList( "python\\ges\\GamePlay\\*.py" );
 	LoadScenarioCycle();
 
+	// Load our past gameplays
+	ParseLogData();
+
 	// Load the scenario
 	LoadScenario();
 }
@@ -194,6 +200,67 @@ void CGEBaseGameplayManager::Shutdown()
 {
 	// Shutdown the scenario
 	ShutdownScenario();
+}
+
+void CGEBaseGameplayManager::ParseLogData()
+{
+	char *contents = (char*)UTIL_LoadFileForMe("gamesetuprecord.txt", NULL);
+
+	if (!contents)
+	{
+		Msg("No rotation log!\n");
+		return;
+	}
+
+	CUtlVector<char*> lines;
+	char linebuffer[64];
+	Q_SplitString(contents, "\n", lines);
+
+	bool readingmodes = false;
+
+	for (int i = 0; i < lines.Count(); i++)
+	{
+		// Ignore comments
+		if (!Q_strncmp(lines[i], "//", 2))
+			continue;
+
+		if (readingmodes)
+		{
+			if (!Q_strncmp(lines[i], "-", 1)) // Our symbol for the end of a block.
+				break;
+
+			Q_StrLeft(lines[i], -1, linebuffer, 64); // Take off the newline character.
+
+			// We could create a bunch of new strings, or we could just make use of the scenario list which already exists.
+			for (int i = 0; i < m_vScenarioList.Count(); i++)
+			{
+				if (!Q_strcmp(linebuffer, m_vScenarioList[i]))
+				{
+					m_vRecentScenarioList.AddToTail(m_vScenarioList[i]);
+					break;
+				}
+			}
+		}
+
+		if (!Q_strncmp(lines[i], "Modes:", 6))
+			readingmodes = true;
+	}
+
+	// NOTE: We do not purge the data!
+	ClearStringVector(lines);
+	delete[] contents;
+}
+
+void CGEBaseGameplayManager::GetRecentModes(CUtlVector<const char*> &modenames)
+{
+	modenames.RemoveAll();
+
+	int buffercount = min(ge_gameplay_modebuffercount.GetInt(), m_vRecentScenarioList.Count());
+
+	for (int i = 0; i < buffercount; i++)
+	{
+		modenames.AddToTail(m_vRecentScenarioList[i]);
+	}
 }
 
 void CGEBaseGameplayManager::BroadcastMatchStart()
@@ -346,6 +413,7 @@ const char *CGEBaseGameplayManager::GetNextScenario()
 	{
 		CUtlVector<char*>	gamemodes;
 		CUtlVector<int>		weights;
+		CUtlVector<const char*>	recentgamemodes;
 
 		int iNumConnections = 0;
 
@@ -361,8 +429,37 @@ const char *CGEBaseGameplayManager::GetNextScenario()
 
 		// Random game mode according to map script.  
 		GEMPRules()->GetMapManager()->GetMapGameplayList(gamemodes, weights, iNumConnections >= teamthresh);
+		ge_teamplay.SetValue( iNumConnections >= teamthresh ); // Premptively go into teamplay if we picked a teamplay mode.
 
-		ge_teamplay.SetValue(iNumConnections >= teamthresh); // Premptively go into teamplay if we picked a teamplay mode.
+		// Adjust the weight of gamemodes we just played.
+		GetRecentModes(recentgamemodes);
+		int deductionamount = ge_gameplay_modebufferpenalty.GetInt();
+		int totalweight = 0;
+
+		for ( int i = 0; i < gamemodes.Count(); i++ )
+		{
+			totalweight += weights[i];
+		}
+
+		if ( recentgamemodes.Count() )
+		{
+			for (int b = 0; b < recentgamemodes.Count(); b++)
+			{
+				if (totalweight <= deductionamount)
+					break; // Make sure we'll have at least one gamemode with above 0 weight.
+
+				for (int l = 0; l < gamemodes.Count(); l++)
+				{
+					if (!Q_strcmp(gamemodes[l], recentgamemodes[b]))
+					{
+						int deduction = min(weights[l], deductionamount);
+						weights[l] -= deduction;
+						totalweight -= deduction;
+						break;
+					}
+				}
+			}
+		}
 
 		if (gamemodes.Count())
 		{
@@ -416,6 +513,8 @@ void CGEBaseGameplayManager::InitScenario()
 	FOR_EACH_MPPLAYER( pPlayer )		
 		GetScenario()->ClientConnect( pPlayer );
 	END_OF_PLAYER_LOOP()
+
+	m_vRecentScenarioList.AddToHead(GetScenario()->GetIdent());
 
 	// Now let anyone who is interested know we are finished initilazing.  
 	// Added to fix the help bug and avoid making any more by switching the order of things, but should be useful in its own right.

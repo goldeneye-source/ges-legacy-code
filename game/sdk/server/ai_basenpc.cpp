@@ -105,7 +105,7 @@ extern ConVar sk_healthkit;
 #include "ai_waypoint.h"
 
 #include "utlbuffer.h"
-#include "GameStats.h"
+#include "gamestats.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -12150,10 +12150,23 @@ bool CAI_BaseNPC::OnObstructionPreSteer( AILocalMoveGoal_t *pMoveGoal,
 	if ( pMoveGoal->directTrace.pObstruction )
 	{
 		CBaseDoor *pDoor = dynamic_cast<CBaseDoor *>( pMoveGoal->directTrace.pObstruction );
+
+#ifdef GE_DLL
+		if (!pDoor)
+		{
+			if (pMoveGoal->directTrace.pObstruction->GetParent())
+				pDoor = dynamic_cast<CBaseDoor *>(pMoveGoal->directTrace.pObstruction->GetParent());
+		}
+#endif
 		if ( pDoor && OnObstructingDoor( pMoveGoal, pDoor, distClear, pResult ) )
 		{
 			return true;
 		}
+
+#ifdef GE_DLL
+		if (pMoveGoal->directTrace.pObstruction->IsPlayer() || pMoveGoal->directTrace.pObstruction->IsNPC())
+			return true;
+#endif
 	}
 
 	return false;

@@ -467,8 +467,8 @@ CGEMPRules::CGEMPRules()
 	m_pMapManager->ParseMapSelectionData();
 
 	// Figure out what day it is
-	int day, month, year;
-	GetCurrentDate(&day, &month, &year);
+	//int day, month, year;
+	//GetCurrentDate(&day, &month, &year);
 
 	// Load our bot names
 	g_vBotNames.RemoveAll();
@@ -619,6 +619,11 @@ void CGEMPRules::OnRoundStart()
 	// Reset winner information
 	SetRoundWinner( 0 );
 	SetRoundTeamWinner( TEAM_UNASSIGNED );
+
+	// Update the teamplay global variable to make sure it's right.
+	// If the game thinks it's teamplay when it isn't, it won't do any clientside prediction since it thinks both players
+	// are on the same team and shouldn't be able to damage each other.
+	gpGlobals->teamplay = IsTeamplay();
 
 	// Start the round timer
 	StartRoundTimer( ge_roundtime.GetFloat() );
@@ -1196,11 +1201,11 @@ void CGEMPRules::SetupChangeLevel( const char *next_level /*= NULL*/ )
 	}
 
 	// Tell our players what the next map will be
-	IGameEvent *event = gameeventmanager->CreateEvent( "server_mapannounce" );
-	if ( event )
+	IGameEvent *event = gameeventmanager->CreateEvent("server_mapannounce");
+	if (event)
 	{
-		event->SetString( "levelname", m_szNextLevel );
-		gameeventmanager->FireEvent( event );
+		event->SetString("levelname", m_szNextLevel);
+		gameeventmanager->FireEvent(event);
 	}
 
 	MapSelectionData *curMapData = m_pMapManager->GetCurrentMapSelectionData();
@@ -1212,6 +1217,54 @@ void CGEMPRules::SetupChangeLevel( const char *next_level /*= NULL*/ )
 		Q_strncpy(m_szNextLevel, "ge_transition", sizeof(m_szNextLevel));
 	}
 	
+	// Record our rotation log, but only if this isn't a transistion.
+	if (Q_strcmp(curMapData->mapname, "ge_transition"))
+	{
+		CUtlVector<const char*> vMaps;
+		CUtlVector<const char*> vModes;
+		CUtlVector<const char*> vWepnames;
+		CUtlVector<CGELoadout*> vWeapons;
+		char linebuffer[128];
+
+		GetMapManager()->GetRecentMaps(vMaps);
+		GEGameplay()->GetRecentModes(vModes);
+		GetLoadoutManager()->GetRecentLoadouts(vWeapons);
+
+		for (int i = 0; i < vWeapons.Count(); i++)
+			vWepnames.AddToTail(vWeapons[i]->GetIdent());
+
+		FileHandle_t file = filesystem->Open("gamesetuprecord.txt", "w", "MOD");
+
+		if (file)
+		{
+			filesystem->Write("Maps:\n", V_strlen("Maps:\n"), file);
+			for (int i = 0; i < vMaps.Count(); i++)
+			{
+				Q_snprintf(linebuffer, 128, "%s\n", vMaps[i]);
+				filesystem->Write(linebuffer, V_strlen(linebuffer), file);
+			}
+			filesystem->Write("-\n", V_strlen("-\n"), file);
+
+			filesystem->Write("Modes:\n", V_strlen("Modes:\n"), file);
+			for (int i = 0; i < vModes.Count(); i++)
+			{
+				Q_snprintf(linebuffer, 128, "%s\n", vModes[i]);
+				filesystem->Write(linebuffer, V_strlen(linebuffer), file);
+			}
+			filesystem->Write("-\n", V_strlen("-\n"), file);
+
+			filesystem->Write("Weps:\n", V_strlen("Weps:\n"), file);
+			for (int i = 0; i < vWepnames.Count(); i++)
+			{
+				Q_snprintf(linebuffer, 128, "%s\n", vWepnames[i]);
+				filesystem->Write(linebuffer, V_strlen(linebuffer), file);
+			}
+			filesystem->Write("-\n", V_strlen("-\n"), file);
+
+			filesystem->Close(file);
+		}
+	}
+
 	// Notify everyone
 	Msg( "CHANGE LEVEL: %s\n", m_szNextLevel );
 
@@ -1333,6 +1386,10 @@ void CGEMPRules::StopMatchTimer()
 void CGEMPRules::SetRoundTimerEnabled( bool state )
 {
 	Assert( m_hRoundTimer.Get() != NULL );
+
+	if (m_hRoundTimer->IsEnabled() == state)
+		return; // We're already in this state so we don't need to do anything.
+
 	if ( state ) {
 		m_hRoundTimer->Enable();
 		StartRoundTimer( ge_roundtime.GetFloat() );
@@ -1716,7 +1773,7 @@ void CGEMPRules::BalanceTeams()
 			for ( int i=0; i < pHeavyTeam->GetNumPlayers(); ++i )
 			{
 				pPlayer = ToGEMPPlayer( pHeavyTeam->GetPlayer(i) );
-				if ( !pPlayer || !GetScenario()->CanPlayerChangeTeam( pPlayer, pHeavyTeam->GetTeamNumber(), pLightTeam->GetTeamNumber() ) )
+				if ( !pPlayer || !GetScenario()->CanPlayerChangeTeam( pPlayer, pHeavyTeam->GetTeamNumber(), pLightTeam->GetTeamNumber(), true ) ) // Autobalance is always forced.
 					continue;
 
 				players.AddToTail( pPlayer );
@@ -1985,6 +2042,8 @@ float CGEMPRules::GetRoundTimeRemaining()
 {	
 	if ( m_hRoundTimer.Get() )
 		return m_hRoundTimer->GetTimeRemaining();
+
+	Warning("Could not find round timer!\n");
 	return 0;
 }
 
@@ -1996,24 +2055,24 @@ bool CGEMPRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		swap(collisionGroup0,collisionGroup1);
 	}
 	
-	if (collisionGroup0 == COLLISION_GROUP_MI6 && collisionGroup1 == COLLISION_GROUP_MI6)		
+	if ( collisionGroup0 == COLLISION_GROUP_MI6 && (collisionGroup1 == COLLISION_GROUP_MI6 || collisionGroup1 == COLLISION_GROUP_GRENADE_MI6) )
 		return false;
 
-	if (collisionGroup0 == COLLISION_GROUP_JANUS && collisionGroup1 == COLLISION_GROUP_JANUS)		
+	if ( collisionGroup0 == COLLISION_GROUP_JANUS && ( collisionGroup1 == COLLISION_GROUP_JANUS || collisionGroup1 == COLLISION_GROUP_GRENADE_JANUS ) )
 		return false;
 
-	//remap these as to not fuck the collisions up for the lower classes.	
-	if (collisionGroup0 == COLLISION_GROUP_MI6)		
-		collisionGroup0 = COLLISION_GROUP_PLAYER;	
+	int switchlist[4] = { COLLISION_GROUP_MI6, COLLISION_GROUP_JANUS, COLLISION_GROUP_GRENADE_MI6, COLLISION_GROUP_GRENADE_JANUS };
+	int fixlist[4] = { COLLISION_GROUP_PLAYER, COLLISION_GROUP_PLAYER, COLLISION_GROUP_GRENADE, COLLISION_GROUP_GRENADE };
 
-	if (collisionGroup0 == COLLISION_GROUP_JANUS)		
-		collisionGroup0 = COLLISION_GROUP_PLAYER;	
+	// remap these as to not fuck the collisions up for the lower classes.
+	for (int i = 0; i < 4; i++)
+	{
+		if (collisionGroup0 == switchlist[i])
+			collisionGroup0 = fixlist[i];
 
-	if (collisionGroup1 == COLLISION_GROUP_MI6)		
-		collisionGroup1 = COLLISION_GROUP_PLAYER;	
-
-	if (collisionGroup1 == COLLISION_GROUP_JANUS)		
-		collisionGroup1 = COLLISION_GROUP_PLAYER;
+		if (collisionGroup1 == switchlist[i])
+			collisionGroup1 = fixlist[i];
+	}
 
 	return BaseClass::ShouldCollide( collisionGroup0, collisionGroup1 ); 
 }

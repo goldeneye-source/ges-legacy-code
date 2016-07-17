@@ -287,6 +287,8 @@ void CGE_Explosion::Think()
 
 void CGE_Explosion::CreateHeatWave( void )
 {
+	return; // We can't afford to have this effect anymore, we're pushing things as it is.
+
 	static Vector offset( -40.0f, 0, 70.0f );
 
 	float scale = 1.0f;
@@ -313,6 +315,8 @@ void CGE_Explosion::CreateHeatWave( void )
 
 void CGE_Explosion::DestroyHeatWave( void )
 {
+	return; // Can't destroy what we don't have.
+
 	if ( m_hHeatWave.Get() )
 	{
 		m_hHeatWave->Remove();

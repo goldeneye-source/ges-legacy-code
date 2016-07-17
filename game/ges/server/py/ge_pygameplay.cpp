@@ -426,13 +426,13 @@ public:
 		TRYFUNCRET( this->get_override("OnPlayerSay")(bp::ptr(pPlayer), text), false );
 	}
 
-	virtual bool CanPlayerChangeTeam(CGEPlayer *pPlayer, int iOldTeam, int iNewTeam)
+	virtual bool CanPlayerChangeTeam(CGEPlayer *pPlayer, int iOldTeam, int iNewTeam, bool wasForced )
 	{
 		bool ret = true;
-		TRYFUNC( ret = this->get_override("CanPlayerChangeTeam")(bp::ptr(pPlayer), iOldTeam, iNewTeam) );
+		TRYFUNC( ret = this->get_override("CanPlayerChangeTeam")(bp::ptr(pPlayer), iOldTeam, iNewTeam, wasForced) );
 		// Call our hook only if we actually changed teams
 		if ( ret )
-			PY_CALLHOOKS( FUNC_GP_PLAYERTEAM, bp::make_tuple(bp::ptr(pPlayer), iOldTeam, iNewTeam) );
+			PY_CALLHOOKS( FUNC_GP_PLAYERTEAM, bp::make_tuple(bp::ptr(pPlayer), iOldTeam, iNewTeam, wasForced ) );
 
 		return ret;
 	}

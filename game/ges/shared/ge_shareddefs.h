@@ -479,13 +479,13 @@ static const unsigned int _vDevsHash[] = {
 	3481230322u,	//wake
 	3153704347u,	//enzo
 	2914713849u,	//bass
-	2526349322u, //baron
-	688766111u,	//vc
+	2526349322u,	//baron
+	688766111u,		//vc
 	2620307454u,	//dlt
 	2544109935u,	//KM
 	4162822065u,	//Lodle
 	1664936941u,	//konrad
-	405937346u,	//saiz
+	405937346u,		//saiz
 	3065896817u,	//audix
 	1987337922u,	//.sh4k3n
 	1386550685u,	//kraid
@@ -497,26 +497,21 @@ static const unsigned int _vDevsHash[] = {
 	1499428109u,	//Spider
 	4169247635u,	//fourtecks
 	1961166869u,	//fonfa
-	1196464728u, //JcFerggy
-	1068190188u, //Slimulation X
-	2889542288u, //Goldenzen
-	2029982914u, //The SSL
-	3076344308u, //Kinky
-	2933176145u, //Engineer
+	1068190188u,	//Slimulation X
+	2889542288u,	//Goldenzen
+	2029982914u,	//The SSL
+	3076344308u,	//Kinky
+	2933176145u,	//Engineer
+	3816687787u,	//Mangley
+	4075811109u,	//E-S
+	2638036214u,	//Adrian
+	3053371375u,	//Torn
+	2052672060u,	//Tweaklab
+	1596055546u,	//Soup
 	HASHLIST_END,
 };
 
 static const unsigned int _vTestersHash[] = { 
-	2327176597u,	//mbsurfer
-	525028083u,	//major
-	3666467964u,	//Gabbo
-	1520212232u,	//Searg kelly
-	3390685664u,	//Doc.NO
-	2425473544u,	//WNxCJL9788
-	3566398091u, //PPK
-	4229361344u, //CCSaint
-	3091418680u, //drukqaddik
-	812630740u,  //Rodney 1.666
 	HASHLIST_END,
 };
 
@@ -547,10 +542,6 @@ T GERandom(const T limit = T(1.0))
    tm myTime;
    VCRHook_LocalTime( &myTime );
 
-//   srand( myTime.tm_sec + myTime.tm_min + myTime.tm_hour );
-
-   // Trying new formula to cut down on redundant seed values and hopefully stop so many repeating selections.
-   // This really should have a randomly chosen initial value but i can't figure out a seamless way of doing it right now.
    srand( myTime.tm_sec + myTime.tm_min * 60 + myTime.tm_hour * 3600 );
    seeded = true;
    

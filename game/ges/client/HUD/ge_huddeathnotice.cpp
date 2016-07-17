@@ -358,7 +358,7 @@ void CGEHudDeathNotice::FireGameEvent( IGameEvent * event )
 		}
 		else if ( headshot )
 		{
-			if (!Q_stricmp(m_DeathMsgInfo.killedWith, "rocket launcher") || !Q_stricmp(m_DeathMsgInfo.killedWith, "grenade launcher"))
+			if (killedwithid == WEAPON_ROCKET_LAUNCHER || killedwithid == WEAPON_GRENADE_LAUNCHER)
 			{
 				Q_snprintf(szConMsg, sizeof(szConMsg), "%s killed %s with %s%s Direct Hit.", m_DeathMsgInfo.Killer.szName, m_DeathMsgInfo.Victim.szName, m_DeathMsgInfo.article, m_DeathMsgInfo.killedWith);
 				m_DeathMsgInfo.wszFormat = g_pVGuiLocalize->Find("#GES_Death_Direct");

@@ -52,7 +52,7 @@ CGEGameTimer::CGEGameTimer()
 float CGEGameTimer::GetTimeRemaining()
 {
 	// If we are not started return 0
-	if ( !IsStarted() )
+	if (!IsStarted())
 		return 0;
 
 	float seconds_remaining;

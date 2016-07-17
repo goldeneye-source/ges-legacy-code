@@ -43,7 +43,7 @@
 #include "prop_combine_ball.h"
 #include "datacache/imdlcache.h"
 #include "eventqueue.h"
-#include "GameStats.h"
+#include "gamestats.h"
 #include "filters.h"
 #include "tier0/icommandline.h"
 

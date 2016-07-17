@@ -45,7 +45,7 @@ void CGEGrenade::Spawn( void )
 	SetDamageRadius( 260 );
 
 	SetSize( -Vector(4,4,4), Vector(4,4,4) );
-	SetCollisionGroup( COLLISION_GROUP_GRENADE );
+	SetCollisionGroup( COLLISION_GROUP_MINE );
 	
 	// Init our physics definition
 	VPhysicsInitNormal( SOLID_VPHYSICS, GetSolidFlags() | FSOLID_TRIGGER, false );

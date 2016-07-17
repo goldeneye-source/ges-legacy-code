@@ -92,7 +92,7 @@
 #include "engine/imatchmaking.h"
 #include "cdll_bounded_cvars.h"
 #include "matsys_controls/matsyscontrols.h"
-#include "GameStats.h"
+#include "gamestats.h"
 
 #ifdef GE_DLL
 	#include "ge_panelhelper.h"
@@ -1308,7 +1308,7 @@ void CHLClient::LevelInitPreEntity( char const* pMapName )
 
 #ifdef GE_DLL
 	// Fail safe
-	GetLoadingScreen()->SetMapImage( pMapName );
+	// GetLoadingScreen()->SetMapImage( pMapName );
 #endif
 
 	// Check low violence settings for this map

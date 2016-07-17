@@ -14,7 +14,7 @@
 #include "iservervehicle.h"
 #include "viewport_panel_names.h"
 #include "info_camera_link.h"
-#include "GameStats.h"
+#include "gamestats.h"
 #include "obstacle_pushaway.h"
 #include "in_buttons.h"
 // memdbgon must be the last include file in a .cpp file!!!

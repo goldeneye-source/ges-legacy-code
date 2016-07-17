@@ -19,7 +19,7 @@
 #include "isaverestore.h"
 #include "eventqueue.h"
 #include "saverestore_utlvector.h"
-#include "GameStats.h"
+#include "gamestats.h"
 #include "ai_basenpc.h"
 #include "Sprite.h"
 

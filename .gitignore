@@ -31,3 +31,5 @@ linux_sdk/server_i486.so
 *.vdf
 
 lib/gtest/ServerTest*
+
+build*/

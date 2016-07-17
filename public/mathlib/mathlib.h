@@ -374,11 +374,11 @@ FORCEINLINE T Square( T const &a )
 	return a * a;
 }
 
-
-FORCEINLINE bool IsPowerOfTwo( uint x )
-{
-	return ( x & ( x - 1 ) ) == 0;
-}
+// GE_DLL
+//FORCEINLINE bool IsPowerOfTwo( uint x )
+//{
+//	return ( x & ( x - 1 ) ) == 0;
+//}
 
 // return the smallest power of two >= x.
 // returns 0 if x == 0 or x > 0x80000000 (ie numbers that would be negative if x was signed)

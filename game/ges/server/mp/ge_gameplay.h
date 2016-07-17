@@ -61,7 +61,7 @@ public:
 
 	virtual bool CanPlayerRespawn(CGEPlayer *pPlayer)=0;
 	virtual bool CanPlayerChangeChar(CGEPlayer* pPlayer, const char* szIdent)=0;
-	virtual bool CanPlayerChangeTeam(CGEPlayer *pPlayer, int iOldTeam, int iNewTeam)=0;
+	virtual bool CanPlayerChangeTeam(CGEPlayer *pPlayer, int iOldTeam, int iNewTeam, bool wasForced = false)=0;
 	virtual bool CanPlayerHaveItem(CGEPlayer *pPlayer, CBaseEntity *pEntity)=0;
 	virtual bool ShouldForcePickup(CGEPlayer *pPlayer, CBaseEntity *pEntity)=0;
 	virtual void CalculateCustomDamage(CGEPlayer *pVictim, const CTakeDamageInfo &inputInfo, float &health, float &armor)=0;
@@ -142,6 +142,8 @@ public:
 	// Loads the named scenario to play
 	bool LoadScenario( const char *ident );
 
+	void GetRecentModes(CUtlVector<const char*> &modenames);
+
 	// Round controls (does not check conditions)
 	void StartRound();
 	void EndRound( bool showreport = true );
@@ -180,6 +182,7 @@ private:
 	// Gameplay cycle management
 	void InitScenario();
 	void ShutdownScenario();
+	void ParseLogData();
 
 	void BroadcastMatchStart();
 	void BroadcastRoundStart();
@@ -218,6 +221,7 @@ private:
 	
 	CUtlVector<char*> m_vScenarioList;
 	CUtlVector<string_t> m_vScenarioCycle;
+	CUtlVector<const char*> m_vRecentScenarioList;
 
 protected:
 	// To satisfy Boost::Python requirements of a wrapper

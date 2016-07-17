@@ -454,6 +454,9 @@ void CGEDoor::MoveThink(void)
 			SetNextThink(gpGlobals->curtime + covereddist / -framespeed);
 		else
 			SetNextThink(gpGlobals->curtime + m_flThinkInterval);
+
+		if (GetMoveDoneTime() < m_flThinkInterval * 3)
+			SetMoveDoneTime(m_flThinkInterval * 4); // Make sure we can't hit our move done time while moving.
 	}
 	else // Has hit or gone past the ending posistion so finalize the transistion and stop moving
 	{

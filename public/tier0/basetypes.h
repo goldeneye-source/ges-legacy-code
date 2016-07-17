@@ -36,9 +36,14 @@
 #define NULL 0
 #endif
 
-
-#ifdef _LINUX
-typedef unsigned int uintptr_t;
+#ifdef GE_DLL
+  #ifdef _LINUX
+    #include <stdint.h>
+  #endif
+#else
+  #ifdef _LINUX
+  typedef unsigned int uintptr_t;
+  #endif
 #endif
 
 #define ExecuteNTimes( nTimes, x )	\
@@ -103,8 +108,9 @@ typedef unsigned char BYTE;
 typedef unsigned char byte;
 typedef unsigned short word;
 
+#ifndef GE_DLL
 typedef unsigned int uintptr_t;
-
+#endif
 
 enum ThreeState_t
 {

@@ -254,17 +254,17 @@ IMPLEMENT_NETWORKCLASS_ALIASED( WeaponRemoteMine, DT_WeaponRemoteMine )
 BEGIN_NETWORK_TABLE( CWeaponRemoteMine, DT_WeaponRemoteMine )
 #ifdef CLIENT_DLL
 	RecvPropBool( RECVINFO( m_bWatchDeployed ) ),
-	RecvPropInt( RECVINFO(m_iWatchModelIndex) ),
+//	RecvPropInt( RECVINFO(m_iWatchModelIndex) ),
 #else
 	SendPropBool( SENDINFO( m_bWatchDeployed ) ),
-	SendPropModelIndex( SENDINFO(m_iWatchModelIndex) ),
+//	SendPropModelIndex( SENDINFO(m_iWatchModelIndex) ),
 #endif
 END_NETWORK_TABLE()
 
 #ifdef CLIENT_DLL
 BEGIN_PREDICTION_DATA( CWeaponRemoteMine )
 	DEFINE_PRED_FIELD( m_bWatchDeployed, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_iWatchModelIndex, FIELD_INTEGER, FTYPEDESC_INSENDTABLE | FTYPEDESC_MODELINDEX ),
+//	DEFINE_PRED_FIELD( m_iWatchModelIndex, FIELD_INTEGER, FTYPEDESC_INSENDTABLE | FTYPEDESC_MODELINDEX ),
 END_PREDICTION_DATA()
 #endif
 
@@ -334,7 +334,7 @@ void CWeaponRemoteMine::Precache( void )
 
 	PrecacheScriptSound( "weapon_mines.WatchBeep" );
 
-	m_iWatchModelIndex = CBaseEntity::PrecacheModel( "models/weapons/mines/w_watch.mdl" );
+//	m_iWatchModelIndex = CBaseEntity::PrecacheModel( "models/weapons/mines/w_watch.mdl" );
 	BaseClass::Precache();
 }
 
@@ -344,7 +344,7 @@ int C_WeaponRemoteMine::GetWorldModelIndex( void )
 	if ( GetOwner() && GetOwner()->IsPlayer() )
 	{
 		if ( m_bWatchDeployed )
-			return m_iWatchModelIndex;
+			return NULL;
 		else
 			return m_iWorldModelIndex;
 	}

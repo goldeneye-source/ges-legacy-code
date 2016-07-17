@@ -34,6 +34,7 @@ set(SERVER_LIBS
 set(GEPY_SOURCES
   ges/server/py/ge_pyai.cpp
   ges/server/py/ge_pyaiconstants.cpp
+  ges/server/py/ge_pyammocrate.cpp
   ges/server/py/ge_pyentity.cpp
   ges/server/py/ge_pyfuncs.cpp
   ges/server/py/ge_pygameplay.cpp

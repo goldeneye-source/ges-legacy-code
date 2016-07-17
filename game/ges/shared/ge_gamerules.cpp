@@ -372,9 +372,8 @@ bool CGERules::FShouldSwitchWeapon( CBasePlayer *pPlayer, CBaseCombatWeapon *pWe
 
 		// Don't switch if we fired our weapon recently.  
 		// Might be a dinky way of doing this, last shot fired time may be more intuitive but this will scale to weapon fire rates at least.
-		if (myweap->GetAccPenalty() > 0)
+		if (myweap->GetAccPenalty() > 0 && GetStrengthOfWeapon(weapid) < 8) // Top level weapons get to ignore this by popular request.
 			return false;
-
 		
 		// Never switch if we have explosives out
 		if ( myweapid == WEAPON_GRENADE_LAUNCHER || myweapid == WEAPON_ROCKET_LAUNCHER || myweapid == WEAPON_GRENADE ||

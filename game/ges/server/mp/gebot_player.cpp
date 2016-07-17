@@ -133,6 +133,7 @@ void CGEBotPlayer::InitialSpawn( void )
 		m_pNPC->m_lifeState = LIFE_DEAD;
 		m_pNPC->AddSolidFlags( FSOLID_NOT_SOLID );
 		m_pNPC->SetCondition( COND_NPC_FREEZE );
+		m_pNPC->ClearAllSchedules();
 
 		// Kill off some client specific stuff
 		SetSpawnState( SS_ACTIVE );
@@ -165,6 +166,7 @@ void CGEBotPlayer::Spawn( void )
 		m_pNPC->SetLocalOrigin( GetAbsOrigin() + Vector(0,0,5) );
 		m_pNPC->SetAbsVelocity( vec3_origin );
 		m_pNPC->SetLocalAngles( GetLocalAngles() );
+		m_pNPC->CleanupScriptsOnTeleport( false );
 
 		m_pNPC->Spawn();
 		m_pNPC->Activate();
@@ -172,7 +174,10 @@ void CGEBotPlayer::Spawn( void )
 
 		// Freeze us if we are in intermission
 		if ( GEMPRules()->IsIntermission() )
+		{
+			m_pNPC->ClearAllSchedules();
 			m_pNPC->SetCondition( COND_NPC_FREEZE );
+		}
 
 		// Setup collision rules based on teamplay
 		if ( GERules()->IsTeamplay() )	
@@ -193,6 +198,7 @@ void CGEBotPlayer::Spawn( void )
 		m_pNPC->m_lifeState = LIFE_DEAD;
 		m_pNPC->RemoveAllWeapons();
 		m_pNPC->AddSolidFlags( FSOLID_NOT_SOLID );
+		m_pNPC->ClearAllSchedules();
 		m_pNPC->SetCondition( COND_NPC_FREEZE );
 	}
 
@@ -211,9 +217,14 @@ void CGEBotPlayer::ForceRespawn( void )
 void CGEBotPlayer::FreezePlayer( bool state /*=true*/ )
 {
 	if ( m_pNPC.Get() )
+	{
+		m_pNPC->ClearAllSchedules();
 		m_pNPC->SetCondition( COND_NPC_FREEZE );
+	}
 	else
+	{
 		m_pNPC->SetCondition( COND_NPC_UNFREEZE );
+	}
 }
 
 int CGEBotPlayer::UpdateTransmitState( void )

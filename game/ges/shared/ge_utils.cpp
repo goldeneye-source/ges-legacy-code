@@ -613,6 +613,8 @@ void GEUTIL_WriteUniqueSkinData( uint64 value, int steamhash )
 	}
 }
 
+// There are other, more seamless ways to do this but we wouldn't want someone making a mistake and giving out invalid skins.
+// Since that could result in unusuable skins if the value is higher than a usable one.
 uint64 GEUTIL_EventCodeToSkin( int code )
 {
 	uint64 skincode = 0;
@@ -622,7 +624,9 @@ uint64 GEUTIL_EventCodeToSkin( int code )
 	if (code & 2)
 		skincode |= 128; // Ivory DD44
 	if (code & 4)
-		skincode |= 16777216; // Ivory ZMG
+		skincode |= 4096; // Black Magnum
+	if (code & 8)
+		skincode |= 16777216; // Rusty ZMG
 
 	return skincode;
 }

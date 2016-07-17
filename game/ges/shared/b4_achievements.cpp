@@ -281,8 +281,6 @@ protected:
 			// If we haven't died at all and the round was more than 4 minutes long and we scored at least 10 kills
 			if ( !m_bHasDied && event->GetInt("roundlength") > 240 && g_PR->GetFrags(pPlayer->entindex()) >= 10 )
 				IncrementCount();
-
-			m_bHasDied = false;
 		}
 	}
 private:

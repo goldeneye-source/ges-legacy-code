@@ -54,6 +54,7 @@ void CGEAmmoSpawner::OnEntSpawned( const char *szClassname )
 
 	// Load us up with the appropriate ammo
 	int weapid = GEMPRules()->GetLoadoutManager()->GetWeaponInSlot( GetSlot() );
+	pCrate->SetWeaponID( weapid );
 	pCrate->SetAmmoType( GetAmmoDef()->Index( GetAmmoForWeapon(weapid) ) );
 	// Force a respawn NOW (default is to wait item respawn time)
 	pCrate->SetNextThink( gpGlobals->curtime );

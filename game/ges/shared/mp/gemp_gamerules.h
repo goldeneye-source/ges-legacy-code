@@ -16,8 +16,10 @@
 #ifdef CLIENT_DLL
 	#define CGEMPRules			C_GEMPRules
 	#define CGEMPGameRulesProxy C_GEMPGameRulesProxy
+	#include "c_gemp_player.h"
 #else
 	#include "ge_gameplay.h"
+	#include "gemp_player.h"
 
 	class CGETokenManager;
 	class CGELoadoutManager;
@@ -114,6 +116,8 @@ public:
 	int GetRoundTeamWinner();
 	void SetRoundWinner( int winner )		{ m_iPlayerWinner = winner; }
 	void SetRoundTeamWinner( int winner )	{ m_iTeamWinner = winner; }
+
+	void GetRankSortedPlayers(CUtlVector<CGEMPPlayer*> &sortedplayers, bool matchRank = false);
 
 	void ResetPlayerScores( bool resetmatch = false );
 	void ResetTeamScores( bool resetmatch = false );

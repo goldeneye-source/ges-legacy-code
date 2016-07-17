@@ -52,7 +52,6 @@ public:
 	virtual void PrimaryAttack();
 
 	virtual void ThrowKnife();
-	virtual void SwitchToKnife();
 
 	virtual void Precache( void );
 	virtual void ItemPreFrame( void );
@@ -190,13 +189,6 @@ void CWeaponKnifeThrowing::ItemPostFrame( void )
 	if ( pOwner == NULL )
 		return;
 
-	if( pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
-	{
-		//No ammo, lets switch to the hunting knife!
-		SwitchToKnife();
-		return;
-	}
-
 	BaseClass::ItemPostFrame();
 }
 
@@ -218,25 +210,6 @@ void CWeaponKnifeThrowing::PrimaryAttack()
 	ToGEPlayer(pOwner)->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 }
 
-void CWeaponKnifeThrowing::SwitchToKnife()
-{
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-	
-	if ( pOwner == NULL )
-		return;
-
-	CBaseCombatWeapon *pKnife = pOwner->Weapon_OwnsThisType("weapon_knife");
-	if( pKnife )
-	{
-		pOwner->Weapon_Switch( pKnife );
-		return;
-	}
-
-	if ( pOwner->GetAmmoCount(m_iPrimaryAmmoType) <= 0 )
-		// Otherwise switch to the next best weapon (ran out of ammo)
-		pOwner->SwitchToNextBestWeapon( this );
-}
-
 #ifdef GAME_DLL
 void CWeaponKnifeThrowing::FireNPCPrimaryAttack( CBaseCombatCharacter *pOperator, bool bUseWeaponAngles )
 {
@@ -250,6 +223,11 @@ CGETKnife *CWeaponKnifeThrowing::CreateKnife( const Vector &vecOrigin, const QAn
 	pKnife->SetDamage( GetGEWpnData().m_iDamage );
 	pKnife->SetOwnerEntity( pOwner );
 	pKnife->SetSourceWeapon(this);
+
+	if (pOwner->GetTeamNumber() == TEAM_JANUS)
+		pKnife->SetCollisionGroup(COLLISION_GROUP_GRENADE_JANUS);
+	else if (pOwner->GetTeamNumber() == TEAM_MI6)
+		pKnife->SetCollisionGroup(COLLISION_GROUP_GRENADE_MI6);
 
 	// Tell the owner what we threw to implement anti-spamming
 	if ( pOwner->IsPlayer() )

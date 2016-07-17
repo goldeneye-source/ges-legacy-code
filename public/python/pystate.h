@@ -134,9 +134,6 @@ typedef struct _ts {
     void (*on_delete)(void *);
     void *on_delete_data;
 
-    PyObject *coroutine_wrapper;
-    int in_coroutine_wrapper;
-
     /* XXX signal handlers should also be here */
 
 } PyThreadState;
@@ -178,12 +175,15 @@ PyAPI_FUNC(int) PyThreadState_SetAsyncExc(long, PyObject *);
 
 /* Assuming the current thread holds the GIL, this is the
    PyThreadState for the current thread. */
-#ifdef Py_BUILD_CORE
+#ifndef Py_LIMITED_API
 PyAPI_DATA(_Py_atomic_address) _PyThreadState_Current;
-#  define PyThreadState_GET() \
-             ((PyThreadState*)_Py_atomic_load_relaxed(&_PyThreadState_Current))
+#endif
+
+#if defined(Py_DEBUG) || defined(Py_LIMITED_API)
+#define PyThreadState_GET() PyThreadState_Get()
 #else
-#  define PyThreadState_GET() PyThreadState_Get()
+#define PyThreadState_GET() \
+    ((PyThreadState*)_Py_atomic_load_relaxed(&_PyThreadState_Current))
 #endif
 
 typedef

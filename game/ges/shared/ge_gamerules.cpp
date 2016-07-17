@@ -1046,7 +1046,8 @@ bool CGERules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	if ( collisionGroup1 == COLLISION_GROUP_GRENADE )
 	{
 		if ( collisionGroup0 == COLLISION_GROUP_DEBRIS || 
-			collisionGroup0 == COLLISION_GROUP_PROJECTILE )
+			collisionGroup0 == COLLISION_GROUP_PROJECTILE ||
+			collisionGroup0 == COLLISION_GROUP_WEAPON)
 		{
 			return false;
 		}

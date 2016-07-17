@@ -32,4 +32,6 @@ add_compile_options(-Usprintf=use_Q_snprintf_instead_of_sprintf -Ustrncpy=use_Q_
   -Ufopen=dont_use_fopen -UPROTECTED_THINGS_ENABLE)
 
 add_subdirectory(thirdparty/boost/libs/python)
+add_subdirectory(mathlib)
+add_subdirectory(tier1)
 add_subdirectory(game)

@@ -764,7 +764,7 @@ void CGEMPPlayer::ChangeTeam( int iTeam, bool bWasForced /* = false */ )
 		return;
 
 	// Let the gameplay have a say (Warnings left up to GamePlay)
-	if ( !GEGameplay()->GetScenario()->CanPlayerChangeTeam( this, GetTeamNumber(), iTeam ) )
+	if ( !GEGameplay()->GetScenario()->CanPlayerChangeTeam( this, GetTeamNumber(), iTeam, bWasForced ))
 		return;
 
 	// If we didn't just join the server, we're alive, and this was by choice, force a suicide.
@@ -1392,21 +1392,6 @@ void CGEMPPlayer::Event_Killed( const CTakeDamageInfo &info )
 	m_vLastDeath = GetAbsOrigin();
 
 	NotifyOnDeath();
-
-	bool killedByTrigger = (!Q_stricmp("trigger_hurt", info.GetAttacker()->GetClassname()) || !Q_stricmp("trigger_trap", info.GetAttacker()->GetClassname()));
-	CBaseCombatWeapon *pWeapon;
-	
-	// Check if we were killed by a trigger and our active weapon is a token
-	// if so remove it from the world so we don't just drop it
-	if ( killedByTrigger )
-	{
-		pWeapon = GetActiveWeapon();
-		if ( pWeapon && GEMPRules()->GetTokenManager()->IsValidToken(pWeapon->GetClassname()) )
-		{
-			Weapon_Detach( pWeapon );
-			UTIL_Remove( pWeapon );
-		}
-	}
 
 	BaseClass::Event_Killed( info );
 

@@ -15,7 +15,7 @@ MACRO(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar
   LIST(APPEND ${SourcesVar} ${PrecompiledSource})
 ENDMACRO(ADD_MSVC_PRECOMPILED_HEADER)
 
-set(SHARED_LIBS m z dl ssl ldap rt util nsl crypt)
+set(SHARED_LIBS m z dl ssl ldap rt util nsl crypt crypto)
 
 set(SERVER_LIBS
   ${CMAKE_SOURCE_DIR}/lib/linux/choreoobjects_486.a
@@ -23,10 +23,11 @@ set(SERVER_LIBS
   ${CMAKE_SOURCE_DIR}/lib/linux/dmxloader_486.a
   ${CMAKE_SOURCE_DIR}/lib/linux/tier3_486.a
   ${CMAKE_SOURCE_DIR}/lib/linux/tier2_486.a
-  ${CMAKE_SOURCE_DIR}/lib/linux/tier1_486.a
-  ${CMAKE_SOURCE_DIR}/lib/linux/mathlib_486.a
   ${CMAKE_SOURCE_DIR}/lib/curl/libcurl.a
-  ${CMAKE_SOURCE_DIR}/lib/python/libpython3.5m.a
+  ${CMAKE_SOURCE_DIR}/lib/python/libpython3.4m.a
+  mathlib
+  tier1
+  boost_python
 )
 
 # Call these out separately for precompiled header on windows
@@ -1033,7 +1034,7 @@ include_directories("../common" "../public" "../public/tier0" "../public/tier1" 
 #######
 add_library(server SHARED ${SERVER_SOURCES})
 
-target_link_libraries(server ${SERVER_LIBS} boost_python ${SHARED_LIBS})
+target_link_libraries(server ${SERVER_LIBS} ${SHARED_LIBS})
 target_compile_definitions(server PUBLIC GAME_DLL HL2_DLL Py_ENABLE_SHARED GE_AI)
 target_include_directories(server PUBLIC "ges/server" "ges/server/mp" "ges/server/ai" "ges/server/py" "ges/server/sp")
 target_include_directories(server PUBLIC "sdk/server" "sdk/server/hl2" "sdk/server/hl2mp" "../public/python")
@@ -1044,20 +1045,28 @@ if(CMAKE_HOST_UNIX)
   set_target_properties(server PROPERTIES OUTPUT_NAME server_i486)
 
   # Link to pre-built libraries
+  file(COPY "${CMAKE_SOURCE_DIR}/lib/link/steam_api_i486.so" DESTINATION "${CMAKE_BINARY_DIR}/game/")
   add_library(steam_api SHARED IMPORTED)
-  find_library(STEAMAPI_SO steam_api_i486.so PATHS ${SDK_DIR}/bin NO_DEFAULT_PATH)
-  set_target_properties(steam_api PROPERTIES IMPORTED_LOCATION ${STEAMAPI_SO})
+  set_target_properties(steam_api PROPERTIES
+    IMPORTED_LOCATION "${CMAKE_BINARY_DIR}/game/steam_api_i486.so"
+    IMPORTED_SONAME "steam_api_i486.so")
 
+  file(COPY "${CMAKE_SOURCE_DIR}/lib/link/tier0_i486.so" DESTINATION "${CMAKE_BINARY_DIR}/game/")
   add_library(tier0 SHARED IMPORTED)
-  find_library(TIER0_SO tier0_i486.so PATHS ${SDK_DIR}/bin NO_DEFAULT_PATH)
-  set_target_properties(tier0 PROPERTIES IMPORTED_LOCATION ${TIER0_SO})
+  set_target_properties(tier0 PROPERTIES
+    IMPORTED_LOCATION "${CMAKE_BINARY_DIR}/game/tier0_i486.so"
+    IMPORTED_SONAME "tier0_i486.so")
 
+  file(COPY "${CMAKE_SOURCE_DIR}/lib/link/vstdlib_i486.so" DESTINATION "${CMAKE_BINARY_DIR}/game/")
   add_library(vstdlib SHARED IMPORTED)
-  find_library(VSTDLIB_SO vstdlib_i486.so PATHS ${SDK_DIR}/bin NO_DEFAULT_PATH)
-  set_target_properties(vstdlib PROPERTIES IMPORTED_LOCATION ${VSTDLIB_SO})
+  set_target_properties(vstdlib PROPERTIES
+    IMPORTED_LOCATION "${CMAKE_BINARY_DIR}/game/vstdlib_i486.so"
+    IMPORTED_SONAME "vstdlib_i486.so")
 
   target_link_libraries(server steam_api tier0 vstdlib)
 endif()
+
+install(TARGETS server LIBRARY DESTINATION "bin")
 
 #######
 # CLIENT LIBRARY
@@ -1070,6 +1079,6 @@ if(CMAKE_HOST_WIN32)
   target_include_directories(client PUBLIC "ges/client" "ges/client/sp" "ges/client/mp" "ges/client/sdk" "ges/client/vgui" "ges/client/hud")
   target_include_directories(client PUBLIC "sdk/client" "sdk/client/game_controls" "sdk/client/hl2mp" "sdk/client/hl2mp/UI"
     "sdk/client/hl2" "sdk/client/hl2/elements" "../vgui2/include" "../vgui2/controls")
-endif()
 
-install(TARGETS server LIBRARY DESTINATION ${INSTALL_DIR})
+  install(TARGETS client LIBRARY DESTINATION "bin")
+endif()

@@ -154,6 +154,7 @@ void CGEBotPlayer::Spawn( void )
 	AddFlag( FL_NOTARGET ); // Don't let NPC's "see" us
 	SetMoveType( MOVETYPE_NOCLIP );
 	AddSolidFlags( FSOLID_NOT_SOLID );
+	SetSolid( SOLID_NONE );
 	// Make sure we are virginal
 	RemoveAllAmmo();
 	RemoveAllWeapons();
@@ -489,7 +490,7 @@ void CGEBotPlayer::CreateRagdollEntity()
 void CGEBotPlayer::PreThink( void )
 {
 	BaseClass::PreThink();
-	
+
 	// Move us to where the NPC is for radar (mainly)
 	SetAbsOrigin( m_pNPC->GetAbsOrigin() );
 	SetLocalAngles( m_pNPC->GetLocalAngles() );

@@ -686,7 +686,7 @@
 /* #undef HAVE_PTH */
 
 /* Define to 1 if you have the `pthread_atfork' function. */
-#define HAVE_PTHREAD_ATFORK 1
+/* #undef HAVE_PTHREAD_ATFORK */
 
 /* Defined for Solaris 2.6 bug in pthread header. */
 /* #undef HAVE_PTHREAD_DESTRUCTOR */
@@ -701,7 +701,7 @@
 #define HAVE_PTHREAD_KILL 1
 
 /* Define to 1 if you have the `pthread_sigmask' function. */
-#define HAVE_PTHREAD_SIGMASK 1
+/* #undef HAVE_PTHREAD_SIGMASK */
 
 /* Define to 1 if you have the <pty.h> header file. */
 #define HAVE_PTY_H 1
@@ -779,16 +779,16 @@
 #define HAVE_SELECT 1
 
 /* Define to 1 if you have the `sem_getvalue' function. */
-#define HAVE_SEM_GETVALUE 1
+/* #undef HAVE_SEM_GETVALUE */
 
 /* Define to 1 if you have the `sem_open' function. */
-#define HAVE_SEM_OPEN 1
+/* #undef HAVE_SEM_OPEN */
 
 /* Define to 1 if you have the `sem_timedwait' function. */
-#define HAVE_SEM_TIMEDWAIT 1
+/* #undef HAVE_SEM_TIMEDWAIT */
 
 /* Define to 1 if you have the `sem_unlink' function. */
-#define HAVE_SEM_UNLINK 1
+/* #undef HAVE_SEM_UNLINK */
 
 /* Define to 1 if you have the `sendfile' function. [Python 3] */
 #define HAVE_SENDFILE 1
@@ -1421,7 +1421,7 @@
 #define WITH_PYMALLOC 1
 
 /* Define if you want to compile in rudimentary thread support */
-#define WITH_THREAD 1
+/* #undef WITH_THREAD */
 
 /* Define to profile with the Pentium timestamp counter */
 /* #undef WITH_TSC */

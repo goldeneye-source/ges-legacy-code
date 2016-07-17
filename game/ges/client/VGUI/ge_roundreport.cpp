@@ -114,6 +114,9 @@ void CGERoundReport::FireGameEvent( IGameEvent *event )
 		// So make sure our teamplay state is correct.
 		m_RoundData.is_teamplay = GEMPRules()->IsTeamplay();
 
+		// Do this here too, just in case.
+		GEUTIL_GetGameplayName(m_RoundData.scenario_name, sizeof(m_RoundData.scenario_name));
+
 		// Always play our music if we are scoring
 		PlayWinLoseMusic();
 

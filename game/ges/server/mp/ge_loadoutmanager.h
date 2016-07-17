@@ -34,6 +34,7 @@ public:
 	// Get the current active weapon in the slot provided or the entire enchilada
 	int  GetWeaponInSlot( int slot );
 	bool GetWeaponSet( CUtlVector<int> &set );
+	void GetRecentLoadouts(CUtlVector<CGELoadout*> &loadouts);
 
 	void OnTokenAdded( const char *szClassname );
 
@@ -46,6 +47,7 @@ public:
 	
 private:
 	void ParseGameplayAffinity( void );
+	void ParseLogData( void );
 	void ClearLoadouts( void );
 
 	// Adjusts weights according to weaponset grouping rules.
@@ -68,6 +70,8 @@ private:
 	CUtlVector<int>		m_RandomSetWeights;
 	// Flags
 	bool				m_bKeepCurrLoadout;
+
+	CUtlVector<CGELoadout*>	m_pRecentLoadouts;
 };
 
 #endif //GE_SPAWNERMANAGER_H

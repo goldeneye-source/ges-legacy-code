@@ -142,7 +142,7 @@ public:
 	virtual int  GetWorldModelIndex( void );
 #endif
 
-	CNetworkVar( int, m_iWatchModelIndex );
+//	CNetworkVar( int, m_iWatchModelIndex );
 
 private:
 	CWeaponRemoteMine( const CWeaponRemoteMine & );

@@ -70,7 +70,7 @@ CWeaponShotgun::CWeaponShotgun( void )
 {
 	// NPC Ranging
 	m_fMaxRange1 = 1024;
-	m_iShellBodyGroup[0] = {-1};
+	m_iShellBodyGroup[0] = -1;
 }
 
 void CWeaponShotgun::Precache(void)

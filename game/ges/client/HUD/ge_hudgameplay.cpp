@@ -471,6 +471,7 @@ void CHudGameplay::PerformLayout()
 		for (int i = 0; i < MAX_WEAPON_SPAWN_SLOTS; ++i)
 		{
 			m_vWeaponLabels[i]->SetPos(x_in, y_in);
+			m_vWeaponLabels[i]->pImage->SetPos( x_in + wide - YRES(64) - m_iTabWidth - m_iTextX*2, y_in );
 			y_in += m_vWeaponLabels[i]->GetTall() + m_iTextY;
 		}
 		break;

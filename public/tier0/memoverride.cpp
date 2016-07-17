@@ -362,11 +362,6 @@ extern "C"
 //-----------------------------------------------------------------------------
 #ifndef NO_MEMOVERRIDE_NEW_DELETE
 
-#ifdef GE_DLL
-extern void AddTrack(unsigned long addr,  unsigned long asize,  const char *fname, unsigned long lnum);
-extern void RemoveTrack(unsigned long addr);
-#endif
-
 void *__cdecl operator new( unsigned int nSize )
 {
 	return AllocUnattributed( nSize );
@@ -374,20 +369,11 @@ void *__cdecl operator new( unsigned int nSize )
 
 void *__cdecl operator new( unsigned int nSize, int nBlockUse, const char *pFileName, int nLine )
 {
-#ifdef GE_DLL
-	void *ptr = g_pMemAlloc->Alloc(nSize, pFileName, nLine);
-	AddTrack((DWORD)ptr, nSize, pFileName, nLine);
-	return ptr;
-#else
 	return g_pMemAlloc->Alloc(nSize, pFileName, nLine);
-#endif
 }
 
 void __cdecl operator delete( void *pMem )
 {
-#ifdef GE_DLL
-	RemoveTrack((DWORD)pMem);
-#endif
 	g_pMemAlloc->Free( pMem );
 }
 
@@ -398,20 +384,11 @@ void *__cdecl operator new[] ( unsigned int nSize )
 
 void *__cdecl operator new[] ( unsigned int nSize, int nBlockUse, const char *pFileName, int nLine )
 {
-#ifdef GE_DLL
-	void *ptr = g_pMemAlloc->Alloc(nSize, pFileName, nLine);
-	AddTrack((DWORD)ptr, nSize, pFileName, nLine);
-	return ptr;
-#else
 	return g_pMemAlloc->Alloc(nSize, pFileName, nLine);
-#endif
 }
 
 void __cdecl operator delete[] ( void *pMem )
 {
-#ifdef GE_DLL
-	RemoveTrack((DWORD)pMem);
-#endif
 	g_pMemAlloc->Free( pMem );
 }
 #endif

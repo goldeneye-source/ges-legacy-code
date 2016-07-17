@@ -36,7 +36,7 @@ void CGEShell::Spawn( void )
 	m_takedamage	= DAMAGE_YES;
 	m_iHealth		= 1;
 	m_iBounceCount	= 0;
-	m_bHitPlayer	= 0;
+	m_bHitPlayer	= false;
 
 	// Default Damages they should be modified by the thrower
 	SetDamage( 320 );

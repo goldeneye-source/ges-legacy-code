@@ -27,8 +27,9 @@
 #include "tier0/memdbgon.h"
 
 ConVar ge_mapchooser_avoidteamplay("ge_mapchooser_avoidteamplay", "0", FCVAR_GAMEDLL, "If set to 1, server will avoid choosing maps where the current playercount is above the team threshold.");
-ConVar ge_mapchooser_avoidtransistions("ge_mapchooser_avoidtransistions", "0", FCVAR_GAMEDLL, "If set to 1, server will avoid choosing maps where a transition through ge_transition is neccecery.");
+ConVar ge_mapchooser_mapbuffercount("ge_mapchooser_mapbuffercount", "5", FCVAR_GAMEDLL, "How many other maps need to be played since the last time a map was played before it can be selected randomly again.");
 ConVar ge_mapchooser_usemapcycle("ge_mapchooser_usemapcycle", "0", FCVAR_GAMEDLL, "If set to 1, server will just use the mapcycle file and not choose randomly based on map script files.");
+ConVar ge_mapchooser_resthreshold("ge_mapchooser_resthreshold", "14", FCVAR_GAMEDLL, "The mapchooser will do everything it can to avoid switching between maps with this combined resintensity.");
 
 
 CGEMapManager::CGEMapManager(void)
@@ -39,6 +40,12 @@ CGEMapManager::CGEMapManager(void)
 CGEMapManager::~CGEMapManager(void)
 {
 	m_pSelectionData.PurgeAndDeleteElements();
+	m_pLoadoutBlacklist.PurgeAndDeleteElements();
+	m_pMapGamemodes.PurgeAndDeleteElements();
+	m_pMapTeamGamemodes.PurgeAndDeleteElements();
+
+	m_pMapGamemodeWeights.RemoveAll();
+	m_pMapTeamGamemodeWeights.RemoveAll();
 }
 
 // Based off of the parser in loadoutmanager.  Thanks KM!
@@ -153,6 +160,50 @@ void CGEMapManager::ParseMapSelectionData(void)
 	}
 	
 	filesystem->FindClose(finder);
+}
+
+void CGEMapManager::ParseLogData()
+{
+	char *contents = (char*)UTIL_LoadFileForMe("gamesetuprecord.txt", NULL);
+
+	if (!contents)
+	{
+		Msg("No rotation log!\n");
+		return;
+	}
+
+	CUtlVector<char*> lines;
+	char linebuffer[64];
+	Q_SplitString(contents, "\n", lines);
+
+	bool readingmaps = false;
+
+	for (int i = 0; i < lines.Count(); i++)
+	{
+		// Ignore comments
+		if (!Q_strncmp(lines[i], "//", 2))
+			continue;
+
+		if (readingmaps)
+		{
+			if (!Q_strncmp(lines[i], "-", 1)) // Our symbol for the end of a block.
+				break;
+
+			Q_StrLeft(lines[i], -1, linebuffer, 64); // Take off the newline character.
+
+			MapSelectionData *mapData = GetMapSelectionData(linebuffer);
+
+			if (mapData)
+				m_pRecentMaps.AddToTail(mapData);
+		}
+
+		if (!Q_strncmp(lines[i], "Maps:", 5))
+			readingmaps = true;
+	}
+
+	// NOTE: We do not purge the data!
+	ClearStringVector(lines);
+	delete[] contents;
 }
 
 void CGEMapManager::ParseMapData(const char *mapname)
@@ -335,6 +386,13 @@ void CGEMapManager::ParseCurrentMapData(void)
 
 	ParseMapData("default"); // Parse this first so we can get all the default data, and then overwrite anything redundant with the current map's data.
 	ParseMapData(gpGlobals->mapname.ToCStr());
+
+	// Also parse our log data so we can add our current map to the rotation history.
+	ParseLogData();
+
+	// If it doesn't have a file it's not eligible for random rotation, no point in logging it.
+	if (m_pCurrentSelectionData != m_pDefaultSelectionData)
+		m_pRecentMaps.AddToHead(m_pCurrentSelectionData);
 }
 
 MapSelectionData* CGEMapManager::GetMapSelectionData(const char *mapname)
@@ -391,7 +449,7 @@ void CGEMapManager::GetMapGameplayList(CUtlVector<char*> &gameplays, CUtlVector<
 	}
 }
 
-void CGEMapManager::GetSetBlacklist(CUtlVector<char*> &sets, CUtlVector<int> &weights)
+void CGEMapManager::GetSetBlacklist( CUtlVector<char*> &sets, CUtlVector<int> &weights )
 {
 	sets.RemoveAll();
 	weights.RemoveAll();
@@ -403,6 +461,18 @@ void CGEMapManager::GetSetBlacklist(CUtlVector<char*> &sets, CUtlVector<int> &we
 	}
 }
 
+void CGEMapManager::GetRecentMaps(CUtlVector<const char*> &mapnames)
+{
+	mapnames.RemoveAll();
+
+	int buffercount = min(ge_mapchooser_mapbuffercount.GetInt(), m_pRecentMaps.Count());
+
+	for (int i = 0; i < buffercount; i++)
+	{
+		mapnames.AddToTail(m_pRecentMaps[i]->mapname);
+	}
+}
+
 void CGEMapManager::GetViableMapList(int iNumPlayers, CUtlVector<char*> &mapnames, CUtlVector<int> &mapweights)
 {
 	if (!m_pSelectionData.Count()) // We don't actually have any maps to choose from.
@@ -411,9 +481,12 @@ void CGEMapManager::GetViableMapList(int iNumPlayers, CUtlVector<char*> &mapname
 	int currentResIntensity = 3;
 	mapnames.RemoveAll();
 	mapweights.RemoveAll();
-	CUtlVector<int> mapintensities;
-	bool lookforcheap = false;
-	int	currentmapindex = -1;
+	CUtlVector<const char*> recentmaps; // Vector of recently played maps that we would rather not play again.
+	CUtlVector<int> mapintensities; // Vector of the resintensity scores of each map.
+	int	currentmapindex = -1; // Index of the current map in the mapnames vector for easy removal later.
+	int goodintensitycount = 0; // For keeping track of how many maps we have that won't crash the game on switch.
+	int intensitythresh = ge_mapchooser_resthreshold.GetInt();
+	GetRecentMaps(recentmaps);
 
 	if (m_pCurrentSelectionData)
 		currentResIntensity = m_pCurrentSelectionData->resintensity;
@@ -422,8 +495,8 @@ void CGEMapManager::GetViableMapList(int iNumPlayers, CUtlVector<char*> &mapname
 
 	for (int i = 0; i < m_pSelectionData.Count(); i++)
 	{
-		int lowerbound = m_pSelectionData[i]->minplayers - 1;
-		int upperbound = m_pSelectionData[i]->maxplayers + 1;
+		int lowerbound = m_pSelectionData[i]->minplayers - 1; // Have to add and subtract one here so the range is inclusive.
+		int upperbound = m_pSelectionData[i]->maxplayers + 1; // and also smoothly tapers off in weight with our formula.
 
 		if (ge_mapchooser_avoidteamplay.GetBool()) // If we want to avoid teamplay our playercount has to come in below the teamthresh.
 			upperbound = min(m_pSelectionData[i]->teamthreshold, m_pSelectionData[i]->maxplayers + 1);
@@ -436,7 +509,7 @@ void CGEMapManager::GetViableMapList(int iNumPlayers, CUtlVector<char*> &mapname
 			int mapweight = m_pSelectionData[i]->baseweight;
 			float playerradius = (upperbound - lowerbound) * 0.5;
 			float centercount = (upperbound + lowerbound) * 0.5;
-			float weightscale = 1 - abs(centercount - (float)iNumPlayers) / playerradius;
+			float weightscale = 1 - abs(centercount - (float)iNumPlayers) / playerradius; // The closer we are to the center of our range the higher our weight is.
 			int finalweight = round(mapweight * weightscale);
 
 			if (m_pSelectionData[i] == m_pCurrentSelectionData)
@@ -447,8 +520,8 @@ void CGEMapManager::GetViableMapList(int iNumPlayers, CUtlVector<char*> &mapname
 			mapweights.AddToTail(finalweight);
 			mapintensities.AddToTail(m_pSelectionData[i]->resintensity);
 
-			if (m_pSelectionData[i]->resintensity + currentResIntensity < 10 && m_pSelectionData[i] != m_pCurrentSelectionData) // We have at least one map that comes in under the resource limit.
-				lookforcheap = true;  // If we have at least one we can strip out the others and go straight to it.
+			if ( m_pSelectionData[i]->resintensity + currentResIntensity < intensitythresh && m_pSelectionData[i] != m_pCurrentSelectionData )
+				goodintensitycount++;
 		}
 	}
 
@@ -460,20 +533,43 @@ void CGEMapManager::GetViableMapList(int iNumPlayers, CUtlVector<char*> &mapname
 		mapintensities.Remove(currentmapindex);
 	}
 
-	// Strip out maps that risk a game crash if we can do that.
-	if (lookforcheap && ge_mapchooser_avoidtransistions.GetBool())
+	// If resintensity is 15 then either one of these maps practically crashes on its own.
+	// If there's a single map we can switch that doesn't have a resintensity of >15 then strip out any that do.
+	// resintensity 15 is -really- high, and the amount of maps that will add up to be 15 is very low.  This mostly just
+	// prevents caverns from getting switched to from any other remotely intensive map.
+
+	// One day we'll upgrade engine versions or figure out a way to ameloriate this bizzare memory constraint, but for now
+	// we're forced into this.
+
+	if ( goodintensitycount > 0 )
 	{
-		for (int i = 0; i < mapnames.Count();)
+		for (int i = mapnames.Count() - 1; i >= 0; i--)
 		{
-			if (mapintensities[i] + currentResIntensity >= 10)
+			if ( mapintensities[i] + currentResIntensity >= intensitythresh )
 			{
-				DevMsg("Removing %s, because it has total resintensity %d\n", mapnames[i], mapintensities[i] + currentResIntensity);
+				DevWarning("Removing %s, because it has total resintensity %d\n", mapnames[i], mapintensities[i] + currentResIntensity);
 				mapnames.Remove(i);
 				mapweights.Remove(i);
 				mapintensities.Remove(i);
 			}
-			else
-				i++;
+
+			DevMsg("Switching to %s will %s transistion, because it has total resintensity %d\n", mapnames[i], mapintensities[i] + currentResIntensity >= 10 ? "":" **not** ", mapintensities[i] + currentResIntensity);
+		}
+	}
+
+	// Disqualify maps that we've played recently, but be sure to leave some for our mapchooser.
+	if ( recentmaps.Count() > 0 )
+	{
+		int validmapcount = mapnames.Count();
+		int recentmapcount = min(recentmaps.Count(), validmapcount - 2);
+
+		for (int r = 0; r < recentmapcount; r++)
+		{
+			for (int i = 0; i < validmapcount; i++)
+			{
+				if (!Q_strcmp(mapnames[i], recentmaps[r]))
+					mapweights[i] *= 0;
+			}
 		}
 	}
 

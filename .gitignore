@@ -32,4 +32,4 @@ linux_sdk/server_i486.so
 
 lib/gtest/ServerTest*
 
-build/
+build*/

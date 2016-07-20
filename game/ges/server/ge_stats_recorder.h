@@ -18,7 +18,7 @@
 #include "ge_gameplay.h"
 #include "ge_player.h"
 #include "ge_shareddefs.h"
-#include "GameStats.h"
+#include "gamestats.h"
 
 extern CGEPlayer *ToGEPlayer( CBaseEntity *pEntity );
 

@@ -1,4 +1,4 @@
-//////////  Copyright © 2008, Goldeneye Source. All rights reserved. ///////////
+//////////  Copyright ï¿½ 2008, Goldeneye Source. All rights reserved. ///////////
 // 
 // ge_ammocrate.cpp
 //

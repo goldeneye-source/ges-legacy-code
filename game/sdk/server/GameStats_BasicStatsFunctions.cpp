@@ -5,7 +5,7 @@
 //=============================================================================
 
 #include "cbase.h"
-#include "GameStats.h"
+#include "gamestats.h"
 
 void BasicGameStatsRecord_t::Clear()
 {

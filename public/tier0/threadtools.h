@@ -983,8 +983,7 @@ private:
 
 #define TFRWL_ALIGN ALIGN8
 
-TFRWL_ALIGN 
-class TT_CLASS CThreadSpinRWLock
+class TFRWL_ALIGN TT_CLASS CThreadSpinRWLock
 {
 public:
 	CThreadSpinRWLock()	{ COMPILE_TIME_ASSERT( sizeof( LockInfo_t ) == sizeof( int64 ) ); Assert( (int)this % 8 == 0 ); memset( this, 0, sizeof( *this ) ); }

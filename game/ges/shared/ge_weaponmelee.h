@@ -11,7 +11,7 @@
 #define GE_WEAPONMELEE
 
 #include "ge_weapon.h"
-#include "GameStats.h"
+#include "gamestats.h"
 
 #if defined( CLIENT_DLL )
 #define CGEWeaponMelee C_GEWeaponMelee

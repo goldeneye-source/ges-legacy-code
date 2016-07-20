@@ -1,4 +1,4 @@
-///////////// Copyright © 2013, Goldeneye: Source. All rights reserved. /////////////
+///////////// Copyright ï¿½ 2013, Goldeneye: Source. All rights reserved. /////////////
 // 
 // File: ge_gameplay.cpp
 // Description:

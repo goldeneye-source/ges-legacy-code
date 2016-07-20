@@ -58,7 +58,7 @@
 #include "nav_mesh.h"
 #include "env_zoom.h"
 #include "rumble_shared.h"
-#include "GameStats.h"
+#include "gamestats.h"
 #include "npcevent.h"
 #include "datacache/imdlcache.h"
 #include "hintsystem.h"

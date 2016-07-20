@@ -76,7 +76,7 @@
 #include "scenefilecache/ISceneFileCache.h"
 #include "tier2/tier2.h"
 #include "particles/particles.h"
-#include "GameStats.h"
+#include "gamestats.h"
 #include "ixboxsystem.h"
 #include "engine/imatchmaking.h"
 #include "hl2orange.spa.h"
@@ -98,7 +98,6 @@
 extern void PythonInit();
 extern void PythonShutdown();
 extern void InitStatusLists();
-extern void GE_DumpMemoryLeaks();
 extern void GE_OverrideCommands();
 #endif
 
@@ -788,10 +787,6 @@ void CServerGameDLL::DLLShutdown( void )
 	DisconnectTier2Libraries();
 	ConVar_Unregister();
 	DisconnectTier1Libraries();
-
-#if defined(GE_DLL) && defined(_DEBUG)
-	GE_DumpMemoryLeaks();
-#endif
 }
 
 

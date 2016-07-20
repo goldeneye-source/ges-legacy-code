@@ -92,7 +92,7 @@
 #include "engine/imatchmaking.h"
 #include "cdll_bounded_cvars.h"
 #include "matsys_controls/matsyscontrols.h"
-#include "GameStats.h"
+#include "gamestats.h"
 
 #ifdef GE_DLL
 	#include "ge_panelhelper.h"
@@ -106,7 +106,6 @@
 	DLL_IMPORT BOOL	  STDCALL TerminateProcess(HANDLE hProcess, unsigned int uExitCode);
 	DLL_IMPORT HANDLE STDCALL GetCurrentProcess(void);
 #endif
-	extern void GE_DumpMemoryLeaks();
 #endif
 
 #ifdef PORTAL
@@ -948,10 +947,6 @@ void CHLClient::Shutdown( void )
 	DisconnectTier2Libraries( );
 	ConVar_Unregister();
 	DisconnectTier1Libraries( );
-
-#if defined(GE_DLL) && defined(_DEBUG)
-	GE_DumpMemoryLeaks();
-#endif
 
 	//Andrew; this is the fastest and dirtiest fucking thing I could come up
 	//with to avoid that damn "CNet Encrypt:0" issue. At least this closes the

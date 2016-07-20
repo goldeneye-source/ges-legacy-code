@@ -1,4 +1,4 @@
-///////////// Copyright © 2012 GoldenEye: Source All rights reserved. /////////////
+///////////// Copyright ï¿½ 2012 GoldenEye: Source All rights reserved. /////////////
 //
 //   Project     : Server (GES)
 //   File        : npc_gebase.cpp

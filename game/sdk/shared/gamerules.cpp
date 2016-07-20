@@ -25,7 +25,7 @@
 	#include "voice_gamemgr.h"
 	#include "globalstate.h"
 	#include "player_resource.h"
-#include "GameStats.h"
+#include "gamestats.h"
 
 #endif
 

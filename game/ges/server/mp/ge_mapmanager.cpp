@@ -655,6 +655,7 @@ void CGEMapManager::PrintMapSelectionWeights(int pcount, bool sorted)
 {
 	CUtlVector<char*> mapnames;
 	CUtlVector<int> mapweights;
+	CUtlVector<char*> sortedmapnames;
 	CUtlVector<int> sortedmapweights;
 	CUtlVector<MapWeightData*> mapweightsgroup;
 
@@ -674,34 +675,48 @@ void CGEMapManager::PrintMapSelectionWeights(int pcount, bool sorted)
 
 		mapweightsgroup.Sort(mapWeightSort);
 
-		Msg("Map:Weight\n");
 		for (int i = 0; i < mapnames.Count(); i++)
 		{
-			mapnames[i] = mapweightsgroup[i]->mapname;
-			mapweights[i] = mapweightsgroup[i]->weight;
-			Msg("%s:%d\n", mapweightsgroup[i]->mapname, mapweightsgroup[i]->weight);
+			sortedmapnames.AddToTail(mapweightsgroup[i]->mapname);
+			sortedmapweights.AddToTail(mapweightsgroup[i]->weight);
 		}
 	}
 	else
 	{
-		Msg("Map:Weight\n");
+		// Create an ordered list of indexes so we can grab both the mapname and its weight from the WeightedRandom function.
+		CUtlVector<int> indexes;
 		for (int i = 0; i < mapnames.Count(); i++)
+			indexes.AddToTail(i);
+
+		// i = mapnames.Count() here because it is only used as the upper bound for the random selection function.
+		// we basically pick a weighted random index from the list one time for each entry on it, and then strike that entry off
+		// so we can't pick it again.  This gets a nice random list for map voting plugins to use.
+		for (int i = mapnames.Count(); i > 0; i--)
 		{
-			Msg("%s:%d\n", mapnames[i], mapweights[i]);
+			int value = GERandomWeighted<int>( indexes.Base(), mapweights.Base(), i );
+			sortedmapnames.AddToTail(mapnames[value]);
+			sortedmapweights.AddToTail(mapweights[value]);
+			mapnames.Remove(value);
+			mapweights.Remove(value);
 		}
 	}
+
+	// Print our results to console for curious parties.
+	Msg("Map:Weight\n");
+	for (int i = 0; i < sortedmapnames.Count(); i++)
+		Msg("%s:%d\n", sortedmapnames[i], sortedmapweights[i]);
 
 	// Fire off an event so map voting plugins and the like can take advantage of our internal map scripting system.
 	IGameEvent *event = gameeventmanager->CreateEvent("map_rec");
 	if (event)
 	{
-		// Go through the first 10 maps and create event parameters for them.  Also make sure we have enough maps at each step.
-		for (int i = 0; i < 10; i++)
+		// Go through the first 16 maps and create event parameters for them.  Also make sure we have enough maps at each step.
+		for (int i = 0; i < 16; i++)
 		{
-			char curmapstr[64];
+			char curmapstr[8];
 			Q_snprintf(curmapstr, 64, "map%d", i + 1);
 			if (i < mapnames.Count())
-				event->SetString(curmapstr, mapnames[i]);
+				event->SetString(curmapstr, sortedmapnames[i]);
 			else
 				event->SetString(curmapstr, "None");
 		}
@@ -736,7 +751,7 @@ CON_COMMAND(ge_print_current_map_data, "Prints the current map's data ")
 		GEMPRules()->GetMapManager()->PrintMapDataLists();
 }
 
-CON_COMMAND(ge_print_map_selection_weights, "Prints the map selection chance for given playercount, use 1 as second parameter to sort.")
+CON_COMMAND(ge_print_map_selection_weights, "Prints the map selection chance for given playercount, or current playercount if none is given.  Use 1 as second parameter for unsorted list.")
 {
 	if (!UTIL_IsCommandIssuedByServerAdmin())
 	{
@@ -748,7 +763,7 @@ CON_COMMAND(ge_print_map_selection_weights, "Prints the map selection chance for
 		return;
 
 	int iNumPlayers = 0;
-	bool bPrintSorted = false;
+	bool bPrintSorted = true;
 
 	if ( args.ArgC() < 2 )
 	{
@@ -761,7 +776,7 @@ CON_COMMAND(ge_print_map_selection_weights, "Prints the map selection chance for
 		iNumPlayers = atoi(args[1]);
 
 	if (args.ArgC() > 2 && atoi(args[2]) > 0)
-		bPrintSorted = true;
+		bPrintSorted = false;
 
 
 	GEMPRules()->GetMapManager()->PrintMapSelectionWeights(iNumPlayers, bPrintSorted);

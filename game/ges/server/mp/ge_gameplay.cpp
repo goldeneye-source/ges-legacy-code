@@ -445,6 +445,8 @@ bool CGEBaseGameplayManager::LoadScenario( const char *ident )
 	return true;
 }
 
+extern ConVar ge_bot_threshold;
+
 const char *CGEBaseGameplayManager::GetNextScenario()
 {
 	int mode = ge_gameplay_mode.GetInt();
@@ -463,39 +465,43 @@ const char *CGEBaseGameplayManager::GetNextScenario()
 	else if (!ge_autoautoteam.GetBool())
 		teamthresh = ge_autoteam.GetInt();
 
-	if ( mode == GAMEPLAY_MODE_RANDOM )
+	int iNumConnections = 0;
+
+	// Find out how many people are actually connected to the server.
+	for (int i = 0; i < gpGlobals->maxClients; i++)
+	{
+		if (engine->GetPlayerNetInfo(i))
+			iNumConnections++;
+	}
+
+	// Consider bots too.
+	iNumConnections = max(iNumConnections, ge_bot_threshold.GetInt());
+	ge_teamplay.SetValue(iNumConnections >= teamthresh); // Premptively go into teamplay if we've got enough players for it.
+
+	if (mode == GAMEPLAY_MODE_RANDOM)
 	{
 		CUtlVector<char*>	gamemodes;
 		CUtlVector<int>		weights;
 		CUtlVector<const char*>	recentgamemodes;
 
-		int iNumConnections = 0;
-
-		// Find out how many people are actually connected to the server.
-		for (int i = 0; i < gpGlobals->maxClients; i++)
-		{
-			if (engine->GetPlayerNetInfo(i))
-				iNumConnections++;
-		}
-
+		// Don't select random modes above a certain playercount.
 		if (iNumConnections <= ge_gameplay_threshold.GetInt())
 			return "deathmatch";
 
 		// Random game mode according to map script.  
 		GEMPRules()->GetMapManager()->GetMapGameplayList(gamemodes, weights, iNumConnections >= teamthresh);
-		ge_teamplay.SetValue( iNumConnections >= teamthresh ); // Premptively go into teamplay if we picked a teamplay mode.
 
 		// Adjust the weight of gamemodes we just played.
 		GetRecentModes(recentgamemodes);
 		int deductionamount = ge_gameplay_modebufferpenalty.GetInt();
 		int totalweight = 0;
 
-		for ( int i = 0; i < gamemodes.Count(); i++ )
+		for (int i = 0; i < gamemodes.Count(); i++)
 		{
 			totalweight += weights[i];
 		}
 
-		if ( recentgamemodes.Count() )
+		if (recentgamemodes.Count())
 		{
 			for (int b = 0; b < recentgamemodes.Count(); b++)
 			{
@@ -525,16 +531,16 @@ const char *CGEBaseGameplayManager::GetNextScenario()
 			return m_vScenarioCycle[0].ToCStr();
 		}
 	}
-	else if ( mode == GAMEPLAY_MODE_CYCLE )
+	else if (mode == GAMEPLAY_MODE_CYCLE)
 	{
 		// Ordered game mode, get the next scenario in our list
-		if ( count > 0 )
+		if (count > 0)
 		{
 			// Increment our index, rolling over if we exceed our count
-			if ( ++g_iScenarioIndex  >= count )
+			if (++g_iScenarioIndex >= count)
 				g_iScenarioIndex = 0;
 
-			return m_vScenarioCycle[ g_iScenarioIndex ].ToCStr();
+			return m_vScenarioCycle[g_iScenarioIndex].ToCStr();
 		}
 	}
 

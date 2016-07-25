@@ -295,6 +295,17 @@ int CGEArmorVest::CalcSpawnProgress()
 	return (int)clamp(10 - 12 * metric, 0, 10);
 }
 
+void CGEArmorVest::UpdateOnRemove(void)
+{
+	BaseClass::UpdateOnRemove();
+
+	// Notify Python about the ammobox
+	if (GetScenario())
+	{
+		GetScenario()->OnArmorRemoved(this);
+	}
+}
+
 void CGEArmorVest::AddSpawnProgressMod(CBasePlayer *pPlayer, int amount)
 {
 	int cappedamount = min(amount, m_iSpawnpoints * -1); // Can't put the armor below 0 spawn points.

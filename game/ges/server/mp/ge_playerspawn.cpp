@@ -571,10 +571,10 @@ CON_COMMAND_F( ge_debug_checkplayerspawns, "Check player spawns against several 
 				if (!testnode)
 					continue;
 
-				UTIL_TraceEntity(pPlayer, pPlayer->GetAbsOrigin(), testnode->GetOrigin(), MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_PLAYER_MOVEMENT, &trace);
+				UTIL_TraceEntity(pPlayer, pPlayer->GetAbsOrigin(), testnode->GetOrigin() + Vector(0, 0, 1), MASK_PLAYERSOLID, pPlayer, COLLISION_GROUP_PLAYER_MOVEMENT, &trace);
 
 				// Check if we can reach the node, and if we did then we found at least one node from here and can get to the network.
-				if (trace.endpos == testnode->GetOrigin())
+				if (trace.endpos == testnode->GetOrigin() + Vector(0, 0, 1))
 				{
 					hitsomething = true;
 					break;

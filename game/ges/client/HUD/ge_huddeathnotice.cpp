@@ -25,7 +25,7 @@
 
 using namespace vgui;
 
-ConVar cl_ge_killfeed_readskins("cl_ge_killfeed_readskins", "0", FCVAR_ARCHIVE | FCVAR_USERINFO, "Use unique names for special weapon skins.");
+ConVar cl_ge_killfeed_readskins("cl_ge_killfeed_readskins", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Use unique names for special weapon skins.");
 ConVar cl_ge_drawkillfeed("cl_ge_drawkillfeed", "1", FCVAR_ARCHIVE | FCVAR_USERINFO, "Draw the killfeed.");
 
 enum InfoColor

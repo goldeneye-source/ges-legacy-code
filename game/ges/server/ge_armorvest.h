@@ -27,6 +27,7 @@ public:
 	virtual CBaseEntity *Respawn( void );
 	virtual void RespawnThink( void );
 	virtual void Materialize( void );
+	void UpdateOnRemove( void );
 
 	virtual void AliveThink();
 	virtual void ItemTouch( CBaseEntity *pEntity );

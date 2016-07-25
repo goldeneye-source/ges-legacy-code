@@ -41,6 +41,7 @@ public:
 	void SetAmmoType( int id );
 	int GetAmmoType();
 	bool HasAmmo();
+	void UpdateOnRemove();
 
 	void SetWeaponID( int id );
 	int GetWeaponID() { return m_iWeaponID; }

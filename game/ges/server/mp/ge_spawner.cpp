@@ -273,7 +273,9 @@ void CGESpawner::SpawnEnt( int spawnstate )
 void CGESpawner::RemoveEnt( void )
 {
 	if ( m_hCurrentEntity.Get() )
+	{
 		m_hCurrentEntity->Remove();
+	}
 	m_hCurrentEntity = NULL;
 }
 

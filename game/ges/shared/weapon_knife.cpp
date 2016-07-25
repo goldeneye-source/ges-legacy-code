@@ -167,9 +167,12 @@ void CWeaponKnife::HandleAnimEventMeleeHit( animevent_t *pEvent, CBaseCombatChar
 	AngleVectors( GetAbsAngles(), &vecDirection );
 
 	Vector vecEnd;
-	VectorMA( pOperator->Weapon_ShootPosition(), 50, vecDirection, vecEnd );
-	CBaseEntity *pHurt = pOperator->CheckTraceHullAttack( pOperator->Weapon_ShootPosition(), vecEnd, 
-		Vector(-16,-16,-16), Vector(36,36,36), GetDamageForActivity( GetActivity() ), DMG_CLUB, 0.75 );
+//	VectorMA( pOperator->Weapon_ShootPosition(), 50, vecDirection, vecEnd );
+//	CBaseEntity *pHurt = pOperator->CheckTraceHullAttack( pOperator->Weapon_ShootPosition(), vecEnd, 
+//		Vector(-16,-16,-16), Vector(36,36,36), GetDamageForActivity( GetActivity() ), DMG_CLUB, 0.75 );
+
+	VectorMA(pOperator->Weapon_ShootPosition(), KNIFE_RANGE, vecDirection, vecEnd);
+	CBaseEntity *pHurt = pOperator->CheckTraceHullAttack(pOperator->Weapon_ShootPosition(), vecEnd, Vector(-16, -16, -16), Vector(36, 36, 36), GetGEWpnData().m_iDamage, DMG_CLUB);
 	
 	// did I hit someone?
 	if ( pHurt )

@@ -1065,9 +1065,13 @@ if(CMAKE_HOST_UNIX)
     IMPORTED_SONAME "vstdlib_i486.so")
 
   target_link_libraries(server steam_api tier0 vstdlib)
+  
+  install(TARGETS server LIBRARY DESTINATION "bin")
+else()
+  install(TARGETS server RUNTIME DESTINATION "bin")
 endif()
 
-install(TARGETS server LIBRARY DESTINATION "bin")
+
 
 #######
 # CLIENT LIBRARY
@@ -1081,5 +1085,5 @@ if(CMAKE_HOST_WIN32)
   target_include_directories(client PUBLIC "sdk/client" "sdk/client/game_controls" "sdk/client/hl2mp" "sdk/client/hl2mp/UI"
     "sdk/client/hl2" "sdk/client/hl2/elements" "../vgui2/include" "../vgui2/controls")
 
-  install(TARGETS client LIBRARY DESTINATION "bin")
+  install(TARGETS client RUNTIME DESTINATION "bin")
 endif()

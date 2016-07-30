@@ -248,3 +248,14 @@ bool CGEAmmoCrate::MyTouch( CBasePlayer *pPlayer )
 
 	return false;
 }
+
+void CGEAmmoCrate::UpdateOnRemove(void)
+{
+	BaseClass::UpdateOnRemove();
+
+	// Notify Python about the ammobox
+	if ( GetScenario() )
+	{
+		GetScenario()->OnAmmoRemoved( this );
+	}
+}

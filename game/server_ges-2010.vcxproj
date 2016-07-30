@@ -463,6 +463,7 @@
     <ClCompile Include="ges\server\ge_door.cpp" />
     <ClCompile Include="ges\server\ge_door_interp.cpp" />
     <ClCompile Include="ges\server\ge_gameplayinfo.cpp" />
+    <ClCompile Include="ges\server\ge_logic_bitflag.cpp" />
     <ClCompile Include="ges\server\ge_logic_gate.cpp" />
     <ClCompile Include="ges\server\ge_point_follower.cpp" />
     <ClCompile Include="ges\server\mp\gebot_player.cpp" />
@@ -494,7 +495,6 @@
     <ClCompile Include="ges\server\ge_triggers.cpp" />
     <ClCompile Include="ges\server\prop_ge_dynamic.cpp" />
     <ClCompile Include="ges\shared\ge_webrequest.cpp" />
-    <ClCompile Include="ge_logic_bitflag.cpp" />
     <ClCompile Include="sdk\server\hl2\npc_bullseye.cpp" />
     <ClCompile Include="sdk\server\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

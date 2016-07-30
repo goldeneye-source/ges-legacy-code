@@ -1044,9 +1044,9 @@ void CGEPlayer::InitialSpawn( void )
 
 	HideBloodScreen();
 
-	// Disable npc interp if we are localhost...but this makes them all jerky for the localhost so I'm disabling it for now.
-	//if ( !engine->IsDedicatedServer() && entindex() == 1 )
-	//	engine->ClientCommand( edict(), "cl_interp_npcs 0" );
+	// Nearly disable npc interp if we are localhost
+	if ( !engine->IsDedicatedServer() && entindex() == 1 )
+		engine->ClientCommand( edict(), "cl_interp_npcs 0.01" );
 }
 
 void CGEPlayer::Spawn()

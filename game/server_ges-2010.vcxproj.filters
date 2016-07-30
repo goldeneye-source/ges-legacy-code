@@ -1791,11 +1791,11 @@
     <ClCompile Include="ges\server\mp\ge_mapmanager.cpp">
       <Filter>GES\Gameplay</Filter>
     </ClCompile>
-    <ClCompile Include="ge_logic_bitflag.cpp">
-      <Filter>GES\Entities</Filter>
-    </ClCompile>
     <ClCompile Include="ges\server\py\ge_pyammocrate.cpp">
       <Filter>GES\Python\modules</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\server\ge_logic_bitflag.cpp">
+      <Filter>GES\Entities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -51,9 +51,6 @@ private:
 	Vector m_vUp;
 	Vector m_vRight;
 
-	int m_iseed1;
-	int m_iseed2;
-	int m_iseed3;
 	float m_fthinktime;
 	float m_fFuseTime;
 

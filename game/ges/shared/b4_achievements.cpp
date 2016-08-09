@@ -599,6 +599,8 @@ protected:
 		SetGoal( 1 );
 
 		SetCharReq( "ourumov" );
+		AddAwardType( GE_AWARD_GIVEMAX ); // Prevent us from getting this from the baseclass logic.
+
 		m_bDD44Only = true;
 	}
 
@@ -607,6 +609,7 @@ protected:
 		m_bDD44Only = true;
 
 		ListenForGameEvent( "player_hurt" );
+		ListenForGameEvent( "round_start" );
 		CGEAchBaseAwardType::ListenForEvents();
 	}
 
@@ -627,22 +630,17 @@ protected:
 		else if ( !Q_stricmp(event->GetName(), "round_end") )
 		{
 			if ( !event->GetBool("showreport") || !IsScenario( "yolt" ) )
-			{
-				m_bDD44Only = true;
 				return;
-			}
 
 			// If we won with DD44 only and with 4+ kills we get cred
 			if ( event->GetInt("winnerid") == pPlayer->entindex() && WasCharForRound() 
 					&& m_bDD44Only && g_PR->GetFrags(pPlayer->entindex()) >= 4 )
 				IncrementCount();
+		}
+		else if (!Q_stricmp(event->GetName(), "round_start"))
+			m_bDD44Only = true; //Reset our status on round start.
 
-			m_bDD44Only = true;	
-		}
-		else
-		{
-			CGEAchBaseAwardType::FireGameEvent_Internal( event );
-		}
+		CGEAchBaseAwardType::FireGameEvent_Internal( event );
 	}
 
 private:

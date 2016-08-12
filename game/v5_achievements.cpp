@@ -120,7 +120,7 @@ protected:
 		{
 			m_iDmgTaken += event->GetInt("damage");
 
-			if (m_iDmgTaken >= 2560) //160 * 8 = 1280
+			if (m_iDmgTaken >= 1280) //160 * 8 = 1280
 				IncrementCount();
 		}
 		else
@@ -1596,6 +1596,7 @@ protected:
 	virtual void ListenForEvents()
 	{
 		ListenForGameEvent("player_death");
+		ListenForGameEvent("player_spawn");
 		VarInit();
 	}
 
@@ -1605,12 +1606,16 @@ protected:
 		if (!pPlayer)
 			return;
 
-		// We died, reset our progress
+		// We died or respawned, reset our progress
 		if (event->GetInt("userid") == pPlayer->GetUserID())
 		{
 			m_iWeaponFlags = 0;
 			return;
 		}
+
+		// If it was the player spawn event there's no need to go further.
+		if (Q_stricmp(event->GetName(), "player_spawn") == 0)
+			return;
 
 		// Not us doing the killing, don't care
 		if (event->GetInt("attacker") != pPlayer->GetUserID())

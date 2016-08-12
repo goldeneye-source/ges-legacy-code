@@ -81,7 +81,7 @@ END_DATADESC()
 
 CGEGameplayInfo::CGEGameplayInfo()
 {
-	m_fFloorHeight = 0;
+	m_fFloorHeight = 125.0f;
 }
 
 void CGEGameplayInfo::Spawn(void)

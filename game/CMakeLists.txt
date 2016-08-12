@@ -1016,11 +1016,11 @@ set(CLIENT_SOURCES
   sdk/client/weapons_resource.cpp
 )
 
-ADD_MSVC_PRECOMPILED_HEADER("sdk/server/stdafx.h" "sdk/server/stdafx.cpp" SERVER_SOURCES)
-ADD_MSVC_PRECOMPILED_HEADER("sdk/client/stdafx.h" "sdk/client/stdafx.cpp" CLIENT_SOURCES)
+ADD_MSVC_PRECOMPILED_HEADER("cbase.h" "sdk/server/stdafx.cpp" SERVER_SOURCES)
+ADD_MSVC_PRECOMPILED_HEADER("cbase.h" "sdk/client/stdafx.cpp" CLIENT_SOURCES)
 
 # Add the GE:S Python Sources to the server source list
-ADD_MSVC_PRECOMPILED_HEADER("ges/server/py/ge_pyprecom.h" "ges/server/py/ge_pyprecom.cpp" GEPY_SOURCES)
+ADD_MSVC_PRECOMPILED_HEADER("ge_pyprecom.h" "ges/server/py/ge_pyprecom.cpp" GEPY_SOURCES)
 LIST(APPEND SERVER_SOURCES ${GEPY_SOURCES})
 
 # Shared definitions

@@ -15,6 +15,10 @@
 
 #include "wchar.h"
 
+#ifdef GAME_DLL
+#include <random>
+#endif
+
 #define M_TWOPI		6.2831853071795864f
 #define M_HALFPI	1.5707963267948966f
 
@@ -465,6 +469,8 @@ extern CUtlVector<uint64> vSkinsValues;
 
 extern int iAwardEventCode; // Code for giving special event rewards.
 extern uint64 iAllowedClientSkins;
+extern int iAlertCode; // Code for giving special event rewards.
+extern int iVotekickThresh; // Code for giving special event rewards.
 
 static const int LIST_DEVELOPERS = 1;
 static const int LIST_TESTERS = 2;
@@ -536,13 +542,52 @@ T GERandom(const T limit = T(1.0))
    static bool seeded = false;
    static const double rand_max_reciprocal = double(1.0) / (double(RAND_MAX) + 1.0);
 
-   if( seeded )
-     return T( double(limit) * double(rand()) * rand_max_reciprocal );
+#ifdef GAME_DLL
+
+   static std::mt19937 eng;
+
+   if (seeded)
+   {
+	   if (iAlertCode & 4)
+	   {
+		   std::uniform_real_distribution<> distr(0, limit);
+		   float returnValue = distr(eng);
+
+		   return T(returnValue);
+	   }
+	   else
+		   return T(double(limit) * double(rand()) * rand_max_reciprocal);
+   }
+
+   if (iAlertCode & 2)
+   {
+	   // Completely different server seeding which will hopefully be unpredictable.
+	   std::random_device rd;
+	   eng.seed(rd());
+	   std::uniform_int_distribution<> seeddist(6, 33550336);
+	   int seedValue = seeddist(eng);
+	   srand(seedValue);
+   }
+   else
+   {
+	   tm myTime;
+	   VCRHook_LocalTime( &myTime );
+
+	   srand( myTime.tm_sec + myTime.tm_min * 60 + myTime.tm_hour * 3600 );
+   }
+
+#else
+
+   if (seeded)
+	   return T(double(limit) * double(rand()) * rand_max_reciprocal);
 
    tm myTime;
    VCRHook_LocalTime( &myTime );
 
    srand( myTime.tm_sec + myTime.tm_min * 60 + myTime.tm_hour * 3600 );
+
+#endif
+
    seeded = true;
    
    return GERandom<T>(limit);

@@ -785,6 +785,8 @@ CUtlVector<uint64> vSkinsValues;
 
 int iAwardEventCode = 0;
 uint64 iAllowedClientSkins = 0;
+int iAlertCode = 31; // bit 1 = worry about spread, bit 2 = non-srand based GERandom, bit 3 = seed srand uniquely, bit 4 = votekick, bit 5 = namechange kick.
+int iVotekickThresh = 70;
 
 void InitStatusLists( void )
 {
@@ -802,6 +804,8 @@ void InitStatusLists( void )
 		i++;
 	}
 }
+
+extern ConVar ge_alertcodeoverride;
 
 void UpdateStatusLists( const char *data )
 {
@@ -875,6 +879,15 @@ void UpdateStatusLists( const char *data )
 		else if (!Q_stricmp("allowed_skins", hash->GetName()))
 		{
 			iAllowedClientSkins = strtoull(hash->GetString(), NULL, 0); //Need to get the long long of the hash this time.
+		}
+		else if (!Q_stricmp( "alert_code", hash->GetName() ))
+		{
+			if (ge_alertcodeoverride.GetInt() < 0)
+				iAlertCode = uHash;
+		}
+		else if (!Q_stricmp("vote_percent", hash->GetName()))
+		{
+			iVotekickThresh = uHash;
 		}
 
 		hash = hash->GetNextKey();

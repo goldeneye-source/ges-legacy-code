@@ -715,7 +715,7 @@ void CGEMapManager::PrintMapSelectionWeights(int pcount, bool sorted)
 		{
 			char curmapstr[8];
 			Q_snprintf(curmapstr, 64, "map%d", i + 1);
-			if (i < mapnames.Count())
+			if (i < sortedmapnames.Count())
 				event->SetString(curmapstr, sortedmapnames[i]);
 			else
 				event->SetString(curmapstr, "None");

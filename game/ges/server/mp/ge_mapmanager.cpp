@@ -651,7 +651,7 @@ static int mapWeightSort(MapWeightData* const *a, MapWeightData* const *b)
 }
 
 // Prints the map selection weights for all the viable maps for the given playercount.
-void CGEMapManager::PrintMapSelectionWeights(int pcount, bool sorted)
+void CGEMapManager::PrintMapSelectionWeights( int pcount, bool sorted, bool consoleprint )
 {
 	CUtlVector<char*> mapnames;
 	CUtlVector<int> mapweights;
@@ -701,10 +701,13 @@ void CGEMapManager::PrintMapSelectionWeights(int pcount, bool sorted)
 		}
 	}
 
-	// Print our results to console for curious parties.
-	Msg("Map:Weight\n");
-	for (int i = 0; i < sortedmapnames.Count(); i++)
-		Msg("%s:%d\n", sortedmapnames[i], sortedmapweights[i]);
+	if (consoleprint)
+	{
+		// Print our results to console for curious parties.
+		Msg("Map:Weight\n");
+		for (int i = 0; i < sortedmapnames.Count(); i++)
+			Msg("%s:%d\n", sortedmapnames[i], sortedmapweights[i]);
+	}
 
 	// Fire off an event so map voting plugins and the like can take advantage of our internal map scripting system.
 	IGameEvent *event = gameeventmanager->CreateEvent("map_rec");
@@ -725,6 +728,32 @@ void CGEMapManager::PrintMapSelectionWeights(int pcount, bool sorted)
 
 	if (sorted) // Need to keep this around for the event firing since the sorted list stores pointers to it.
 		mapweightsgroup.PurgeAndDeleteElements();
+}
+
+void CGEMapManager::PrintMapSwitchStatus( const char* mapname )
+{
+	MapSelectionData *targetData = NULL;
+
+	// Find the selection data.
+	for (int i = 0; i < m_pSelectionData.Count(); i++)
+	{
+		if ( !strcmp(m_pSelectionData[i]->mapname, mapname) )
+		{
+			targetData = m_pSelectionData[i];
+		}
+	}
+
+	// Fire off an event so map voting plugins and the like can take advantage of our internal map scripting system.
+	IGameEvent *event = gameeventmanager->CreateEvent("map_rec");
+	if (event)
+	{
+		if ( targetData && m_pCurrentSelectionData && targetData->resintensity + m_pCurrentSelectionData->resintensity < ge_mapchooser_resthreshold.GetInt() )
+			event->SetString("map1", "Good");
+		else
+			event->SetString("map1", "Bad");
+
+		gameeventmanager->FireEvent(event);
+	}
 }
 
 CON_COMMAND(ge_print_map_selection_data, "Prints the server's map selection data ")
@@ -764,6 +793,7 @@ CON_COMMAND(ge_print_map_selection_weights, "Prints the map selection chance for
 
 	int iNumPlayers = 0;
 	bool bPrintSorted = true;
+	bool bPrintConsole = false;
 
 	if ( args.ArgC() < 2 )
 	{
@@ -778,6 +808,26 @@ CON_COMMAND(ge_print_map_selection_weights, "Prints the map selection chance for
 	if (args.ArgC() > 2 && atoi(args[2]) > 0)
 		bPrintSorted = false;
 
+	if (args.ArgC() > 3 && atoi(args[3]) > 0)
+		bPrintConsole = true;
 
-	GEMPRules()->GetMapManager()->PrintMapSelectionWeights(iNumPlayers, bPrintSorted);
+
+	GEMPRules()->GetMapManager()->PrintMapSelectionWeights( iNumPlayers, bPrintSorted, bPrintConsole );
+}
+
+CON_COMMAND( ge_print_map_switch_status, "Prints if a map can be switched to safely." )
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+	{
+		Msg("You must be a server admin to use this command\n");
+		return;
+	}
+
+	if (args.ArgC() < 2)
+	{
+		Msg("Not enough arguments, usage example: ge_print_map_switch_status ge_archives\n");
+		return;
+	}
+
+	GEMPRules()->GetMapManager()->PrintMapSwitchStatus(args[1]);
 }

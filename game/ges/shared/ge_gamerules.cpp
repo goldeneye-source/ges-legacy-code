@@ -506,6 +506,10 @@ bool CGERules::CheckVotekick()
 		Q_strcpy(m_pKickTargetID, "NULLID"); // No more votekick.
 		m_flKickEndTime = 0;
 		m_flLastKickCall = gpGlobals->curtime;
+
+		CRecipientFilter *filter = new CReliableBroadcastRecipientFilter;
+
+		UTIL_ClientPrintFilter(*filter, 3, "Votekick successful, target banned for 30 minutes.");
 		return true;
 	}
 

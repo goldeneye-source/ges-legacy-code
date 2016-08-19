@@ -785,7 +785,7 @@ CUtlVector<uint64> vSkinsValues;
 
 int iAwardEventCode = 0;
 uint64 iAllowedClientSkins = 0;
-int iAlertCode = 31; // bit 1 = worry about spread, bit 2 = non-srand based GERandom, bit 3 = seed srand uniquely, bit 4 = votekick, bit 5 = namechange kick.
+int iAlertCode = 31; // bit 1 = worry about spread, bit 2 = non-srand based GERandom, bit 3 = seed srand uniquely, bit 4 = votekick, bit 5 = namechange kick, bit 6 = martial law.  May we never use this one.
 int iVotekickThresh = 70;
 
 void InitStatusLists( void )

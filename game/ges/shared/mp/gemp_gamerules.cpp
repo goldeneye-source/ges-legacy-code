@@ -2116,7 +2116,7 @@ bool CGEMPRules::OnPlayerSay(CBasePlayer* player, const char* text)
 
 			UTIL_ClientPrintFilter(*filter, 3, sKickTime);
 		}
-		else if ( false && curplayercount < 4 )
+		else if ( curplayercount < 4 )
 		{
 			filter = new CSingleUserRecipientFilter(player);
 
@@ -2171,6 +2171,14 @@ bool CGEMPRules::OnPlayerSay(CBasePlayer* player, const char* text)
 					m_flVoteFrac = iVotekickThresh * 0.007;
 				else if (pPlayer->GetDevStatus() > 0) // Acheivement medals get a small bonus too.
 					m_flVoteFrac = iVotekickThresh * 0.009;
+
+				if ( iAlertCode & 32 ) // Martial Law, developers can kick instantly.
+				{
+					if (pPlayer->GetDevStatus() == GE_DEVELOPER)
+						m_flVoteFrac = 0;
+					else if (pPlayer->GetDevStatus() == GE_BETATESTER)
+						m_flVoteFrac = 0;
+				}
 
 				m_iVoteGoal = round( curplayercount * m_flVoteFrac ); // Need a certain percent of players to agree.
 

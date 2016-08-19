@@ -476,7 +476,14 @@ const char *CGEBaseGameplayManager::GetNextScenario()
 
 	// Consider bots too.
 	iNumConnections = max(iNumConnections, ge_bot_threshold.GetInt());
-	ge_teamplay.SetValue(iNumConnections >= teamthresh); // Premptively go into teamplay if we've got enough players for it.
+
+	if (ge_teamplay.GetInt() != 1)
+	{
+		if (iNumConnections >= teamthresh)
+			ge_teamplay.SetValue(2); // Premptively go into teamplay if we've got enough players for it.
+		else
+			ge_teamplay.SetValue(0);
+	}
 
 	if (mode == GAMEPLAY_MODE_RANDOM)
 	{
@@ -701,14 +708,25 @@ void CGEBaseGameplayManager::StartMatch()
 
 void CGEBaseGameplayManager::StartRound()
 {
-	if ( ge_autoteam.GetInt() > 0 )
+	if ( ge_autoteam.GetInt() > 0 && ge_teamplay.GetInt() != 1 ) // If teamplay is 1 then it is forced on.
 	{
-		// If we had 1 or more people than ge_autoteam on the last map, enforce teamplay immediately
-		// If we have the requisite active players, enforce teamplay
-		// If we don't, and ge_teamplay > 1 (ie not set by the player), then deactivate teamplay
-		if ( g_iLastPlayerCount >= (ge_autoteam.GetInt() + 1) || GEMPRules()->GetNumActivePlayers() >= ge_autoteam.GetInt() )
+
+		int iNumConnections = 0;
+
+		// Find out how many people are actually connected to the server.
+		for (int i = 0; i < gpGlobals->maxClients; i++)
+		{
+			if (engine->GetPlayerNetInfo(i))
+				iNumConnections++;
+		}
+
+		// Consider bots too.
+		iNumConnections = max(iNumConnections, ge_bot_threshold.GetInt());
+
+		// If the number of connections is greater than our teamthresh, go into teamplay.
+		if ( iNumConnections >= ge_autoteam.GetInt() )
 			ge_teamplay.SetValue(2);
-		else if ( ge_teamplay.GetInt() > 1 )
+		else
 			ge_teamplay.SetValue(0);
 	}
 

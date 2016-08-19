@@ -64,6 +64,7 @@
 	void GEBotThreshold_Callback( IConVar *var, const char *pOldString, float fOldValue );
 	void GEVelocity_Callback( IConVar *var, const char *pOldString, float fOldValue );
 	void GEInfAmmo_Callback(IConVar *var, const char *pOldString, float fOldValue);
+	void GEAlertCode_Callback(IConVar *var, const char *pOldString, float fOldValue);
 #endif
 
 #include "gemp_gamerules.h"
@@ -110,7 +111,18 @@ ConVar ge_roundcount( "ge_roundcount", "0", FCVAR_REPLICATED, "Number of rounds 
 ConVar ge_teamplay	( "ge_teamplay", "0", FCVAR_REPLICATED, "Turns on team play if the current scenario supports it.", GETeamplay_Callback );
 ConVar ge_velocity	( "ge_velocity", "1.0", FCVAR_REPLICATED|FCVAR_NOTIFY, "Player movement velocity multiplier, applies in multiples of 0.25 [0.7 to 2.0]", true, 0.7, true, 2.0, GEVelocity_Callback );
 ConVar ge_infiniteammo( "ge_infiniteammo", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Players never run out of ammo!", GEInfAmmo_Callback );
-ConVar ge_nextnextmap("ge_nextnextmap", "", FCVAR_GAMEDLL, "Map to switch to immediately upon loading next map");
+ConVar ge_nextnextmap( "ge_nextnextmap", "", FCVAR_GAMEDLL, "Map to switch to immediately upon loading next map");
+ConVar ge_alertcodeoverride("ge_alertcodeoverride", "-1", FCVAR_GAMEDLL, "Override alert code with this value. bit 1 = desynch spread, bit 2 = use mersine twister, bit 3 = check player speed", GEAlertCode_Callback);
+ConVar ge_votekickpreference("ge_votekickpreference", "-1", FCVAR_GAMEDLL, "-1 = allow alertcode to dictate votekick behavior, 0 = disable, 1 = enable.");
+
+void GEAlertCode_Callback(IConVar *var, const char *pOldString, float flOldValue)
+{
+	ConVar *cVar = static_cast<ConVar*>(var);
+	int value = cVar->GetInt();
+
+	if ( value >= 0 )
+		iAlertCode = value;
+}
 
 void GERoundTime_Callback( IConVar *var, const char *pOldString, float flOldValue )
 {
@@ -443,6 +455,10 @@ CGEMPRules::CGEMPRules()
 
 	// Find "sv_alltalk" convar and set the value accordingly
 	m_pAllTalkVar = cvar->FindVar( "sv_alltalk" );
+
+	// Copy over our override value.
+	if (ge_alertcodeoverride.GetInt() >= 0)
+		iAlertCode = ge_alertcodeoverride.GetInt();
 
 	// Create entity resources
 	g_pRadarResource = (CGERadarResource*) CBaseEntity::Create( "radar_resource", vec3_origin, vec3_angle );
@@ -1065,6 +1081,20 @@ void CGEMPRules::Think()
 
 	EnforceBotCount();
 
+	if (m_flKickEndTime && m_flKickEndTime < gpGlobals->curtime)
+	{
+		if ( !CheckVotekick() )
+		{
+			CRecipientFilter *filter = new CReliableBroadcastRecipientFilter;
+
+			UTIL_ClientPrintFilter(*filter, 3, "Votekick Failed!");
+
+			Q_strcpy(m_pKickTargetID, "NULLID"); // No more votekick.
+			m_flKickEndTime = 0;
+			m_flLastKickCall = gpGlobals->curtime;
+		}
+	}
+
 	// Enforce token management
 	m_pTokenManager->EnforceTokens();
 }
@@ -1140,6 +1170,17 @@ void CGEMPRules::ClientActive( CBasePlayer *pPlayer )
 	if ( pGEPlayer->IsBotPlayer() )
 		m_vBotList.AddToTail( pGEPlayer );
 
+	if (Q_strcmp("NULLID", m_pKickTargetID)) // Votekick currently going on.
+	{
+		int curplayercount = 0;
+
+		FOR_EACH_MPPLAYER(pCountPlayer)
+			curplayercount++;
+		END_OF_PLAYER_LOOP()
+
+		m_iVoteGoal = round(curplayercount * m_flVoteFrac); // Need a certain percent of players to agree.
+	}
+
 	GetScenario()->ClientConnect( pGEPlayer );
 }
 
@@ -1175,6 +1216,25 @@ void CGEMPRules::ClientDisconnected( edict_t *pEntity )
 				if (trapdoor->GetLastActivator() == player)
 					trapdoor->SetLastActivator(NULL);
 			}
+		}
+
+		if (Q_strcmp("NULLID", m_pKickTargetID)) // Votekick currently going on.
+		{
+			if ( m_vVoterIDs.Find(player->GetSteamHash()) != -1 )
+			{
+				m_vVoterIDs.FindAndRemove(player->GetSteamHash());
+				m_iVoteCount--; // Player voted, so take that vote away.
+			}
+
+			int curplayercount = -1; // Account for the fact that this player is leaving.
+
+			FOR_EACH_MPPLAYER(pCountPlayer)
+				curplayercount++;
+			END_OF_PLAYER_LOOP()
+
+			m_iVoteGoal = round( curplayercount * m_flVoteFrac ); // Need a certain percent of players to agree.
+
+			CheckVotekick(); // Could have pushed us over the threshold.
 		}
 
 		player->RemoveLeftObjects();
@@ -2014,10 +2074,143 @@ void CGEMPRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info 
 
 bool CGEMPRules::OnPlayerSay(CBasePlayer* player, const char* text)
 {
-	CGEPlayer* pPlayer = ToGEPlayer(player);
+	CGEMPPlayer* pPlayer = ToGEMPPlayer(player);
 
 	if (!pPlayer || !text)
 		return false;
+
+	if (!Q_strncmp("!gevotekick", text, 11))
+	{
+		CRecipientFilter *filter = NULL;
+
+		int curplayercount = 0;
+
+		FOR_EACH_MPPLAYER(pCountPlayer)
+			curplayercount++;
+		END_OF_PLAYER_LOOP()
+
+		if (ge_votekickpreference.GetInt() == 0 || (ge_votekickpreference.GetInt() == -1 && !(iAlertCode & 8)))
+		{
+			filter = new CSingleUserRecipientFilter(player);
+
+			UTIL_ClientPrintFilter(*filter, 3, "Vote kick disabled on this server.");
+		}
+		else if (Q_strcmp("NULLID", m_pKickTargetID))
+		{
+			filter = new CSingleUserRecipientFilter(player);
+
+			UTIL_ClientPrintFilter(*filter, 3, "There is already someone being targeted with votekick!");
+		}
+		else if (m_flLastKickCall && (m_flLastKickCall + 120 > gpGlobals->curtime || (m_pLastKickCaller == player && m_flLastKickCall + 240 > gpGlobals->curtime)))
+		{
+			filter = new CSingleUserRecipientFilter(player);
+
+			char sKickTime[128];
+
+			int votewait = m_flLastKickCall + 120 - gpGlobals->curtime;
+
+			if (m_pLastKickCaller == player)
+				votewait += 120;
+
+			Q_snprintf(sKickTime, sizeof(sKickTime), "You must wait %d seconds before starting another votekick!", votewait);
+
+			UTIL_ClientPrintFilter(*filter, 3, sKickTime);
+		}
+		else if ( curplayercount < 4 )
+		{
+			filter = new CSingleUserRecipientFilter(player);
+
+			UTIL_ClientPrintFilter(*filter, 3, "Need at least 4 players in the server to call a votekick!");
+		}
+		else
+		{
+			filter = new CReliableBroadcastRecipientFilter;
+
+			char targetname[32];
+			CBasePlayer *pKickTarget;
+
+			if (!Q_strncmp("!gevotekickid", text, 13))
+			{
+				Q_StrRight(text, -14, targetname, 32);
+
+				pKickTarget = UTIL_PlayerByUserId( Q_atoi(targetname) );
+			}
+			else
+			{
+				Q_StrRight(text, -12, targetname, 32);
+
+				pKickTarget = UTIL_PlayerByName(targetname);
+			}
+
+			if (pKickTarget)
+				Q_strcpy(m_pKickTargetID, pKickTarget->GetNetworkIDString());
+
+			if (Q_strcmp("NULLID", m_pKickTargetID) && pKickTarget)
+			{
+				char sKickNotice[128];
+				Q_snprintf(sKickNotice, sizeof(sKickNotice), "%s has called a votekick on %s!", player->GetPlayerName(), pKickTarget->GetPlayerName());
+
+				UTIL_ClientPrintFilter(*filter, 3, sKickNotice);
+				UTIL_ClientPrintFilter(*filter, 3, "Press g to agree!");
+
+				m_iVoteCount = 1; // Person who called the kick of course voted yes.
+				m_iVoteGoal = 0;
+				m_flKickEndTime = gpGlobals->curtime + 40;
+				m_pLastKickCaller = pPlayer;
+				m_vVoterIDs.RemoveAll();
+				m_vVoterIDs.AddToTail(pPlayer->GetSteamHash()); // Make sure they can't vote again.
+
+
+				m_flVoteFrac = iVotekickThresh * 0.01; // Pretty high by default to prevent abuse.
+
+				if (pPlayer->GetDevStatus() == GE_DEVELOPER)
+					m_flVoteFrac = iVotekickThresh * 0.005;
+				else if (pPlayer->GetDevStatus() == GE_BETATESTER)
+					m_flVoteFrac = iVotekickThresh * 0.006;
+				else if (pPlayer->GetDevStatus() == GE_CONTRIBUTOR)
+					m_flVoteFrac = iVotekickThresh * 0.007;
+				else if (pPlayer->GetDevStatus() > 0) // Acheivement medals get a small bonus too.
+					m_flVoteFrac = iVotekickThresh * 0.009;
+
+				if ( iAlertCode & 32 ) // Martial Law, developers can kick instantly.
+				{
+					if (pPlayer->GetDevStatus() == GE_DEVELOPER)
+						m_flVoteFrac = 0;
+					else if (pPlayer->GetDevStatus() == GE_BETATESTER)
+						m_flVoteFrac = 0;
+				}
+
+				m_iVoteGoal = round( curplayercount * m_flVoteFrac ); // Need a certain percent of players to agree.
+
+				CheckVotekick();
+			}
+		}
+
+		return true;
+	}
+	else if (Q_strcmp("NULLID", m_pKickTargetID) && !Q_strcmp("!voodoo", text))
+	{
+		CRecipientFilter *filter = new CSingleUserRecipientFilter(player);
+
+		if (m_vVoterIDs.Find(pPlayer->GetSteamHash()) != -1)
+			UTIL_ClientPrintFilter(*filter, 3, "You already voted!");
+		else
+		{
+			filter = new CReliableBroadcastRecipientFilter;
+
+			m_iVoteCount++;
+			m_vVoterIDs.AddToTail(pPlayer->GetSteamHash());
+
+			char sKickProgress[128];
+			Q_snprintf(sKickProgress, sizeof(sKickProgress), "Vote count is now %d/%d!", m_iVoteCount, m_iVoteGoal);
+
+			UTIL_ClientPrintFilter(*filter, 3, sKickProgress);
+		}
+
+		CheckVotekick();
+
+		return true;
+	}
 
 	return GetScenario()->OnPlayerSay(pPlayer, text);
 }

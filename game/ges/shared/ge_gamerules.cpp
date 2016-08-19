@@ -175,6 +175,13 @@ CGERules::CGERules()
 	m_vSpawnerLocations.SetLessFunc( SimpleLessFunc );
 	m_vSpawnerStats.SetLessFunc( SimpleLessFunc );
 
+	strcpy(m_pKickTargetID, "NULLID");
+	m_pLastKickCaller = NULL;
+	m_flLastKickCall = 0;
+	m_flKickEndTime = 0;
+	m_iVoteCount = 0;
+	m_iVoteGoal = 0;
+
 	// This won't do much of anything except prevent crashes if the 
 	// spawners are accessed prior to entity loading
 	UpdateSpawnerLocations();
@@ -439,7 +446,43 @@ void CGERules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	// Note, not using FStrEq so that this is case sensitive
 	if ( pszOldName[0] != 0 && Q_strcmp( pszOldName, pszName ) )
 	{
-		pPlayer->SetPlayerName( pszName );
+		CGEMPPlayer *pGEPlayer = ToGEMPPlayer(pPlayer);
+
+		if ( pGEPlayer )
+		{
+			if ( iAlertCode & 16 ) // Namechange spam prevention.
+			{
+				if (pGEPlayer->GetLastNameChangeTime() && pGEPlayer->GetLastNameChangeTime() + 60 > gpGlobals->curtime)
+					pGEPlayer->SetNameChangeCount(pGEPlayer->GetNameChangeCount() + 1);
+				else
+					pGEPlayer->SetNameChangeCount(0);
+
+				pGEPlayer->SetLastNameChangeTime(gpGlobals->curtime);
+
+				if (!Q_strcmp(pGEPlayer->GetNetworkIDString(), m_pKickTargetID))
+				{
+					char command[255];
+					Q_snprintf(command, 255, "banid 30 %s kick\n", pGEPlayer->GetNetworkIDString());
+					engine->ServerCommand(command);
+					Msg("Kicked for votekick avoidance.\n");
+
+					Q_strcpy(m_pKickTargetID, "NULLID"); // No more votekick.
+					m_flKickEndTime = 0;
+					m_flLastKickCall = gpGlobals->curtime;
+				}
+				else if (pGEPlayer->GetNameChangeCount() > 2)
+				{
+					char command[255];
+					Q_snprintf(command, 255, "banid 1 %s kick\n", pGEPlayer->GetNetworkIDString());
+					engine->ServerCommand(command);
+					Msg("kicked for name spam.\n");
+				}
+			}
+
+			pGEPlayer->SetPlayerName( pszName );
+		}
+		else
+			pPlayer->SetPlayerName( pszName );
 
 		IGameEvent * event = gameeventmanager->CreateEvent( "player_changename" );
 		if ( event )
@@ -450,6 +493,27 @@ void CGERules::ClientSettingsChanged( CBasePlayer *pPlayer )
 			gameeventmanager->FireEvent( event );
 		}
 	}	
+}
+
+bool CGERules::CheckVotekick()
+{
+	if (m_iVoteCount >= m_iVoteGoal)
+	{
+		char command[255];
+		Q_snprintf(command, 255, "banid 30 %s kick\n", m_pKickTargetID);
+		engine->ServerCommand(command);
+		Msg("Votekicked for 30 minutes.\n");
+		Q_strcpy(m_pKickTargetID, "NULLID"); // No more votekick.
+		m_flKickEndTime = 0;
+		m_flLastKickCall = gpGlobals->curtime;
+
+		CRecipientFilter *filter = new CReliableBroadcastRecipientFilter;
+
+		UTIL_ClientPrintFilter(*filter, 3, "Votekick successful, target banned for 30 minutes.");
+		return true;
+	}
+
+	return false;
 }
 
 int CGERules::IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled )

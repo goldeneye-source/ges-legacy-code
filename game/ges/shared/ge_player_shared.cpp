@@ -319,8 +319,19 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 		bStartedInWater = ( enginetrace->GetPointContents( modinfo.m_vecSrc ) & (CONTENTS_WATER|CONTENTS_SLIME) ) != 0;
 	}
 
+#ifdef GAME_DLL
+	// Prediction seed
+	int iSeed;
+
+	// If we're worried we can desynch the server and client seed.
+	if ( iAlertCode & 1 )
+		iSeed = GERandom<int>(INT_MAX);
+	else
+		iSeed = CBaseEntity::GetPredictionRandomSeed();
+#else
 	// Prediction seed
 	int iSeed = CBaseEntity::GetPredictionRandomSeed();
+#endif
 
 	//-----------------------------------------------------
 	// Set up our shot manipulator.
@@ -373,7 +384,16 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 				else // Center shot is more accurate
 					adjSpread *= 0.35;
 			}
+
+#ifdef GAME_DLL
+			// If we're worried we can desynch the server and client.
+			if ( iAlertCode & 1 )
+				vecDir = ApplySpreadGauss(adjSpread, adjShotDir, modinfo.m_iGaussFactor, GERandom<int>(INT_MAX) + iShot);
+			else
+				vecDir = ApplySpreadGauss(adjSpread, adjShotDir, modinfo.m_iGaussFactor, CBaseEntity::GetPredictionRandomSeed() + iShot);
+#else
 			vecDir = ApplySpreadGauss(adjSpread, adjShotDir, modinfo.m_iGaussFactor, CBaseEntity::GetPredictionRandomSeed() + iShot);
+#endif
 		}
 
 		vecEnd = modinfo.m_vecSrc + vecDir * modinfo.m_flDistance;

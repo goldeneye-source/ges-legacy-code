@@ -16,7 +16,6 @@
 #include "filters.h"
 #include "vstdlib/random.h"
 #include "triggers.h"
-#include "ge_triggers.h"
 #include "saverestoretypes.h"
 #include "hierarchy.h"
 #include "bspfile.h"
@@ -34,14 +33,14 @@
 #include "ai_behavior_follow.h"
 #include "ai_behavior_lead.h"
 #include "gameinterface.h"
-#include "gemp_gamerules.h"
-
-#include "triggers.h"
-#include "ge_shareddefs.h"
 
 #ifdef HL2_DLL
 #include "hl2_player.h"
 #endif
+
+#include "ge_shareddefs.h"
+#include "gemp_gamerules.h"
+#include "ge_triggers.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

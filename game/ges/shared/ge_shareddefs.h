@@ -15,9 +15,9 @@
 
 #include "wchar.h"
 
-#ifdef GAME_DLL
+#include "valve_minmax_off.h"
 #include <random>
-#endif
+#include "valve_minmax_on.h"
 
 #define M_TWOPI		6.2831853071795864f
 #define M_HALFPI	1.5707963267948966f

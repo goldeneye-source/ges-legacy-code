@@ -149,6 +149,12 @@ public:
 	virtual void  GiveDefaultItems();
 	virtual bool  ClientCommand( const CCommand &args );
 
+	virtual float GetLastNameChangeTime()		{ return m_flLastNameChange; };
+	virtual int GetNameChangeCount()			{ return m_iNameChangeCount; };
+
+	virtual void SetLastNameChangeTime( float newtime )	{ m_flLastNameChange = newtime; };
+	virtual void SetNameChangeCount( int amount )	{ m_iNameChangeCount = amount; };
+
 	virtual bool  BumpWeapon( CBaseCombatWeapon *pWeapon );
 
 	virtual void  FinishClientPutInServer();
@@ -227,6 +233,9 @@ protected:
 	bool	m_bFirstSpawn;
 	bool	m_bPreSpawn;
 	bool	m_bSpawnFromDeath;
+
+	float	m_flLastNameChange;
+	int		m_iNameChangeCount;
 
 	// Spawn system personal modifiers.
 	Vector	m_vLastDeath;

@@ -56,7 +56,10 @@ public:
 	void PrintMapDataLists(void);
 
 	// Prints out the liklyhood of picking a given map at this playercount.
-	void PrintMapSelectionWeights( int pcount, bool sorted );
+	void PrintMapSelectionWeights( int pcount, bool sorted, bool consoleprint );
+
+	// Prints out if we can switch to this map or not.
+	void PrintMapSwitchStatus(const char* mapname);
 
 	// Get selection data for a specific map and write it to mincount and maxcount
 	MapSelectionData* GetMapSelectionData(const char *mapname);

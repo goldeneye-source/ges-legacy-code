@@ -70,7 +70,8 @@ void CGEAmmoCrate::Materialize( void )
 	BaseClass::Materialize();
 
 	// Notify Python about the ammobox
-	if ( GetScenario() )
+	// Item tracker does not do well with ammocrates that have no assigned ammo type.
+	if ( GetScenario() && m_iAmmoID != -1 ) // CHECKING AMMOID IS A CRAPPY HOTFIX FOR NOW, FIX ITEM TRACKER.
 	{
 		GetScenario()->OnAmmoSpawned( this );
 	}
@@ -82,7 +83,7 @@ void CGEAmmoCrate::Materialize( void )
 CBaseEntity *CGEAmmoCrate::Respawn( void )
 {
 	// Notify Python about the ammobox
-	if ( GetScenario() )
+	if ( GetScenario() && m_iAmmoID != -1 ) // CHECKING AMMOID IS A CRAPPY HOTFIX FOR NOW, FIX ITEM TRACKER.
 	{
 		GetScenario()->OnAmmoRemoved( this );
 	}
@@ -94,17 +95,20 @@ CBaseEntity *CGEAmmoCrate::Respawn( void )
 	if ( m_iAmmoID != -1 )
 	{
 		Ammo_t *pAmmo = GetAmmoDef()->GetAmmoOfIndex( m_iAmmoID );
-		Assert( pAmmo );
-		// Set the crate amount
-		m_iAmmoAmount = pAmmo->nCrateAmt;
 
-		// Set our skin as appropriate
-		if ( Q_stristr(pAmmo->pName, "mine") )
-			m_nSkin = AMMOCRATE_SKIN_MINES;
-		else if ( !Q_stricmp(pAmmo->pName, AMMO_GRENADE) )
-			m_nSkin = AMMOCRATE_SKIN_GRENADES;
-		else
-			m_nSkin = AMMOCRATE_SKIN_DEFAULT;
+		if (pAmmo)
+		{
+			// Set the crate amount
+			m_iAmmoAmount = pAmmo->nCrateAmt;
+
+			// Set our skin as appropriate
+			if (Q_stristr(pAmmo->pName, "mine"))
+				m_nSkin = AMMOCRATE_SKIN_MINES;
+			else if (!Q_stricmp(pAmmo->pName, AMMO_GRENADE))
+				m_nSkin = AMMOCRATE_SKIN_GRENADES;
+			else
+				m_nSkin = AMMOCRATE_SKIN_DEFAULT;
+		}
 	}
 
 	// Don't show us if we won't give out any ammo
@@ -254,7 +258,7 @@ void CGEAmmoCrate::UpdateOnRemove(void)
 	BaseClass::UpdateOnRemove();
 
 	// Notify Python about the ammobox
-	if ( GetScenario() )
+	if ( GetScenario() && m_iAmmoID != -1 ) // CHECKING AMMOID IS A CRAPPY HOTFIX FOR NOW, FIX ITEM TRACKER.
 	{
 		GetScenario()->OnAmmoRemoved( this );
 	}

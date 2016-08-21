@@ -58,6 +58,18 @@ protected:
 
 	void LoadMapCycle();
 	void ClearSpawnerLocations();
+
+	bool CheckVotekick();
+
+	char m_pKickTargetID[64];
+	CGEPlayer *m_pLastKickCaller;
+	float m_flLastKickCall;
+	float m_flKickEndTime;
+
+	int m_iVoteCount;
+	int m_iVoteGoal;
+	float m_flVoteFrac;
+	CUtlVector<int> m_vVoterIDs;
 #endif
 
 	// -------------------

@@ -15,7 +15,7 @@ MACRO(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar
   LIST(APPEND ${SourcesVar} ${PrecompiledSource})
 ENDMACRO(ADD_MSVC_PRECOMPILED_HEADER)
 
-set(SHARED_LIBS m z dl ssl ldap rt util nsl crypt crypto)
+set(SHARED_LIBS m z dl ldap rt util nsl)
 
 set(SERVER_LIBS
   ${CMAKE_SOURCE_DIR}/lib/linux/choreoobjects_486.a

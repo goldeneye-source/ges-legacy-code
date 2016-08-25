@@ -1081,6 +1081,10 @@ void CGEMPPlayer::SetPlayerName( const char *name )
 	{
 		BaseClass::SetPlayerName( name );
 	}
+
+	// Store python safe versions of our name.
+	GEUTIL_CleanupNameEnding(m_szCleanName, m_szSafeName);
+	GEUTIL_CleanupNameEnding(name, m_szSafeCleanName);
 }
 
 bool CGEMPPlayer::ClientCommand( const CCommand &args )

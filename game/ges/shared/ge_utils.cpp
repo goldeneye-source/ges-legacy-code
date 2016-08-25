@@ -1041,5 +1041,51 @@ const char *SpawnerTypeToClassName( int id )
 	return GESpawnerInfo[id].classname;
 }
 // End Spawner helper functions
+
+// Removes cut off multibyte characters from the end of a string.
+bool GEUTIL_CleanupNameEnding( const char* pName, char* pOutputName )
+{
+	Q_strncpy(pOutputName, pName, MAX_PLAYER_NAME_LENGTH); // We always expect an output.
+
+	// Source makes sure the last character is the null terminator so we don't need to check for that.  In fact that's part of the issue.
+	if (Q_strlen(pName) >= MAX_PLAYER_NAME_LENGTH - 1 && pName[MAX_PLAYER_NAME_LENGTH - 2] & 0x80) // Name hits the character limit and penultimate character is not a single byte character.
+	{
+		// Basically the issue is that multibyte characters can get cut off by source and cause issues in python.
+		// Because of this we need to find and remove any corrupted characters.  We do this with their bit encodings.
+		// 0xxxxxxx is a single byte character.
+		// 1xxxxxxx is a multibyte character.
+		// the posistion of the first 0 after the 1 tells us the nature of this particular character.
+		// 10xxxxxx is a continuation of a multibyte character
+		// 110xxxxx is the first byte of a 2 byte multibyte character
+		// 1110xxxx is the first byte of a 3 byte multibyte character
+		// 11110xxx is the first byte of a 4 byte multibyte character
+
+		int c;
+		int zeropos = -1;
+
+		for (c = 2; c < 5; c++) // Check the last 3 characters in the string, since UTF-8 characters can be up to 4 bytes.
+		{
+			for (int i = 1; i < 6; i++)
+			{
+				if (~pName[MAX_PLAYER_NAME_LENGTH - c] & (1 << (7 - i))) // Find the first zero
+				{
+					zeropos = i;
+					break;
+				}
+			}
+
+			if (zeropos > 1) // If the zero is at bit 6 then this is not the first byte of the character, we need to keep going.  Otherwise we found what we're looking for.
+				break;
+		}
+
+		if (zeropos >= c)
+		{
+			pOutputName[MAX_PLAYER_NAME_LENGTH - c] = '\0'; //Replace the start of the character with the end of the string.
+
+			return true;
+		}
+	}
+	return false;
+}
 #endif
 

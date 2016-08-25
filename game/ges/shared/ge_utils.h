@@ -68,6 +68,9 @@ uint64 GEUTIL_EventCodeToSkin( int code );
 void pyShowPopupHelp( CGEPlayer *pPlayer, const char *title, const char *msg, const char *img = "", float holdtime = 5.0f, bool canArchive = false );
 void pyShowPopupHelpTeam( int team, const char *title, const char *msg, const char *img = NULL, float holdtime = 5.0f, bool canArchive = false );
 
+// Removes cut off multibyte characters from the end of a name and stores the new string in pOutputName.
+// Returns true if cleanup was neccecery.
+bool GEUTIL_CleanupNameEnding(const char* pName, char* pOutputName);
 #endif
 
 // Color hints (^a, ^1, etc.)

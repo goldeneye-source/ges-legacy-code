@@ -105,6 +105,12 @@ public:
 	virtual void		 SetPlayerName( const char *name );
 	virtual const char  *GetCleanPlayerName()	{ return m_szCleanName; }
 
+	// Name that's safe for python to use, without color tags.
+	virtual const char  *GetSafeCleanPlayerName()	{ return m_szSafeCleanName; }
+
+	// Name that's safe for python to use, still contains color tags.
+	virtual const char  *GetSafePlayerName()	{ return m_szSafeName; }
+
 	virtual int		GetUsedWeaponSkin(int weapid)				{ return weapid < WEAPON_RANDOM ? m_iWeaponSkinInUse.Get(weapid) : 0; }
 	virtual void	SetUsedWeaponSkin(int weapid, int value)	{ if (weapid < WEAPON_RANDOM) m_iWeaponSkinInUse.Set(weapid, value); }
 
@@ -196,6 +202,9 @@ protected:
 	CNetworkVar(int, m_iSteamIDHash);
 
 	char m_szCleanName[32];
+
+	char m_szSafeName[32]; // Name that's safe for python to use.
+	char m_szSafeCleanName[32]; // Clean name that's safe for python to use.
 
 	int m_iMatchScore;
 	int m_iMatchDeaths;

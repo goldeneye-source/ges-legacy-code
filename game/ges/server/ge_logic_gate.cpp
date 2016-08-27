@@ -59,37 +59,49 @@ void CGELogicGate::Spawn(void)
 
 bool CGELogicGate::CheckGateLogic(void)
 {
+	bool outputValue = false;
 	// We don't need breaks here because all cases return something.
 	switch (m_iGateType)
 	{
 	case 0: // AND
-		return m_bXValue & m_bYValue;
+		outputValue = m_bXValue & m_bYValue;
+		break;
 	case 1: // OR
-		return m_bXValue | m_bYValue;
+		outputValue = m_bXValue | m_bYValue;
+		break;
 	case 2: // NAND
-		return !(m_bXValue & m_bYValue);
+		outputValue = !(m_bXValue & m_bYValue);
+		break;
 	case 3: // NOR
-		return !(m_bXValue | m_bYValue);
+		outputValue = !(m_bXValue | m_bYValue);
+		break;
 	case 4: // XOR
-		return m_bXValue ^ m_bYValue;
+		outputValue = m_bXValue ^ m_bYValue;
+		break;
 	case 5: // XNOR
-		return !(m_bXValue ^ m_bYValue);
+		outputValue = !(m_bXValue ^ m_bYValue);
+		break;
 	case 6: // NOT(X input only)
-		return !m_bXValue;
+		outputValue = !m_bXValue;
+		break;
 	default:
-		return false;
+		outputValue = false;
 	}
+
+	return outputValue;
 }
 
 void CGELogicGate::ReportGateLogic(bool state, CBaseEntity *pActivator)
 {
-	if (!pActivator)
-		pActivator = this;
+	CBaseEntity *pNewActivator = pActivator;
+
+	if (!pNewActivator)
+		pNewActivator = this;
 
 	if (state)
-		m_FireTrue.FireOutput(pActivator, this);
+		m_FireTrue.FireOutput(pNewActivator, this);
 	else
-		m_FireFalse.FireOutput(pActivator, this);
+		m_FireFalse.FireOutput(pNewActivator, this);
 }
 
 void CGELogicGate::InputSetGateType(inputdata_t &inputdata)
@@ -108,9 +120,6 @@ void CGELogicGate::InputCheckGateOutput(inputdata_t &inputdata)
 
 void CGELogicGate::ChangeInput(bool changeY, bool state, CBaseEntity *pActivator)
 {
-	if (!pActivator)
-		pActivator = this;
-
 	if (changeY)
 		m_bYValue = state;
 	else

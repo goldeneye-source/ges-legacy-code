@@ -1,4 +1,4 @@
-///////////// Copyright © 2008, Goldeneye: Source. All rights reserved. /////////////
+///////////// Copyright Â© 2008, Goldeneye: Source. All rights reserved. /////////////
 // 
 // File: ge_logic_gate.cpp
 // Description:
@@ -23,7 +23,7 @@ BEGIN_DATADESC(CGELogicGate)
 DEFINE_KEYFIELD(m_bAutoFire, FIELD_BOOLEAN, "ShouldAutoFire"),
 DEFINE_KEYFIELD(m_iGateType, FIELD_INTEGER, "GateType"),
 DEFINE_KEYFIELD(m_bXValue, FIELD_BOOLEAN, "StartingXValue"),
-DEFINE_KEYFIELD(m_bYValue, FIELD_INTEGER, "StartingYValue"),
+DEFINE_KEYFIELD(m_bYValue, FIELD_BOOLEAN, "StartingYValue"),
 DEFINE_INPUTFUNC(FIELD_INTEGER, "SetGateType", InputSetGateType),
 DEFINE_INPUTFUNC(FIELD_VOID, "TestOutput", InputCheckGateOutput),
 DEFINE_INPUTFUNC(FIELD_VOID, "SetXTrue", InputXTrue),

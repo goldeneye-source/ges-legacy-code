@@ -705,14 +705,22 @@ void CRagdollProp::InitRagdoll( const Vector &forceVector, int forceBone, const 
 	if ( m_anglesOverrideString != NULL_STRING && Q_strlen(m_anglesOverrideString.ToCStr()) > 0 )
 	{
 		char szToken[2048];
+#ifdef GE_DLL
+		const char *pStr = nexttoken(szToken, STRING(m_anglesOverrideString), ',', sizeof(szToken));
+#else
 		const char *pStr = nexttoken(szToken, STRING(m_anglesOverrideString), ',');
+#endif
 		// anglesOverride is index,angles,index,angles (e.g. "1, 22.5 123.0 0.0, 2, 0 0 0, 3, 0 0 180.0")
 		while ( szToken[0] != 0 )
 		{
 			int objectIndex = atoi(szToken);
 			// sanity check to make sure this token is an integer
 			Assert( atof(szToken) == ((float)objectIndex) );
+#ifdef GE_DLL
+			pStr = nexttoken(szToken, pStr, ',', sizeof(szToken));
+#else
 			pStr = nexttoken(szToken, pStr, ',');
+#endif
 			Assert( szToken[0] );
 			if ( objectIndex >= m_ragdoll.listCount )
 			{
@@ -739,7 +747,11 @@ void CRagdollProp::InitRagdoll( const Vector &forceVector, int forceBone, const 
 				MatrixSetColumn( out, 3, pBoneToWorld[boneIndex] );
 				element.pObject->SetPositionMatrix( pBoneToWorld[boneIndex], true );
 			}
+#ifdef GE_DLL
+			pStr = nexttoken(szToken, pStr, ',', sizeof(szToken));
+#else
 			pStr = nexttoken(szToken, pStr, ',');
+#endif
 		}
 	}
 

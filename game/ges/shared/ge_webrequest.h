@@ -15,12 +15,17 @@
 #include "threadtools.h"
 #include "utlbuffer.h"
 
-typedef void (*WEBRQST_CLBK)( const char *result, const char *error );
+
+// typedef void (*WEBRQST_CLBK)( const char *result, const char *error );
+
+// result is data returned from request, error is the potential error thrown.
+// internaldata is information specified by the constructor to return to any callbacks.
+typedef void (*WEBRQST_CLBK)( const char *result, const char *error, const char *internalData );
 
 class CGEWebRequest : public CThread
 {
 public:
-	CGEWebRequest( const char *addr, WEBRQST_CLBK = NULL );
+	CGEWebRequest( const char *addr, WEBRQST_CLBK = NULL, const char *methodData = NULL, const char *internalData = NULL);
 	~CGEWebRequest();
 
 	void Destroy();
@@ -41,9 +46,39 @@ protected:
 
 	char *m_pAddress;
 	char *m_pError;
+
+	char *m_pMethodData;
+	char *m_pInternalData;
+
 	CUtlBuffer m_Result;
 
 	WEBRQST_CLBK m_pCallback;
+};
+
+
+class CGETempWebRequest : public CGEWebRequest 
+{
+public:
+	CGETempWebRequest( const char *addr, WEBRQST_CLBK = NULL, const char *methodData = NULL, const char *internalData = NULL);
+	DECLARE_CLASS( CGETempWebRequest, CGEWebRequest );
+
+protected:
+	virtual void OnExit();
+};
+
+
+class CGEPostWebRequest : public CGEWebRequest 
+{
+public:
+	CGEPostWebRequest( const char *addr, const char *postData = NULL );
+	~CGEPostWebRequest();
+	DECLARE_CLASS( CGEPostWebRequest, CGEWebRequest );
+
+protected:
+	virtual int Run();
+	virtual void OnExit();
+
+	char *m_pPostData;
 };
 
 #endif

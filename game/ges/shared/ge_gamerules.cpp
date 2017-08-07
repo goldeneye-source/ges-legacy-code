@@ -127,7 +127,7 @@ bool SimpleLessFunc( const int &lhs, const int &rhs )
 CGEWebRequest *g_pStatusListWebRequest = NULL;
 CGEWebRequest *g_pVersionWebRequest = NULL;
 
-void OnVersionLoad( const char *result, const char *error )
+void OnVersionLoad( const char *result, const char *error, const char *internalData )
 {
 	if ( !error || error[0] == '\0' )
 	{

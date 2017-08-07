@@ -2020,6 +2020,53 @@ void UTIL_ValidateSoundName( string_t &name, const char *defaultStr )
 //			sep - Character to use as separator. UNDONE: allow multiple separator chars
 // Output : Returns a pointer to the next token to be parsed.
 //-----------------------------------------------------------------------------
+#ifdef GE_DLL
+const char *nexttoken(char *token, const char *str, char sep, size_t tokenLen)
+{
+	if ((str == NULL) || (*str == '\0'))
+	{
+		if (tokenLen)
+		{
+			*token = '\0';
+		}
+		return(NULL);
+	}
+
+	//
+	// Copy everything up to the first separator into the return buffer.
+	// Do not include separators in the return buffer.
+	//
+	while ((*str != sep) && (*str != '\0') && (tokenLen > 1))
+	{
+		*token++ = *str++;
+		tokenLen--;
+	}
+
+	//
+	// If token is to big for return buffer, skip rest of token.
+	//
+	while ((*str != sep) && (*str != '\0'))
+	{
+		str++;
+	}
+
+	if (tokenLen)
+	{
+		*token = '\0';
+		tokenLen--;
+	}
+
+	//
+	// Advance the pointer unless we hit the end of the input string.
+	//
+	if (*str == '\0')
+	{
+		return(str);
+	}
+
+	return(++str);
+}
+#else
 const char *nexttoken(char *token, const char *str, char sep)
 {
 	if ((str == NULL) || (*str == '\0'))
@@ -2048,6 +2095,7 @@ const char *nexttoken(char *token, const char *str, char sep)
 
 	return(++str);
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Helper for UTIL_FindClientInPVS

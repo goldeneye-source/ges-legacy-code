@@ -3218,7 +3218,11 @@ bool C_BaseAnimating::DispatchMuzzleEffect( const char *options, bool isFirstPer
 	int			weaponType = 0;
 
 	// Get the first parameter
+#ifdef GE_DLL
+	p = nexttoken( token, p, ' ', sizeof(token) );
+#else
 	p = nexttoken( token, p, ' ' );
+#endif
 
 	// Find the weapon type
 	if ( token ) 
@@ -3270,7 +3274,11 @@ bool C_BaseAnimating::DispatchMuzzleEffect( const char *options, bool isFirstPer
 	}
 
 	// Get the second parameter
+#ifdef GE_DLL
+	p = nexttoken( token, p, ' ', sizeof(token) );
+#else
 	p = nexttoken( token, p, ' ' );
+#endif
 
 	int	attachmentIndex = -1;
 
@@ -3381,14 +3389,22 @@ void C_BaseAnimating::FireEvent( const Vector& origin, const QAngle& angles, int
 
 			// Get the particle effect name
 			const char *p = options;
+#ifdef GE_DLL
+			p = nexttoken( token, p, ' ', sizeof(token) );
+#else
 			p = nexttoken(token, p, ' ');
+#endif
 			if ( token ) 
 			{
 				Q_strncpy( szParticleEffect, token, sizeof(szParticleEffect) );
 			}
 
 			// Get the attachment type
+#ifdef GE_DLL
+			p = nexttoken( token, p, ' ', sizeof(token) );
+#else
 			p = nexttoken(token, p, ' ');
+#endif
 			if ( token ) 
 			{
 				iAttachType = GetAttachTypeFromString( token );
@@ -3400,7 +3416,11 @@ void C_BaseAnimating::FireEvent( const Vector& origin, const QAngle& angles, int
 			}
 
 			// Get the attachment point index
+#ifdef GE_DLL
+			p = nexttoken( token, p, ' ', sizeof(token) );
+#else
 			p = nexttoken(token, p, ' ');
+#endif
 			if ( token )
 			{
 				iAttachment = atoi(token);
@@ -3650,14 +3670,22 @@ void C_BaseAnimating::FireEvent( const Vector& origin, const QAngle& angles, int
 			const char *p = options;
 
 			// Bodygroup Name
+#ifdef GE_DLL
+			p = nexttoken( token, p, ' ', sizeof(token) );
+#else
 			p = nexttoken(token, p, ' ');
+#endif
 			if ( token ) 
 			{
 				Q_strncpy( szBodygroupName, token, sizeof(szBodygroupName) );
 			}
 
 			// Get the desired value
+#ifdef GE_DLL
+			p = nexttoken( token, p, ' ', sizeof(token) );
+#else
 			p = nexttoken(token, p, ' ');
+#endif
 			if ( token ) 
 			{
 				value = atoi( token );
@@ -3697,21 +3725,33 @@ void C_BaseAnimating::FireObsoleteEvent( const Vector& origin, const QAngle& ang
 
 			const char *p = options;
 
+#ifdef GE_DLL
+			p = nexttoken( token, p, ' ', sizeof(token) );
+#else
 			p = nexttoken(token, p, ' ');
+#endif
 
 			if( token ) 
 			{
 				Q_strncpy( effectFunc, token, sizeof(effectFunc) );
 			}
 
+#ifdef GE_DLL
+			p = nexttoken( token, p, ' ', sizeof(token) );
+#else
 			p = nexttoken(token, p, ' ');
+#endif
 
 			if( token )
 			{
 				iAttachment = atoi(token);
 			}
 
+#ifdef GE_DLL
+			p = nexttoken( token, p, ' ', sizeof(token) );
+#else
 			p = nexttoken(token, p, ' ');
+#endif
 
 			if( token )
 			{

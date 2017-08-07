@@ -132,7 +132,11 @@ CEventAction::CEventAction( const char *ActionData )
 	//
 	// Parse the target name.
 	//
+#ifdef GE_DLL
+	const char *psz = nexttoken(szToken, ActionData, ',', sizeof(szToken));
+#else
 	const char *psz = nexttoken(szToken, ActionData, ',');
+#endif
 	if (szToken[0] != '\0')
 	{
 		m_iTarget = AllocPooledString(szToken);
@@ -141,7 +145,11 @@ CEventAction::CEventAction( const char *ActionData )
 	//
 	// Parse the input name.
 	//
+#ifdef GE_DLL
+	psz = nexttoken(szToken, psz, ',', sizeof(szToken));
+#else
 	psz = nexttoken(szToken, psz, ',');
+#endif
 	if (szToken[0] != '\0')
 	{
 		m_iTargetInput = AllocPooledString(szToken);
@@ -154,7 +162,11 @@ CEventAction::CEventAction( const char *ActionData )
 	//
 	// Parse the parameter override.
 	//
+#ifdef GE_DLL
+	psz = nexttoken(szToken, psz, ',', sizeof(szToken));
+#else
 	psz = nexttoken(szToken, psz, ',');
+#endif
 	if (szToken[0] != '\0')
 	{
 		m_iParameter = AllocPooledString(szToken);
@@ -163,7 +175,11 @@ CEventAction::CEventAction( const char *ActionData )
 	//
 	// Parse the delay.
 	//
+#ifdef GE_DLL
+	psz = nexttoken(szToken, psz, ',', sizeof(szToken));
+#else
 	psz = nexttoken(szToken, psz, ',');
+#endif
 	if (szToken[0] != '\0')
 	{
 		m_flDelay = atof(szToken);
@@ -172,7 +188,11 @@ CEventAction::CEventAction( const char *ActionData )
 	//
 	// Parse the number of times to fire.
 	//
+#ifdef GE_DLL
+	nexttoken(szToken, psz, ',', sizeof(szToken));
+#else
 	nexttoken(szToken, psz, ',');
+#endif
 	if (szToken[0] != '\0')
 	{
 		m_nTimesToFire = atoi(szToken);

@@ -107,11 +107,7 @@ void CHudNumericDisplay::SetIsTime(bool state)
 void CHudNumericDisplay::PaintNumbers(HFont font, int xpos, int ypos, int value)
 {
 	surface()->DrawSetTextFont(font);
-#ifdef GE_DLL
-	wchar_t unicode[7];
-#else
- 	wchar_t unicode[6];
-#endif
+	wchar_t unicode[6];
 	if ( !m_bIsTime )
 	{
 		swprintf(unicode, L"%d", value);
@@ -132,7 +128,7 @@ void CHudNumericDisplay::PaintNumbers(HFont font, int xpos, int ypos, int value)
 		int iMinutes = value / 60;
 		int iSeconds = value - iMinutes * 60;
 	#ifdef GE_DLL
-		if ( value < 0 || iMinutes > 999)
+		if ( value < 0 )
 			swprintf( unicode, L"--:--" );
 		else if ( iSeconds < 10 && iMinutes < 10 )
 			swprintf( unicode, L"0%d:0%d", iMinutes, iSeconds );

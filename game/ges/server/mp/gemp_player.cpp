@@ -1325,24 +1325,10 @@ void CGEMPPlayer::PreThink()
 				}
 				else if ( IsOnList( LIST_BANNED, m_iSteamIDHash) )
 				{
-					bool otherPlayers = false;
-
-					FOR_EACH_MPPLAYER(pPlayer)
-						if (!pPlayer->IsNPC() && pPlayer->GetUserID() != this->GetUserID())
-							otherPlayers = true;
-					END_OF_PLAYER_LOOP()
-
-					if ( engine->IsDedicatedServer() || otherPlayers )
-					{
-						char command[255];
-						Q_snprintf(command, 255, "banid 0 %d kick\n", GetUserID());
-						//Msg("%s is Banned [%s]\n", steamID, command);
-						engine->ServerCommand(command);
-					}
-					else
-					{
-						engine->ServerCommand("sv_lan 1");
-					}
+					char command[255];
+					Q_snprintf(command, 255, "kick %d\n", GetUserID());
+					Msg("%s is GE:S Auth Server Banned [%s]\n", steamID, command);
+					engine->ServerCommand(command);
 				}
 
 				if (IsOnList(LIST_SKINS, m_iSteamIDHash))

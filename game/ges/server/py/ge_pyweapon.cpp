@@ -97,32 +97,6 @@ int pyGetWeaponSlot( CGEWeapon *pWeap )
 	return slot;
 }
 
-void pyWeaponSetSkin( CGEWeapon *pWeap, int skin )
-{
-	if ( pWeap )
-	{
-		int WhitelistedWeapons[] = { WEAPON_TOKEN, WEAPON_ROCKET_LAUNCHER }; // Whitelist weapons as needed.  But donchu ever whitelist the klobb or KF7, boy.
-
-		int weaponID = pWeap->GetWeaponID();
-		bool match = false;
-		int whitelistLength = sizeof(WhitelistedWeapons) / sizeof(int);
-
-		for (int i = 0; i < whitelistLength; i++)
-		{
-			if ( WhitelistedWeapons[i] == weaponID )
-			{
-				match = true; 
-				break;
-			}
-		}
-
-		if (match)
-			pWeap->SetSkin(skin);
-		else
-			Warning("Tried to assign invalid skin through python!\n");
-	}
-}
-
 const char *pyWeaponAmmoType( bp::object weap )
 {
 	bp::extract<char*> to_name( weap );
@@ -262,7 +236,7 @@ BOOST_PYTHON_MODULE(GEWeapon)
 		.def("GetDamage", &CGEWeapon::GetWeaponDamage)
 		.def("GetWeaponId", &CGEWeapon::GetWeaponID)
 		.def("GetWeaponSlot", pyGetWeaponSlot)
-		.def("SetSkin", pyWeaponSetSkin)
+		.def("SetSkin", &CGEWeapon::SetSkin)
 		// The following override CBaseEntity to prevent movement when held
 		.def("SetAbsOrigin", pyWeaponSetAbsOrigin)
 		.def("SetAbsAngles", pyWeaponSetAbsAngles);

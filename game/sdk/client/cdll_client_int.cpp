@@ -99,6 +99,8 @@
 	#include "ge_musicmanager.h"
 	#include "ge_loadingscreen.h"
 	#include "ge_vieweffects.h"
+	#include "ge_blacklist.h"
+	#include "inetchannel.h"
 #if 0
 	// HACKHACK: this is dumb, and unsafe. Things that should be uninitialized at the
 	// engine-level can kiss their deconstructors goodbye. See Shutdown for an
@@ -1257,6 +1259,16 @@ void CHLClient::LevelInitPreEntity( char const* pMapName )
 	// HACK: Bogus, but the logic is too complicated in the engine
 	if (g_bLevelInitialized)
 		return;
+
+#ifdef GE_DLL
+	INetChannelInfo *connectionInfo = engine->GetNetChannelInfo();
+	if ( connectionInfo )
+	{
+		if ( !InvestigateGEServer(connectionInfo->GetAddress(), false) )
+			engine->ClientCmd_Unrestricted("disconnect"); // Somehow authed a previously denied server after starting connection to it.
+	}
+#endif
+
 	g_bLevelInitialized = true;
 
 	input->LevelInit();

@@ -1746,6 +1746,12 @@
     <ClCompile Include="ges\client\c_ge_door_interp.cpp">
       <Filter>GES\Entities</Filter>
     </ClCompile>
+    <ClCompile Include="ges\client\ge_blacklist.cpp">
+      <Filter>GES</Filter>
+    </ClCompile>
+    <ClCompile Include="ges\client\VGUI\ge_popup.cpp">
+      <Filter>GES\VGUI\Menu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ges\client\clientmode_ge.h">
@@ -3616,6 +3622,12 @@
     </ClInclude>
     <ClInclude Include="ges\client\c_ge_point_follower.h">
       <Filter>GES\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\ge_blacklist.h">
+      <Filter>GES</Filter>
+    </ClInclude>
+    <ClInclude Include="ges\client\VGUI\ge_popup.h">
+      <Filter>GES\VGUI\Menu</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -41,6 +41,7 @@
 #include "vgui/ge_roundreport.h"
 #include "vgui/ge_loadingscreen.h"
 #include "vgui/ge_scenariohelp.h"
+#include "ge_blacklist.h"
 
 #include "ge_hudgameplay.h"
 #include "ge_hudtargetid.h"
@@ -139,6 +140,12 @@ CON_COMMAND( __OVR_map, "Load the specified map." )
 	engine->ClientCmd_Unrestricted( VarArgs("__real_map %s", args.ArgS()) );
 }
 
+CON_COMMAND( __OVR_connect, "Connect to the given server." )
+{
+	if ( InvestigateGEServer(args.ArgS(), true) )
+		engine->ClientCmd_Unrestricted( VarArgs("__real_connect %s", args.ArgS()) );
+}
+
 void RenderGEPlayerSprites()
 {
 	// Prevents an assert
@@ -231,6 +238,8 @@ void ClientModeGENormal::Init()
 
 	// Swap the map command with our own
 	GEUTIL_OverrideCommand( "map", "__real_map", "__OVR_map", "Load the specified map." );
+
+	GEUTIL_OverrideCommand( "connect", "__real_connect", "__OVR_connect", "Connect to the given server." );
 }
 
 void ClientModeGENormal::LevelInit( const char* newmap )

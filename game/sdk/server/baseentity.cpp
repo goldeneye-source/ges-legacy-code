@@ -4663,7 +4663,11 @@ void CBaseEntity::PrecacheModelComponents( int nModelIndex )
 						{
 							char token[256];
 							const char *pOptions = pEvent->pszOptions();
+#ifdef GE_DLL
+							nexttoken( token, pOptions, ' ', sizeof(token) );
+#else
 							nexttoken( token, pOptions, ' ' );
+#endif
 							if ( token ) 
 							{
 								PrecacheParticleSystem( token );
